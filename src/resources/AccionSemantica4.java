@@ -1,7 +1,7 @@
 package resources;
 
-import java.util.ArrayList;
-import java.util.List;
+
+
 
 public class AccionSemantica4 implements AccionSemantica {
 	//esta accion semantica se define como:
@@ -17,9 +17,12 @@ public class AccionSemantica4 implements AccionSemantica {
 	private int maxValor=32767;
 	public Token ejecutar(AnalizadorLexico AL, char nuevoChar) {
 		AL.pos--;
-		String cte=AL.buffer; //claveTablaSimbolo
-		Integer cteClaveTS= new Integer(cte);
-		int valorCte=cteClaveTS.intValue();
+		String cte=AL.buffer; 
+		int valorCte=new Integer(cte).intValue();
+		
+		String claveTS=cte+"_i";
+		
+	
 		Token devuelto=null;
 		
 		if(valorCte< minValor || valorCte> maxValor ) { //chequeo de rangos
@@ -27,19 +30,13 @@ public class AccionSemantica4 implements AccionSemantica {
 			System.out.println("Warning: Reemplazo de valor en linea: " + AL.nroLinea);
 		}
 		
-		if(!AL.tablaSimbolos.containsKey(cteClaveTS)) {
+		if(!AL.tablaSimbolos.containsKey(claveTS)) {
 			
-			
-			List<Object> nuevosAtributos= new ArrayList<Object>();
-			nuevosAtributos.add(cte); //nombre
-			nuevosAtributos.add("integer"); //tipo
-			nuevosAtributos.add("CONSTANTE"); //tipoToken
-			nuevosAtributos.add(valorCte); //valor
-			AL.tablaSimbolos.put(cteClaveTS, nuevosAtributos);
+			AL.AltaEnTablaSimbolos(claveTS,"CTE_INTEGER",valorCte);
 			
 		}
 			
-		devuelto= new Token(AL.mapeoTipoTokens.get("CONSTANTE"),cteClaveTS); 
+		devuelto= new Token(Tokens.CTE_INTEGER,claveTS); 
 		//si no existia, se creo antes, si existia devuelvo el TIPO DE TOKEN y su clave de acceso a la tabla de simbolos
 		//Se incrementa para que se pueda hacer otra entrada a la TablaSimbolos con otra clave
 		
@@ -51,5 +48,5 @@ public class AccionSemantica4 implements AccionSemantica {
 		
 	}
 
-
+	
 }

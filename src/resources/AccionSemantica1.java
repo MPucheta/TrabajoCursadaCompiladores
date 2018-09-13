@@ -27,16 +27,9 @@ public class AccionSemantica1 implements AccionSemantica {
 		}else {
 			
 			if(!AL.tablaSimbolos.containsKey(buffer)) {
-				//revisar esto, los atributos de la TS parecian bien pero cuando es identificador como que pierde el sentido
-				//Y no tanto porque el ID luego esta bindeado a una valor (r-value). PREGUNTAR EN CLASE
-				List<Object> nuevosAtributos= new ArrayList<Object>();
-				nuevosAtributos.add(buffer); //nombre
-				nuevosAtributos.add("ID"); //tipo
-				nuevosAtributos.add("ID"); //tipoToken
-				nuevosAtributos.add(buffer); //valor
-				AL.tablaSimbolos.put(buffer, nuevosAtributos);
 				
-				
+				AL.AltaEnTablaSimbolos(buffer, "ID", buffer); //tipo de dato? tipo de token, lexema
+	
 			}
 			devuelto= new Token(AL.mapeoTipoTokens.get("ID"),buffer);
 			

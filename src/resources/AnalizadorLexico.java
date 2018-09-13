@@ -18,10 +18,10 @@ public class AnalizadorLexico {
 	static final AccionSemantica8 AS8 = new AccionSemantica8();
 	
 	String fuente;
-	public Hashtable<Object , List<Object>> tablaSimbolos; 
-	//como cada Object (Integer, String) tienen redefinidos los equals, esto debiera andar bien. Sin embargo, no descartar
-	//definir una interfaz llamada Symbol 
-	//List Object va a estar conformada por... <Nombre, tipo, tipoToken, valor> <String, char/string, valor concreto (Character, Integer)>
+	public Hashtable<String , List<Object>> tablaSimbolos; 
+	
+	//no descartar definir una interfaz llamada Symbol 
+	//List Object va a estar conformada por... <tipoToken, Lexema> <String, valor concreto (Character, Integer)>
 	public Hashtable<String,Integer> mapeoTipoTokens; //por ejemplo, ID 50, CTE 60. IF 20. Son distintos a los que hay en equivalencia. Repensar
 	
 	Set<String> palabrasReservadas;
@@ -81,13 +81,23 @@ public class AnalizadorLexico {
 		palabrasReservadas.add("void");
 		palabrasReservadas.add("fun");
 		palabrasReservadas.add("return");
+		
+		mapeoTipoTokens.put("if",(int) Tokens.IF);
+		mapeoTipoTokens.put("else",(int) Tokens.ELSE);
+		mapeoTipoTokens.put("end_if",(int) Tokens.END_IF);
+		mapeoTipoTokens.put("print",(int) Tokens.PRINT);
+		mapeoTipoTokens.put("integer",(int) Tokens.INTEGER);
+		mapeoTipoTokens.put("uslinteger",(int) Tokens.USLINTEGER);
+		mapeoTipoTokens.put("while",(int) Tokens.WHILE);
+		mapeoTipoTokens.put("void",(int) Tokens.VOID);
+		mapeoTipoTokens.put("fun",(int) Tokens.FUN);
+		mapeoTipoTokens.put("return",(int) Tokens.RETURN);
+		
 	}
 	
-	public void inicializarBuffer(){
-		buffer = "";
-	}
 	
-	public Token getToken(){
+	
+	public int yylex(){
 		char c = fuente.charAt(pos);
 		buffer = "";
 		
@@ -102,9 +112,9 @@ public class AnalizadorLexico {
 		
 		
 		if (estado == FINAL)
-			return token;
+			return token.tipoDeToken;
 		}
-		return null;
+		return -1;
 	}
 	
 	private int equivalencia(char c){
@@ -168,4 +178,29 @@ public class AnalizadorLexico {
 	public boolean existePalabraReservada(String palabra){
 		return palabrasReservadas.contains(palabra);
 	}
+	
+	public void AltaEnTablaSimbolos(String clave, Object ... atributos) {
+		//metodo pensado para dar de alta en la tabla de simbolos. La cantidad de atributos es variable, de esta manera
+		//no es necesario cambiar en cada archivo como se da de alta.
+		
+		
+		//SE ESPERA DE IGUAL MANERA QUE LOS ATRIBUTOS SEAN PRESENTADOS COMO TIPODATO,TIPOTOKEN,LEXEMA
+		List<Object> nuevosAtributos= new ArrayList<Object>();
+		
+		for(Object o: atributos) {
+			nuevosAtributos.add(o);
+			
+		}
+		this.tablaSimbolos.put(clave, nuevosAtributos);
+	}
+	
+	public void inicializarBuffer(){
+		buffer = "";
+	}
+	
+	public int ASCIIToken(char c) {
+		return (int) c;
+		
+	}
+	
 }
