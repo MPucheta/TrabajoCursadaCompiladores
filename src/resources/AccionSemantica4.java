@@ -17,10 +17,12 @@ public class AccionSemantica4 implements AccionSemantica {
 	private int maxValor=32767;
 	public Token ejecutar(AnalizadorLexico AL, char nuevoChar) {
 		AL.pos--;
-		String cte=AL.buffer; //claveTablaSimbolo
-		cte=cte.split("_")[0]; //ya que lo leido se supone que es una cte de la forma, por ejemplo, 123_i
-		
+		String cte=AL.buffer; 
 		int valorCte=new Integer(cte).intValue();
+		
+		String claveTS=cte+"_i";
+		
+	
 		Token devuelto=null;
 		
 		if(valorCte< minValor || valorCte> maxValor ) { //chequeo de rangos
@@ -28,13 +30,13 @@ public class AccionSemantica4 implements AccionSemantica {
 			System.out.println("Warning: Reemplazo de valor en linea: " + AL.nroLinea);
 		}
 		
-		if(!AL.tablaSimbolos.containsKey(AL.buffer)) {
+		if(!AL.tablaSimbolos.containsKey(claveTS)) {
 			
-			AL.AltaEnTablaSimbolos(AL.buffer, "integer","CTE",valorCte);
+			AL.AltaEnTablaSimbolos(claveTS,"CTE_INTEGER",valorCte);
 			
 		}
 			
-		devuelto= new Token(AL.mapeoTipoTokens.get("CTE"),AL.buffer); 
+		devuelto= new Token(Tokens.CTE_INTEGER,claveTS); 
 		//si no existia, se creo antes, si existia devuelvo el TIPO DE TOKEN y su clave de acceso a la tabla de simbolos
 		//Se incrementa para que se pueda hacer otra entrada a la TablaSimbolos con otra clave
 		
@@ -46,5 +48,5 @@ public class AccionSemantica4 implements AccionSemantica {
 		
 	}
 
-
+	
 }
