@@ -1,7 +1,5 @@
 package resources;
 
-import java.util.ArrayList;
-import java.util.List;
 
 public class AccionSemantica1 implements AccionSemantica {
 
@@ -28,7 +26,7 @@ public class AccionSemantica1 implements AccionSemantica {
 			
 			if(!AL.tablaSimbolos.containsKey(buffer)) {
 				
-				AL.AltaEnTablaSimbolos(buffer, "ID", buffer); //tipo de dato? tipo de token, lexema
+				AL.altaEnTablaSimbolos(buffer, "ID", buffer); //tipo de dato? tipo de token, lexema
 	
 			}
 			devuelto= new Token(AL.mapeoTipoTokens.get("ID"),buffer);

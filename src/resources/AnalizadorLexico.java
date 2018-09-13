@@ -3,9 +3,9 @@ import java.util.*; //hash, list
 
 public class AnalizadorLexico {
 	public int pos = 0;
-	public int nroLinea = 0;
+	public int nroLinea = 1; //se comienza a leer el archivo desde la línea 1 
 	public String buffer;
-	public int punteroTablaSimbolos=0; //este se debe incrementar por cada entrada hecha en la tabla de simbolos 
+	public int punteroTablaSimbolos = 0; //este se debe incrementar por cada entrada hecha en la tabla de simbolos 
 	static final int FINAL = 100;
 	static final int ERROR = -1;
 	static final AccionSemantica1 AS1 = new AccionSemantica1();
@@ -16,6 +16,7 @@ public class AnalizadorLexico {
 	static final AccionSemantica6 AS6 = new AccionSemantica6();
 	static final AccionSemantica7 AS7 = new AccionSemantica7();
 	static final AccionSemantica8 AS8 = new AccionSemantica8();
+	static final AccionSemantica9 AS9 = new AccionSemantica9();
 	
 	String fuente;
 	public Hashtable<String , List<Object>> tablaSimbolos; 
@@ -45,19 +46,19 @@ public class AnalizadorLexico {
 		 */	};
 	
 	static final AccionSemantica[][] matrizAccionesSemanticas = {
-			/* 0*/	{ null,    AS2,    AS2,    AS2,    AS2,    AS2,    AS2,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS2,    AS2,    AS2,    AS2,     12,     11,      0,      0,      0},
+			/* 0*/	{ null,    AS3,    AS3,    AS3,    AS3,    AS3,   null,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS7,    AS3,    AS3,    AS3,    AS3,   null,   null,   null,   null,    AS9},
 			/* 1*/	{  AS3,    AS3,    AS3,    AS3,    AS3,    AS3,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null},
 			/* 2*/	{  AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1,    AS1},
 			/* 3*/	{ null,   null,    AS3,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null},
 			/* 4*/	{ null,   null,   null,    AS4,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null},
-			/* 5*/	{ null,   null,   null,   null,    AS3,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null},
+			/* 5*/	{ null,   null,   null,   null,    AS5,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null},
 			/* 6*/	{ null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,    AS7,   null,   null,   null,   null,   null,   null,   null,   null,   null},
 			/* 7*/	{  AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS7,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8},
 			/* 8*/	{  AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS7,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8,    AS8},
 			/* 9*/	{ null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,    AS7,   null,   null,   null,   null,   null,   null,   null,   null,   null},
 			/*10*/	{  AS6,    AS3,    AS6,    AS3,    AS3,    AS3,    AS3,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6},
-			/*11*/	{   11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,      0,     11,     11,     11},
-			/*12*/	{   12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,  FINAL,     12,     12,     12,   null}
+			/*11*/	{ null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,    AS9},
+			/*12*/	{  AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS2,    AS3,    AS3,    AS3,   null}
 			/*        letra   minus dígito       i       l       u       _       +	     -	     *	     /	     {	     }	     (	     )	     ;	     ,	     =	     :	      <	     >	     !	     '	     #	 blanco	    tab	    \n
 			 */
 	};
@@ -179,7 +180,7 @@ public class AnalizadorLexico {
 		return palabrasReservadas.contains(palabra);
 	}
 	
-	public void AltaEnTablaSimbolos(String clave, Object ... atributos) {
+	public void altaEnTablaSimbolos(String clave, Object ... atributos) {
 		//metodo pensado para dar de alta en la tabla de simbolos. La cantidad de atributos es variable, de esta manera
 		//no es necesario cambiar en cada archivo como se da de alta.
 		

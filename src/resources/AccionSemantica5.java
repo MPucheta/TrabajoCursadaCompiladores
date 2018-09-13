@@ -27,7 +27,7 @@ public class AccionSemantica5 implements AccionSemantica{
 			
 			if(!AL.tablaSimbolos.containsKey(claveTS)) { 
 				
-				AL.AltaEnTablaSimbolos(claveTS, "CTE_USLINTEGER",valorCte);
+				AL.altaEnTablaSimbolos(claveTS, "CTE_USLINTEGER",valorCte);
 
 				
 			}
