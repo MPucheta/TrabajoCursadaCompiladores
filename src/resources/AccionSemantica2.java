@@ -2,15 +2,17 @@ package resources;
 
 
 public class AccionSemantica2 implements AccionSemantica{
-	//Esta accion semantica se encarga de reservar espacio en el buffer y
-	//agregar el char en cuestion. 
-	//En esta implementacion el buffer es un string por lo que reservar espacio se hace
-	//mediante un new (ya que se toma como dinamico)
+	//Esta accion semantica se encarga de guardar en la TS las cadenas de caracteres
 	
 	public Token ejecutar(AnalizadorLexico AL, char nuevoChar) {
-		AL.inicializarBuffer();
-		AL.buffer+=nuevoChar;
-		return null;
+		String cadena = AL.buffer;
+		String claveTS = "'" + AL.buffer + "'"; 
+		
+		if(!AL.tablaSimbolos.containsKey(claveTS)) 
+			AL.altaEnTablaSimbolos(claveTS,"CADENA_CARACTERES",cadena);
+		
+		
+		return new Token(Tokens.CADENA_CARACTERES, claveTS);
 		
 	}
 	

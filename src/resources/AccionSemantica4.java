@@ -32,7 +32,7 @@ public class AccionSemantica4 implements AccionSemantica {
 		
 		if(!AL.tablaSimbolos.containsKey(claveTS)) {
 			
-			AL.AltaEnTablaSimbolos(claveTS,"CTE_INTEGER",valorCte);
+			AL.altaEnTablaSimbolos(claveTS,"CTE_INTEGER",valorCte);
 			
 		}
 			
