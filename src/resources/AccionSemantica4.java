@@ -5,7 +5,7 @@ package resources;
 
 public class AccionSemantica4 implements AccionSemantica {
 	//esta accion semantica se define como:
-	/*>Devolver a la entrada lo ultimo leido
+	/*
 	 * >verificar si cte entra en rango definido para i
 	 * 		si no, pisar con maximo valor e informar warning
 	 * >verificar si existe en tabla simbolo
@@ -16,7 +16,7 @@ public class AccionSemantica4 implements AccionSemantica {
 	private int minValor=-32768;
 	private int maxValor=32767;
 	public Token ejecutar(AnalizadorLexico AL, char nuevoChar) {
-		AL.pos--;
+		
 		String cte=AL.buffer; 
 		int valorCte=new Integer(cte).intValue();
 		
@@ -27,6 +27,7 @@ public class AccionSemantica4 implements AccionSemantica {
 		
 		if(valorCte< minValor || valorCte> maxValor ) { //chequeo de rangos
 			valorCte=maxValor; //tecnica de reemplazo
+			claveTS=valorCte+"_i"; //esto es tricky, si reemplace el valor, debo crear una nueva clave, asi evito usar claves que nunca voy a acceder.
 			System.out.println("Warning: Reemplazo de valor en linea: " + AL.nroLinea);
 		}
 		
