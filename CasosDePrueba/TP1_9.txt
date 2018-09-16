@@ -1,0 +1,4 @@
+'esta es una cadena de 1 linea bien definida'
+
+'esta cadena esta mal definida
+no puede ocupar mas de una linea'

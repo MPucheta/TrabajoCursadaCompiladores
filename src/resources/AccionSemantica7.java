@@ -5,7 +5,13 @@ public class AccionSemantica7 implements AccionSemantica {
 	
 	public Token ejecutar(AnalizadorLexico AL, char nuevoChar) {
 		AL.buffer += nuevoChar;
-		return new Token(AL.mapeoTipoTokens.get(AL.buffer), null);
+		int equivalente=0;
+		if(AL.buffer.length()==1)
+			equivalente= AL.ASCIIToken(AL.buffer.charAt(0));
+		else
+			equivalente=AL.mapeoTipoTokens.get(AL.buffer);
+		
+		return new Token(equivalente, null);
 	}
 
 }

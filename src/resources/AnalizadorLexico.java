@@ -35,10 +35,10 @@ public class AnalizadorLexico {
 		/* 3*/	{ERROR,  ERROR,      3,  ERROR,  ERROR,  ERROR,      4,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR},
 		/* 4*/	{ERROR,  ERROR,  ERROR,  FINAL,  ERROR,      5,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR},
 		/* 5*/	{ERROR,  ERROR,  ERROR,  ERROR,  FINAL,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR},
-		/* 6*/	{ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  FINAL,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR},
+		/* 6*/	{ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  FINAL,  ERROR,  ERROR,  FINAL,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR},
 		/* 7*/	{FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL},
 		/* 8*/	{FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL},
-		/* 9*/	{ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  FINAL,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR},
+		/* 9*/	{ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  FINAL,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR},
 		/*10*/	{FINAL,     10,  FINAL,     10,     10,     10,     10,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL},
 		/*11*/	{   11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,      0,     11,     11,     11},
 		/*12*/	{   12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,  FINAL,     12,     12,     12,  ERROR}
@@ -94,26 +94,38 @@ public class AnalizadorLexico {
 		mapeoTipoTokens.put("fun",(int) Tokens.FUN);
 		mapeoTipoTokens.put("return",(int) Tokens.RETURN);
 		
+		mapeoTipoTokens.put(":=",(int) Tokens.ASIGN);
+		mapeoTipoTokens.put("!=",(int) Tokens.COMP_DISTINTO);
+		mapeoTipoTokens.put(">=",(int) Tokens.COMP_MAYOR_IGUAL);
+		mapeoTipoTokens.put("<=",(int) Tokens.COMP_MENOR_IGUAL);
+		
 	}
 	
 	
 	
 	public int yylex(){
-		char c = fuente.charAt(pos);
-		buffer = "";
 		
+		char c ;
+		buffer = "";
+		Token token=null;
 		for (int estado = 0; (estado != FINAL) && (estado != ERROR);){
+			if(pos>=fuente.length()) //poniendo este chequeo aca evita que salten excepciones y permite que devuelva el token de error, indicando que el token que aparecio no es valido
+				return -1;
+			c = fuente.charAt(pos++);
 			int columna = equivalencia(c);
 			int proximoEstado = matrizTransicionEstados[estado][columna];
-			Token token = matrizAccionesSemanticas[estado][columna].ejecutar(this, c);
+			if(matrizAccionesSemanticas[estado][columna]!=null)
+				token = matrizAccionesSemanticas[estado][columna].ejecutar(this, c);
 			
-			pos++; //ver si queda esto
-			c = fuente.charAt(pos);
+			
 			estado = proximoEstado;
 		
 		
-		if (estado == FINAL)
-			return token.tipoDeToken;
+		if (estado == FINAL) {
+			
+			return (token!=null)? token.tipoDeToken:-1;
+			
+			}
 		}
 		return -1;
 	}
@@ -171,8 +183,9 @@ public class AnalizadorLexico {
 			return 24;
 		if ((int)c == 9)  //tab
 			return 25;
-		if ((int)c == 10) //salto de linea
+		if ((int)c == 10) //salto de linea,\n. Si el programa tiene \r\n, se debe reemplazar con String.replaceAll
 			return 26;
+		
 		return ERROR;
 	}
 	
