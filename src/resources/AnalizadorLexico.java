@@ -17,18 +17,19 @@ public class AnalizadorLexico {
 	static final AccionSemantica7 AS7 = new AccionSemantica7();
 	static final AccionSemantica8 AS8 = new AccionSemantica8();
 	static final AccionSemantica9 AS9 = new AccionSemantica9();
-	
+	Set<String> palabrasReservadas;
 	String fuente;
-	public Hashtable<String , List<Object>> tablaSimbolos; 
+	Hashtable<String, List<Object>> TS;
+
 	
 	//no descartar definir una interfaz llamada Symbol 
 	//List Object va a estar conformada por... <tipoToken, Lexema> <String, valor concreto (Character, Integer)>
 	public Hashtable<String,Integer> mapeoTipoTokens; //por ejemplo, ID 50, CTE 60. IF 20. Son distintos a los que hay en equivalencia. Repensar
 	
-	Set<String> palabrasReservadas;
 	
 	
-	static final int[][] matrizTransicionEstados = {
+	
+	static final short[][] matrizTransicionEstados = {
 		/* 0*/	{ERROR,     10,      3,     10,     10,     10,      1,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,      6,      7,      8,      9,     12,     11,      0,      0,      0},
 		/* 1*/	{    2,      2,      2,      2,      2,      2,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR,  ERROR},
 		/* 2*/	{    2,      2,      2,      2,      2,      2,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL},
@@ -65,13 +66,14 @@ public class AnalizadorLexico {
 	
 	
 	
-	public AnalizadorLexico(String programa){ //se agrega tabla de simbolos a los parametros?
-		pos = 0;
+	public AnalizadorLexico(String programa, Hashtable<String, List<Object>> tablaSimbolos){
 		fuente = programa;
-		tablaSimbolos= new Hashtable<>();
-		mapeoTipoTokens= new Hashtable<>();
+		TS = tablaSimbolos;
 		
+		pos = 0;
+		mapeoTipoTokens= new Hashtable<>();
 		palabrasReservadas = new HashSet<>();
+		
 		palabrasReservadas.add("if");
 		palabrasReservadas.add("else");
 		palabrasReservadas.add("end_if");
@@ -83,21 +85,21 @@ public class AnalizadorLexico {
 		palabrasReservadas.add("fun");
 		palabrasReservadas.add("return");
 		
-		mapeoTipoTokens.put("if",(int) Tokens.IF);
-		mapeoTipoTokens.put("else",(int) Tokens.ELSE);
-		mapeoTipoTokens.put("end_if",(int) Tokens.END_IF);
-		mapeoTipoTokens.put("print",(int) Tokens.PRINT);
-		mapeoTipoTokens.put("integer",(int) Tokens.INTEGER);
-		mapeoTipoTokens.put("uslinteger",(int) Tokens.USLINTEGER);
-		mapeoTipoTokens.put("while",(int) Tokens.WHILE);
-		mapeoTipoTokens.put("void",(int) Tokens.VOID);
-		mapeoTipoTokens.put("fun",(int) Tokens.FUN);
-		mapeoTipoTokens.put("return",(int) Tokens.RETURN);
+		mapeoTipoTokens.put("if",(int) Token.IF);
+		mapeoTipoTokens.put("else",(int) Token.ELSE);
+		mapeoTipoTokens.put("end_if",(int) Token.END_IF);
+		mapeoTipoTokens.put("print",(int) Token.PRINT);
+		mapeoTipoTokens.put("integer",(int) Token.INTEGER);
+		mapeoTipoTokens.put("uslinteger",(int) Token.USLINTEGER);
+		mapeoTipoTokens.put("while",(int) Token.WHILE);
+		mapeoTipoTokens.put("void",(int) Token.VOID);
+		mapeoTipoTokens.put("fun",(int) Token.FUN);
+		mapeoTipoTokens.put("return",(int) Token.RETURN);
 		
-		mapeoTipoTokens.put(":=",(int) Tokens.ASIGN);
-		mapeoTipoTokens.put("!=",(int) Tokens.COMP_DISTINTO);
-		mapeoTipoTokens.put(">=",(int) Tokens.COMP_MAYOR_IGUAL);
-		mapeoTipoTokens.put("<=",(int) Tokens.COMP_MENOR_IGUAL);
+		mapeoTipoTokens.put(":=",(int) Token.ASIGN);
+		mapeoTipoTokens.put("!=",(int) Token.COMP_DISTINTO);
+		mapeoTipoTokens.put(">=",(int) Token.COMP_MAYOR_IGUAL);
+		mapeoTipoTokens.put("<=",(int) Token.COMP_MENOR_IGUAL);
 		
 	}
 	
@@ -105,27 +107,28 @@ public class AnalizadorLexico {
 	
 	public int yylex(){
 		
-		char c ;
-		buffer = "";
+		char c;
+		buffer = ""; //se resetea el buffer cada vez que se va a leer un token
 		Token token=null;
+		
 		for (int estado = 0; (estado != FINAL) && (estado != ERROR);){
-			if(pos>=fuente.length()) //poniendo este chequeo aca evita que salten excepciones y permite que devuelva el token de error, indicando que el token que aparecio no es valido
-				return -1;
-			c = fuente.charAt(pos++);
-			int columna = equivalencia(c);
-			int proximoEstado = matrizTransicionEstados[estado][columna];
+			if (pos >= fuente.length()) 
+				return -1;				/*poniendo este chequeo aca evita que salten excepciones y permite 
+										 * que devuelva el token de error, indicando que el token que aparecio 
+										 * no es valido
+				*/
+			
+			c = fuente.charAt(pos++); // se lee el proximo caracter y se aumenta pos
+			
+			int columna = equivalencia(c); //se obtiene la columna de la matriz a partir del caracter leido
 			if(matrizAccionesSemanticas[estado][columna]!=null)
-				token = matrizAccionesSemanticas[estado][columna].ejecutar(this, c);
+				token = matrizAccionesSemanticas[estado][columna].ejecutar(this, c); //se ejecuta la AS
 			
-			
-			estado = proximoEstado;
+			estado = matrizTransicionEstados[estado][columna]; //y se pasa al proximo estado
 		
 		
-		if (estado == FINAL) {
-			
+		if (estado == FINAL) 
 			return (token!=null)? token.tipoDeToken:-1;
-			
-			}
 		}
 		return -1;
 	}
@@ -205,7 +208,7 @@ public class AnalizadorLexico {
 			nuevosAtributos.add(o);
 			
 		}
-		this.tablaSimbolos.put(clave, nuevosAtributos);
+		this.TS.put(clave, nuevosAtributos);
 	}
 	
 	public void inicializarBuffer(){
@@ -214,7 +217,10 @@ public class AnalizadorLexico {
 	
 	public int ASCIIToken(char c) {
 		return (int) c;
-		
+	}
+	
+	public boolean finDePrograma(){
+		return pos >= fuente.length();
 	}
 	
 }

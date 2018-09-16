@@ -23,17 +23,17 @@ public class AccionSemantica5 implements AccionSemantica{
 			if (valorCte< minValor || valorCte> maxValor ) { //chequeo de rangos
 				valorCte=maxValor; //tecnica de reemplazo
 				claveTS=valorCte+"_ul"; //esto es tricky, si reemplace el valor, debo crear una nueva clave, asi evito usar claves que nunca voy a acceder.
-				System.out.println("Warning: Reemplazo de valor en linea: " + AL.nroLinea);
+				System.out.println("Warning: constante fuera de rango. Reemplazo en línea: " + AL.nroLinea);
 			}
 			
-			if(!AL.tablaSimbolos.containsKey(claveTS)) { 
+			if(!AL.TS.containsKey(claveTS)) { 
 				
 				AL.altaEnTablaSimbolos(claveTS, "CTE_USLINTEGER",valorCte);
 
 				
 			}
 				
-			devuelto= new Token(Tokens.CTE_USLINTEGER,claveTS); 
+			devuelto= new Token(Token.CTE_USLINTEGER,claveTS); 
 			//si no existia, se creo antes, si existia devuelvo el TIPO DE TOKEN y su clave de acceso a la tabla de simbolos
 			//Se incrementa para que se pueda hacer otra entrada a la TablaSimbolos con otra clave
 			
