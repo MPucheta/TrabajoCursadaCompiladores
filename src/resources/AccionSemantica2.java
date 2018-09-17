@@ -8,11 +8,11 @@ public class AccionSemantica2 implements AccionSemantica{
 		String cadena = AL.buffer;
 		String claveTS = "'" + AL.buffer + "'"; 
 		
-		if(!AL.tablaSimbolos.containsKey(claveTS)) 
+		if(!AL.TS.containsKey(claveTS)) 
 			AL.altaEnTablaSimbolos(claveTS,"CADENA_CARACTERES",cadena);
 		
 		
-		return new Token(Tokens.CADENA_CARACTERES, claveTS);
+		return new Token(Token.CADENA_CARACTERES, claveTS);
 		
 	}
 	

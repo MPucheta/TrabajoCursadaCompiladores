@@ -18,7 +18,7 @@ public class ArchivoTexto {
 		*/
 		
 		File dir=new File(nombreArchivo);
-		System.out.println("Cargando archivo "+ dir.getCanonicalPath()  );
+		System.out.println("Cargando archivo "+ dir.getCanonicalPath() +"\n" );
 		this.cargarArchivo(dir);
 	}
 	
@@ -91,6 +91,17 @@ public class ArchivoTexto {
 		
 		
 	}
+	
+	public String leerArchivo(){
+		String salida = "";
+		Iterator<Character> it= this.getIterator();
+		while(it.hasNext()) {
+				salida += it.next();
+		}
+		return salida;
+	}
+	
+	
 	public static void main(String[] args) {
 		
 		try {
