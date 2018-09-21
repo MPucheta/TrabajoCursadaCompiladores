@@ -1,2 +1,6 @@
--32768_i;
-32767_i;
+
+_test:=32760_i,
+_test2:=40000_i,
+if (_test1 < _test2)
+	_test2:=666_i,
+end_if

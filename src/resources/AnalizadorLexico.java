@@ -113,7 +113,7 @@ public class AnalizadorLexico {
 		
 		for (int estado = 0; (estado != FINAL) && (estado != ERROR);){
 			if (pos >= fuente.length()) 
-				return -1;				/*poniendo este chequeo aca evita que salten excepciones y permite 
+				return 0;				/*poniendo este chequeo aca evita que salten excepciones y permite 
 										 * que devuelva el token de error, indicando que el token que aparecio 
 										 * no es valido
 				*/
@@ -130,7 +130,7 @@ public class AnalizadorLexico {
 		if (estado == FINAL) 
 			return (token!=null)? token.tipoDeToken:-1;
 		}
-		return -1;
+		return 0;
 	}
 	
 	private int equivalencia(char c){

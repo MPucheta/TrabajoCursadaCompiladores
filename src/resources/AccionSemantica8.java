@@ -6,7 +6,7 @@ public class AccionSemantica8 implements AccionSemantica {
 	
 	public Token ejecutar(AnalizadorLexico AL, char nuevoChar) {
 		AL.pos--;
-		return new Token(AL.mapeoTipoTokens.get(AL.buffer), null);
+		return new Token(AL.ASCIIToken(AL.buffer.toCharArray()[0]), null);
 	}
 
 }
