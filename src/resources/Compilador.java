@@ -20,7 +20,7 @@ public class Compilador {
 	public static void main(String[] args) {
 		ArchivoTexto fuente=null;
 		try {
-			fuente = new ArchivoTexto("CasosDePrueba\\TP1_10.txt");
+			fuente = new ArchivoTexto("CasosDePrueba\\TP1_1.txt");
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
 			e.printStackTrace();
@@ -35,12 +35,17 @@ public class Compilador {
 		AL = new AnalizadorLexico(programa, tablaSimbolos);
 		
 		int finToken=0;
+		
+		Parser parser= new Parser(AL);
+		parser.run();
+		
+		/*
 		while (!AL.finDePrograma()) {
 			finToken=AL.yylex();
 			if(finToken!=-1)
 				System.out.println(Token.tipoToken(finToken));
 		}
-		
+		*/
 		TestCompilador.imprimirTablaSimbolos(tablaSimbolos);
 		
 	}
