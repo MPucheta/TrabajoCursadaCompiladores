@@ -5,7 +5,7 @@ _var := 123_i + 150_i, #comentario
 
 _var := 124_ul
 #
-_var2 123_ul,
+_var2:=123_ul,
 if (_var <= _var2)
 {_var:= _var+33333_i,
 }
