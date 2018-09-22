@@ -14,7 +14,7 @@ public class AccionSemantica4 implements AccionSemantica {
 	 * @see resources.AccionSemantica#ejecutar(resources.AnalizadorLexico, char)
 	 */
 	private int minValor=-32768;
-	private int maxValor=32767;
+	private int maxValor=32768;
 	public Token ejecutar(AnalizadorLexico AL, char nuevoChar) {
 		
 		String cte=AL.buffer; 
@@ -28,7 +28,7 @@ public class AccionSemantica4 implements AccionSemantica {
 		if(valorCte< minValor || valorCte> maxValor ) { //chequeo de rangos
 			valorCte=maxValor; //tecnica de reemplazo
 			claveTS=valorCte+"_i"; //esto es tricky, si reemplace el valor, debo crear una nueva clave, asi evito usar claves que nunca voy a acceder.
-			System.out.println("Warning: constante fuera de rango. Reemplazo en línea: " + AL.nroLinea);
+			System.out.println("Warning: constante fuera de rango. Reemplazo en lÃ­nea: " + AL.nroLinea);
 		}
 		
 		if(!AL.TS.containsKey(claveTS)) {
