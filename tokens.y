@@ -1,9 +1,11 @@
 
 %{
+package resources;
 import java.lang.Math;
 import java.io.*;
 import java.util.StringTokenizer;
-import resources.*;
+
+
 %}
 
 /* YACC Declarations */
@@ -24,18 +26,21 @@ conjunto_sentencias	:	sentencia
 sentencia 	: 	declarativa
 		| 	ejecutable
 		;
-ejecutable 	: 	IF '(' condicion ')' bloque_sentencias END_IF
-		|	IF '(' condicion ')' bloque_sentencias ELSE bloque_sentencias END_IF
-		| 	WHILE '(' condicion ')' bloque_sentencias ','
-		|	asignacion
+
+
+ejecutable 	: 	IF '(' condicion ')' bloque_sentencias END_IF	{agregarEstructuraDetectada("Sentencia if");}
+		|	IF '(' condicion ')' bloque_sentencias ELSE bloque_sentencias END_IF	{agregarEstructuraDetectada("Sentencia if-else");}
+		| 	WHILE '(' condicion ')' bloque_sentencias {agregarEstructuraDetectada("Sentencia while");}
+		|	asignacion	{agregarEstructuraDetectada("Asignacion");}
 		|	PRINT '(' CADENA_CARACTERES ')' ','
 		|	ID '(' ')' ','
 		;
 
-declarativa 	: 	tipo_variable lista_variables ','
-		|	tipo_closure	lista_variables ','
-		|	declaracion_closure
-		|	declaracion_funcion_simple
+
+declarativa 	: 	tipo_variable lista_variables ','	{agregarEstructuraDetectada("Declaracion variable");}
+		|	tipo_closure	lista_variables ','	{agregarEstructuraDetectada("Declaracion variable closure");}
+		|	declaracion_closure			{agregarEstructuraDetectada("Closure");}
+		|	declaracion_funcion_simple		{agregarEstructuraDetectada("Funcion simple");}
 		;
 
 tipo_variable	: 	INTEGER
@@ -47,6 +52,9 @@ tipo_closure	:	FUN
 
 declaracion_closure			: 	tipo_closure ID '(' ')' '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}' 
 					; 
+
+
+					;
 
 declaracion_funcion_simple	:	VOID ID '(' ')' '{' conjunto_sentencias  '}' 
 					;
@@ -63,7 +71,7 @@ lista_variables	:	ID
 
 
 bloque_sentencias 	:	ejecutable
-| 	bloque_sentencias ejecutable
+| 	'{' bloque_sentencias ejecutable '}'
 ; 
 condicion	:	expr '=' expr
 		|	expr '<' expr
@@ -91,17 +99,40 @@ factor		: 	ID
 		| 	'-' CTE_USLINTEGER
 		;
 
-asignacion	:	ID ASIGN expr ','
-		|	ID ASIGN ID '(' ')' ','
+asignacion	:	ID ASIGN expr ','	
+		|	ID ASIGN ID '(' ')' ','	
 		;
 
 
 %%
 
-AnalizadorLexico AL = new AnalizadorLexico();
-int yylex(){
-	System.out.println(AL.yylex());
 
+AnalizadorLexico AL = null;
+String estructurasGramaticalesDetectadas="";
+int yylex(){
+	int result=AL.yylex();
+	System.out.println("Linea: " + AL.nroLinea + " Token leido: " + result + " designado como: " + Token.tipoToken(result) );
+	return result;
 
 }
 
+void yyerror(String s)
+{
+ System.out.println("En linea: " + AL.nroLinea + ". Ocurrio un error de parsing " + s);
+}
+
+public Parser(AnalizadorLexico AL)
+
+{
+	this.AL=AL;
+  
+}
+
+public String getEstructurasGramaticalesDetectadas(){
+	return this.estructurasGramaticalesDetectadas;
+}
+
+private void agregarEstructuraDetectada(String tipo){
+	this.estructurasGramaticalesDetectadas=this.estructurasGramaticalesDetectadas + " " + tipo + " en linea " + AL.nroLinea + "\n";
+
+}
