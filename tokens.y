@@ -71,7 +71,8 @@ lista_variables	:	ID
 
 
 bloque_sentencias 	:	ejecutable
-			| 	'{' bloque_sentencias '}'
+			|	'{' ejecutable '}'
+			| 	'{' bloque_sentencias ejecutable'}'
 			; 
 condicion	:	expr '=' expr
 		|	expr '<' expr
