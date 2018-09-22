@@ -112,8 +112,10 @@ public class AnalizadorLexico {
 		Token token=null;
 		
 		for (int estado = 0; (estado != FINAL) && (estado != ERROR);){
-			if (pos >= fuente.length()) 
-				return 0;				/*poniendo este chequeo aca evita que salten excepciones y permite 
+				if (pos >= fuente.length()) {
+					return 0;	
+				}
+				/*poniendo este chequeo aca evita que salten excepciones y permite 
 										 * que devuelva el token de error, indicando que el token que aparecio 
 										 * no es valido
 				*/
@@ -128,7 +130,7 @@ public class AnalizadorLexico {
 		
 		
 		if (estado == FINAL) 
-			return (token!=null)? token.tipoDeToken:-1;
+			return (token!=null)? token.tipoDeToken:0;
 		}
 		return 0;
 	}

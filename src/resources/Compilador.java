@@ -20,7 +20,7 @@ public class Compilador {
 	public static void main(String[] args) {
 		ArchivoTexto fuente=null;
 		try {
-			fuente = new ArchivoTexto("CasosDePrueba\\TP1_1.txt");
+			fuente = new ArchivoTexto("CasosDePrueba\\TP1_10.txt");
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
 			e.printStackTrace();
@@ -30,19 +30,23 @@ public class Compilador {
 		//ESTO ES MUY IMPORTANTE, windows introduce \r\n al momento del linebreak
 		//lo que puede introducir problemas ya que uno programa para el salto de linea general \n
 		programa = programa.replaceAll("\r\n" , "\n"); 
+		programa+="\n"; //esto es un arreglo medio trucho. 
+		//La cuestion es que cuando alguien escribe un programa valido el ultimo token puede no ser detectado si no agrega un salto de linea
+		//esto es basicamente porque el grafo espera algo distinto a una letra o '_' para terminar el token de palabra reservada
+		//es decir, nunca se devuelve un token (o se devuelve 0) ya que el ultimo token valido se detecta como si estuviera
+		// cortado por la mitad
 		
-		//System.out.println(programa);
 		AL = new AnalizadorLexico(programa, tablaSimbolos);
 		
 		int finToken=0;
 		
 		Parser parser= new Parser(AL);
 		parser.run();
-		
+		System.out.println("detectado \n" + parser.estructurasGramaticalesDetectadas);
 		/*
 		while (!AL.finDePrograma()) {
 			finToken=AL.yylex();
-			if(finToken!=-1)
+			if(finToken!=0)
 				System.out.println(Token.tipoToken(finToken));
 		}
 		*/
