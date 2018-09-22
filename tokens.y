@@ -28,26 +28,26 @@ sentencia 	: 	declarativa
 		;
 
 
-ejecutable 	: 	IF '(' condicion ')' bloque_sentencias END_IF	{agregarEstructuraDetectada("Sentencia if");}
-		|	IF '(' condicion ')' bloque_sentencias ELSE bloque_sentencias END_IF	{agregarEstructuraDetectada("Sentencia if-else");}
-		| 	WHILE '(' condicion ')' bloque_sentencias {agregarEstructuraDetectada("Sentencia while");}
+ejecutable 	: 	IF '(' condicion ')' bloque_sentencias END_IF	
+		| 	IF '(' condicion ')' bloque_sentencias ELSE bloque_sentencias END_IF 	
+		|	WHILE '(' condicion ')' bloque_sentencias 
 		|	asignacion	{agregarEstructuraDetectada("Asignacion");}
 		|	PRINT '(' CADENA_CARACTERES ')' ','
-		|	ID '(' ')' ','
+		|	ID '(' ')' ','	{agregarEstructuraDetectada("Invocacion funcion");}
 		;
 
 
 declarativa 	: 	tipo_variable lista_variables ','	{agregarEstructuraDetectada("Declaracion variable");}
-		|	tipo_closure	lista_variables ','	{agregarEstructuraDetectada("Declaracion variable closure");}
-		|	declaracion_closure			{agregarEstructuraDetectada("Closure");}
-		|	declaracion_funcion_simple		{agregarEstructuraDetectada("Funcion simple");}
+		|	tipo_closure	lista_variables ','	
+		|	declaracion_closure			
+		|	declaracion_funcion_simple		
 		;
 
 tipo_variable	: 	INTEGER
 		| 	USLINTEGER
 		;
 
-tipo_closure	:	FUN
+tipo_closure	:	FUN	{agregarEstructuraDetectada("Declaracion de tipo closure");}
 		;
 
 declaracion_closure			: 	tipo_closure ID '(' ')' '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}' 
@@ -110,8 +110,16 @@ asignacion	:	ID ASIGN expr ','
 
 AnalizadorLexico AL = null;
 String estructurasGramaticalesDetectadas="";
+
+
 int yylex(){
 	int result=AL.yylex();
+	//la siguiente condicion se debe hacer porque estas estructuras (ej, if, while) ocupan varias lineas de texto
+	//por lo que cuando el parsing detecta finalmente que un if termina en un end_if, el AL.nroLinea ya avanzo.
+	//Por lo tanto sin esto el nroLinea mostrado seria el del fin de la estructura y no del comienzo
+	if(result==Token.IF || result ==Token.WHILE){
+		agregarEstructuraDetectada("Sentencia " + Token.tipoToken(result));
+	}
 	System.out.println("Linea: " + AL.nroLinea + " Token leido: " + result + " designado como: " + Token.tipoToken(result) );
 	return result;
 
