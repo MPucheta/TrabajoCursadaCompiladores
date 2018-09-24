@@ -23,7 +23,7 @@ public class AccionSemantica5 implements AccionSemantica{
 			if (valorCte< minValor || valorCte> maxValor ) { //chequeo de rangos
 				valorCte=maxValor; //tecnica de reemplazo
 				claveTS=valorCte+"_ul"; //esto es tricky, si reemplace el valor, debo crear una nueva clave, asi evito usar claves que nunca voy a acceder.
-				System.out.println("Warning: constante fuera de rango. Reemplazo en línea: " + AL.nroLinea);
+				AL.agregarError("Warning: constante uslinteger fuera de rango. Reemplazo en línea: " + AL.nroLinea);
 			}
 			
 			if(!AL.TS.containsKey(claveTS)) { 

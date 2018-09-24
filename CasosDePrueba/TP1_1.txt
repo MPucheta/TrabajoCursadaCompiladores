@@ -1,2 +1,9 @@
--32768_i;
-32767_i;
+if(123_i>0_i)
+	_test3:=123_i,
+end_if
+_test:=32760_i,
+
+_test2:=40000_i,
+if (_test1 < _test2)
+	_test2:=666_i,
+end_if

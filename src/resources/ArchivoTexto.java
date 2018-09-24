@@ -1,15 +1,16 @@
 package resources;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Iterator;
+import java.util.List;
+
+
 
 public class ArchivoTexto {
-	
+	//si se manda un string al constructor se asume que es un archivo de lectura
+	//si no se manda nada se asume que el archivo es de salida
 	BufferedReader br;
+	private static final String windowsLineSeparator="\r\n"; //esto es mas que nada para documentar. Los strings debieran tener esto en vez de \n si quiero escribir varias lineas
 	
 	public ArchivoTexto(String nombreArchivo) throws IOException{
 		/*File dir = new File(".");
@@ -20,8 +21,36 @@ public class ArchivoTexto {
 		File dir=new File(nombreArchivo);
 		System.out.println("Cargando archivo "+ dir.getCanonicalPath() +"\n" );
 		this.cargarArchivo(dir);
+		
+	
 	}
 	
+	
+	
+	public static void escribirEnDisco(String dir,String contenido)throws IOException  {
+		contenido=contenido.replace("\n", windowsLineSeparator);
+		BufferedWriter out;
+		
+		out = new BufferedWriter(new PrintWriter(dir));
+		out.write(contenido);
+		out.close();
+		
+	
+		
+	}
+	public static void escribirEnDisco(String dir,List<String> contenido) throws IOException {
+		BufferedWriter out;
+		out = new BufferedWriter(new PrintWriter(dir));
+		for(String s: contenido) {
+			s=s.replace("\n", windowsLineSeparator);
+			out.write(s);
+		}
+		
+		
+		out.close();
+	
+		
+	}
 	public void cargarArchivo(File fin) throws IOException {
 		FileInputStream fis = new FileInputStream(fin);
 		br = new BufferedReader(new InputStreamReader(fis));
@@ -102,12 +131,14 @@ public class ArchivoTexto {
 	}
 	
 	
+	
+	
 	public static void main(String[] args) {
 		
 		try {
 		
 			ArchivoTexto test= new ArchivoTexto("test.txt");
-			
+			/*
 			Iterator<Character> it= test.getIterator();
 			String aux="";
 			while(it.hasNext()) {
@@ -116,7 +147,10 @@ public class ArchivoTexto {
 				
 				
 				
-			}
+			}*/
+			String aux= "testing out ouput \n lets see if it works";
+			
+			ArchivoTexto.escribirEnDisco("test.txt",aux);
 			
 			System.out.print(aux);
 			
