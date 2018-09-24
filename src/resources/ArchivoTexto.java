@@ -2,6 +2,7 @@ package resources;
 
 import java.io.*;
 import java.util.Iterator;
+import java.util.List;
 
 
 
@@ -26,17 +27,27 @@ public class ArchivoTexto {
 	
 	
 	
-	public static void escribirEnDisco(String dir,String contenido) {
+	public static void escribirEnDisco(String dir,String contenido)throws IOException  {
 		contenido=contenido.replace("\n", windowsLineSeparator);
 		BufferedWriter out;
-		try {
-			out = new BufferedWriter(new PrintWriter(dir));
-			out.write(contenido);
-			out.close();
-		} catch (Exception e) {
 		
-			e.printStackTrace();
+		out = new BufferedWriter(new PrintWriter(dir));
+		out.write(contenido);
+		out.close();
+		
+	
+		
+	}
+	public static void escribirEnDisco(String dir,List<String> contenido) throws IOException {
+		BufferedWriter out;
+		out = new BufferedWriter(new PrintWriter(dir));
+		for(String s: contenido) {
+			s=s.replace("\n", windowsLineSeparator);
+			out.write(s);
 		}
+		
+		
+		out.close();
 	
 		
 	}

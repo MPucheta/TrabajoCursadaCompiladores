@@ -15,12 +15,15 @@ public class Compilador {
 	private static AnalizadorLexico AL;
 	
 		
+
 	
 	
 	public static void main(String[] args) {
 		ArchivoTexto fuente=null;
 		try {
-			fuente = new ArchivoTexto("CasosDePrueba\\TP1_11.txt");
+
+			fuente = new ArchivoTexto("CasosDePrueba\\TP2_2.txt");
+
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
 			e.printStackTrace();
@@ -39,21 +42,27 @@ public class Compilador {
 		AL = new AnalizadorLexico(programa, tablaSimbolos);
 		
 		int finToken=0;
-		/*
+		
 		Parser parser= new Parser(AL);
 		parser.run();
-		System.out.println("detectado \n" + parser.estructurasGramaticalesDetectadas);*/
+		System.out.println("detectado \n" + parser.estructurasGramaticalesDetectadas);
 		
-		while (!AL.finDePrograma()) {
-			finToken=AL.yylex();
-			if(finToken!=0)
-				System.out.println(Token.tipoToken(finToken) + "  "+AL.nroLinea);
+		
+		
+		TestCompilador.imprimirTablaSimbolos(tablaSimbolos);
+		try {
+			ArchivoTexto.escribirEnDisco("tokensLeidos.txt",parser.getTokensLeidos());
+			ArchivoTexto.escribirEnDisco("erroresEnParsing.txt",parser.getErrores());
+		} catch (IOException e) {
 			
+			e.printStackTrace();
 		}
 		
-		System.out.println("\nERRORES LEXICOS: \n");
-		System.out.println(AL.erroresLexicos());
-		//TestCompilador.imprimirTablaSimbolos(tablaSimbolos);
+		
+		System.out.println("errores \n" + parser.getErrores());
+		
+		
+
 		
 	}
 

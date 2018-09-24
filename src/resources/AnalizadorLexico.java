@@ -3,7 +3,7 @@ import java.util.*; //hash, list
 
 public class AnalizadorLexico {
 	public int pos = 0;
-	public int nroLinea = 1; //se comienza a leer el archivo desde la línea 1 
+	public int nroLinea = 1; //se comienza a leer el archivo desde la lÃ­nea 1 
 	public String buffer;
 	public int punteroTablaSimbolos = 0; //este se debe incrementar por cada entrada hecha en la tabla de simbolos 
 	static final int FINAL = 100;
@@ -44,7 +44,7 @@ public class AnalizadorLexico {
 		/*10*/	{FINAL,     10,  FINAL,     10,     10,     10,     10,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL,  FINAL},
 		/*11*/	{   11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,     11,      0,     11,     11,     11},
 		/*12*/	{   12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,     12,  FINAL,     12,     12,     12,  ERROR}
-		/*        letra   minus dígito       i       l       u       _       +	     -	     *	     /	     {	     }	     (	     )	     ;	     ,	     =	     :	      <	     >	     !	     '	     #	 blanco	    tab	    \n
+		/*        letra   minus dÃ­gito       i       l       u       _       +	     -	     *	     /	     {	     }	     (	     )	     ;	     ,	     =	     :	      <	     >	     !	     '	     #	 blanco	    tab	    \n
 		 */	};
 	
 	static final AccionSemantica[][] matrizAccionesSemanticas = {
@@ -61,7 +61,7 @@ public class AnalizadorLexico {
 			/*10*/	{  AS6,    AS3,    AS6,    AS3,    AS3,    AS3,    AS3,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6,    AS6},
 			/*11*/	{ null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,   null,    AS9},
 			/*12*/	{  AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS3,    AS2,    AS3,    AS3,    AS3,   null}
-			/*        letra   minus dígito       i       l       u       _       +	     -	     *	     /	     {	     }	     (	     )	     ;	     ,	     =	     :	      <	     >	     !	     '	     #	 blanco	    tab	    \n
+			/*        letra   minus dÃ­gito       i       l       u       _       +	     -	     *	     /	     {	     }	     (	     )	     ;	     ,	     =	     :	      <	     >	     !	     '	     #	 blanco	    tab	    \n
 			 */
 	};
 	
@@ -135,12 +135,13 @@ public class AnalizadorLexico {
 			if (estado == FINAL) 
 				return (token!=null)? token.tipoDeToken:0;
 		}
+
 		
-		
-		// si llega a este punto, se llegó a una situación de error por un caracter
+		// si llega a este punto, se llegÃ³ a una situaciÃ³n de error por un caracter
 		if (estadoAnterior != 0) // un error en el estado 0 es un caso especial, se tiene que saltear el caracter leido
-			pos--; //se vuelve atras para releer el caracter que dio originó el error
+			pos--; //se vuelve atras para releer el caracter que dio originÃ³ el error
 		this.agregarError(estadoAnterior);
+
 		return Token.YYERRCODE;
 	}
 	
@@ -155,7 +156,7 @@ public class AnalizadorLexico {
 			return 1;
 		if ((int)c >= 65 && (int)c <= 90) //otras letras 
 			return 0;
-		if ((int)c >= 48 && (int)c <= 57) //dígitos
+		if ((int)c >= 48 && (int)c <= 57) //dÃ­gitos
 			return 2;
 		if (c == '_')
 			return 6;
@@ -244,25 +245,25 @@ public class AnalizadorLexico {
 	public void agregarError(int estado){
 		switch(estado){
 			case 0:
-				erroresLexicos.add("Error: letra mayúscula no esperada. Línea: " + nroLinea);
+				erroresLexicos.add("Error: letra mayÃºscula no esperada. LÃ­nea: " + nroLinea);
 				break;
 			case 1:
-				erroresLexicos.add("Error: carácter inválido en identificador. Se espera letra o dígito. Línea: " + nroLinea);
+				erroresLexicos.add("Error: carÃ¡cter invÃ¡lido en identificador. Se espera letra o dÃ­gito. LÃ­nea: " + nroLinea);
 				break;
 			/* 
 			 * case 2: ESTADO SIN ERRORES POSIBLES
 				erroresLexicos.add();*/ 
 			case 3:
-				erroresLexicos.add("Error: carácter inválido en constante. Se espera dígito o sufijo luego de '" + buffer + "'. Línea: " + nroLinea);
+				erroresLexicos.add("Error: carÃ¡cter invÃ¡lido en constante. Se espera dÃ­gito o sufijo luego de '" + buffer + "'. LÃ­nea: " + nroLinea);
 				break;
 			case 4:
-				erroresLexicos.add("Error: carácter inválido en sufijo de constante. Se espera sufijo '_i' o '_ul'. Línea: " + nroLinea);
+				erroresLexicos.add("Error: carÃ¡cter invÃ¡lido en sufijo de constante. Se espera sufijo '_i' o '_ul'. LÃ­nea: " + nroLinea);
 				break;
 			case 5:
-				erroresLexicos.add("Error: carácter inválido en sufijo de constante. Se espera sufijo '_i' o '_ul'. Línea: " + nroLinea);
+				erroresLexicos.add("Error: carÃ¡cter invÃ¡lido en sufijo de constante. Se espera sufijo '_i' o '_ul'. LÃ­nea: " + nroLinea);
 				break;
 			case 6:
-				erroresLexicos.add("Error: se espera '=' luego de ':' para una asignación. Línea: " + nroLinea);
+				erroresLexicos.add("Error: se espera '=' luego de ':' para una asignaciÃ³n. LÃ­nea: " + nroLinea);
 				break;
 			/*
 			 * case 7: ESTADO SIN ERRORES POSIBLES
@@ -270,14 +271,14 @@ public class AnalizadorLexico {
 			   case 8: ESTADO SIN ERRORES POSIBLES
 				erroresLexicos.add(""); */
 			case 9:
-				erroresLexicos.add("Error: se espera '=' luego de '!' para el comparador NOT EQUAL. Línea: " + nroLinea);
+				erroresLexicos.add("Error: se espera '=' luego de '!' para el comparador NOT EQUAL. LÃ­nea: " + nroLinea);
 				break;
 			/*case 10: ESTADO SIN ERRORES POSIBLES
 				erroresLexicos.add("");
 			  case 11: ESTADO SIN ERRORES POSIBLES
 				erroresLexicos.add("");*/
 			case 12:
-				erroresLexicos.add("Error: las cadenas de caracteres no pueden contener saltos de línea. Línea: " + nroLinea);
+				erroresLexicos.add("Error: las cadenas de caracteres no pueden contener saltos de lÃ­nea. LÃ­nea: " + nroLinea);
 				break;
 		}
 		
