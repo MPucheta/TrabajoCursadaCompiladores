@@ -132,7 +132,7 @@ public class AnalizadorLexico {
 		if (estado == FINAL) 
 			return (token!=null)? token.tipoDeToken:0;
 		}
-		return 0;
+		return Token.YYERRCODE;
 	}
 	
 	private int equivalencia(char c){

@@ -15,12 +15,13 @@ public class Compilador {
 	private static AnalizadorLexico AL;
 	
 		
+
 	
 	
 	public static void main(String[] args) {
 		ArchivoTexto fuente=null;
 		try {
-			fuente = new ArchivoTexto("CasosDePrueba\\TP1_10.txt");
+			fuente = new ArchivoTexto("CasosDePrueba\\TP2_2.txt");
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
 			e.printStackTrace();
@@ -51,6 +52,18 @@ public class Compilador {
 		}
 		*/
 		TestCompilador.imprimirTablaSimbolos(tablaSimbolos);
+		try {
+			ArchivoTexto.escribirEnDisco("tokensLeidos.txt",parser.getTokensLeidos());
+			ArchivoTexto.escribirEnDisco("erroresEnParsing.txt",parser.getErrores());
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+		
+		
+		System.out.println("errores \n" + parser.getErrores());
+		
+		
 		
 	}
 
