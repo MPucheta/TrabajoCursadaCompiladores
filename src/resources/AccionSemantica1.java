@@ -18,7 +18,7 @@ public class AccionSemantica1 implements AccionSemantica {
 		AL.pos--; //volver un caracter de lectura hacia atras
 		
 		if(AL.buffer.length()>25) {
-			System.out.println("Error: un identificador solo puede tener hasta 25 caracteres de longitud. Línea: " + AL.nroLinea); 
+			AL.agregarError("Error: un identificador solo puede tener hasta 25 caracteres de longitud. Línea: " + AL.nroLinea); 
 			devuelto=new Token(-1,null); //token de error, ver de redefinir cualca
 		}
 		else {

@@ -1,8 +1,5 @@
 package resources;
 
-
-
-
 public class AccionSemantica4 implements AccionSemantica {
 	//esta accion semantica se define como:
 	/*
@@ -28,7 +25,7 @@ public class AccionSemantica4 implements AccionSemantica {
 		if(valorCte< minValor || valorCte> maxValor ) { //chequeo de rangos
 			valorCte=maxValor; //tecnica de reemplazo
 			claveTS=valorCte+"_i"; //esto es tricky, si reemplace el valor, debo crear una nueva clave, asi evito usar claves que nunca voy a acceder.
-			System.out.println("Warning: constante fuera de rango. Reemplazo en lÃ­nea: " + AL.nroLinea);
+			AL.agregarError("Warning: constante integer fuera de rango. Reemplazo en línea: " + AL.nroLinea);
 		}
 		
 		if(!AL.TS.containsKey(claveTS)) {

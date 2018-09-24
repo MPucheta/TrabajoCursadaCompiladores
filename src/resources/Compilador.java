@@ -21,7 +21,9 @@ public class Compilador {
 	public static void main(String[] args) {
 		ArchivoTexto fuente=null;
 		try {
+
 			fuente = new ArchivoTexto("CasosDePrueba\\TP2_2.txt");
+
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
 			e.printStackTrace();
@@ -44,13 +46,9 @@ public class Compilador {
 		Parser parser= new Parser(AL);
 		parser.run();
 		System.out.println("detectado \n" + parser.estructurasGramaticalesDetectadas);
-		/*
-		while (!AL.finDePrograma()) {
-			finToken=AL.yylex();
-			if(finToken!=0)
-				System.out.println(Token.tipoToken(finToken));
-		}
-		*/
+		
+		
+		
 		TestCompilador.imprimirTablaSimbolos(tablaSimbolos);
 		try {
 			ArchivoTexto.escribirEnDisco("tokensLeidos.txt",parser.getTokensLeidos());
@@ -64,6 +62,7 @@ public class Compilador {
 		System.out.println("errores \n" + parser.getErrores());
 		
 		
+
 		
 	}
 
