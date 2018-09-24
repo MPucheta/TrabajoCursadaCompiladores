@@ -20,7 +20,7 @@ public class Compilador {
 	public static void main(String[] args) {
 		ArchivoTexto fuente=null;
 		try {
-			fuente = new ArchivoTexto("CasosDePrueba\\TP1_10.txt");
+			fuente = new ArchivoTexto("CasosDePrueba\\TP1_11.txt");
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
 			e.printStackTrace();
@@ -39,18 +39,21 @@ public class Compilador {
 		AL = new AnalizadorLexico(programa, tablaSimbolos);
 		
 		int finToken=0;
-		
+		/*
 		Parser parser= new Parser(AL);
 		parser.run();
-		System.out.println("detectado \n" + parser.estructurasGramaticalesDetectadas);
-		/*
+		System.out.println("detectado \n" + parser.estructurasGramaticalesDetectadas);*/
+		
 		while (!AL.finDePrograma()) {
 			finToken=AL.yylex();
 			if(finToken!=0)
-				System.out.println(Token.tipoToken(finToken));
+				System.out.println(Token.tipoToken(finToken) + "  "+AL.nroLinea);
+			
 		}
-		*/
-		TestCompilador.imprimirTablaSimbolos(tablaSimbolos);
+		
+		System.out.println("\nERRORES LEXICOS: \n");
+		System.out.println(AL.erroresLexicos());
+		//TestCompilador.imprimirTablaSimbolos(tablaSimbolos);
 		
 	}
 

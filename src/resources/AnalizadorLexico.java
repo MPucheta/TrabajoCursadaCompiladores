@@ -19,6 +19,7 @@ public class AnalizadorLexico {
 	static final AccionSemantica9 AS9 = new AccionSemantica9();
 	Set<String> palabrasReservadas;
 	String fuente;
+	private List<String> erroresLexicos = new ArrayList<String>();
 	Hashtable<String, List<Object>> TS;
 
 	
@@ -110,10 +111,11 @@ public class AnalizadorLexico {
 		char c;
 		buffer = ""; //se resetea el buffer cada vez que se va a leer un token
 		Token token=null;
-		
-		for (int estado = 0; (estado != FINAL) && (estado != ERROR);){
+		int estado = 0;
+		int estadoAnterior = -1; //para errores
+		while (estado != ERROR){
 				if (pos >= fuente.length()) {
-					return 0;	
+					return 0;	//fin del programa
 				}
 				/*poniendo este chequeo aca evita que salten excepciones y permite 
 										 * que devuelva el token de error, indicando que el token que aparecio 
@@ -126,13 +128,20 @@ public class AnalizadorLexico {
 			if(matrizAccionesSemanticas[estado][columna]!=null)
 				token = matrizAccionesSemanticas[estado][columna].ejecutar(this, c); //se ejecuta la AS
 			
+			estadoAnterior = estado;
 			estado = matrizTransicionEstados[estado][columna]; //y se pasa al proximo estado
 		
 		
-		if (estado == FINAL) 
-			return (token!=null)? token.tipoDeToken:0;
+			if (estado == FINAL) 
+				return (token!=null)? token.tipoDeToken:0;
 		}
-		return 0;
+		
+		
+		// si llega a este punto, se llegó a una situación de error por un caracter
+		if (estadoAnterior != 0) // un error en el estado 0 es un caso especial, se tiene que saltear el caracter leido
+			pos--; //se vuelve atras para releer el caracter que dio originó el error
+		this.agregarError(estadoAnterior);
+		return Token.YYERRCODE;
 	}
 	
 	private int equivalencia(char c){
@@ -225,4 +234,55 @@ public class AnalizadorLexico {
 		return pos >= fuente.length();
 	}
 	
+	public String erroresLexicos(){
+		String salida = "";
+		for (String s: erroresLexicos)
+			salida += s + "\n";
+		return salida;
+	}
+	
+	public void agregarError(int estado){
+		switch(estado){
+			case 0:
+				erroresLexicos.add("Error: letra mayúscula no esperada. Línea: " + nroLinea);
+				break;
+			case 1:
+				erroresLexicos.add("Error: carácter inválido en identificador. Se espera letra o dígito. Línea: " + nroLinea);
+				break;
+			/* 
+			 * case 2: ESTADO SIN ERRORES POSIBLES
+				erroresLexicos.add();*/ 
+			case 3:
+				erroresLexicos.add("Error: carácter inválido en constante. Se espera dígito o sufijo luego de '" + buffer + "'. Línea: " + nroLinea);
+				break;
+			case 4:
+				erroresLexicos.add("Error: carácter inválido en sufijo de constante. Se espera sufijo '_i' o '_ul'. Línea: " + nroLinea);
+				break;
+			case 5:
+				erroresLexicos.add("Error: carácter inválido en sufijo de constante. Se espera sufijo '_i' o '_ul'. Línea: " + nroLinea);
+				break;
+			case 6:
+				erroresLexicos.add("Error: se espera '=' luego de ':' para una asignación. Línea: " + nroLinea);
+				break;
+			/*
+			 * case 7: ESTADO SIN ERRORES POSIBLES
+				erroresLexicos.add("");
+			   case 8: ESTADO SIN ERRORES POSIBLES
+				erroresLexicos.add(""); */
+			case 9:
+				erroresLexicos.add("Error: se espera '=' luego de '!' para el comparador NOT EQUAL. Línea: " + nroLinea);
+				break;
+			/*case 10: ESTADO SIN ERRORES POSIBLES
+				erroresLexicos.add("");
+			  case 11: ESTADO SIN ERRORES POSIBLES
+				erroresLexicos.add("");*/
+			case 12:
+				erroresLexicos.add("Error: las cadenas de caracteres no pueden contener saltos de línea. Línea: " + nroLinea);
+				break;
+		}
+		
+	}
+	public void agregarError(String error){
+		this.erroresLexicos.add(error);
+	}
 }
