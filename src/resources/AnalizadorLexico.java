@@ -133,7 +133,7 @@ public class AnalizadorLexico {
 		
 		
 			if (estado == FINAL) 
-				return token;
+				return (token==null)?(new Token(Token.YYERRCODE, "ERROR")):token;
 		}
 
 		

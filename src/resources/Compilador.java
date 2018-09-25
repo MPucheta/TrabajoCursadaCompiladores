@@ -2,6 +2,7 @@ package resources;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -20,9 +21,10 @@ public class Compilador {
 	
 	public static void main(String[] args) {
 		ArchivoTexto fuente=null;
+		
 		try {
 
-			fuente = new ArchivoTexto("CasosDePrueba\\TP2_3.txt");
+			fuente = new ArchivoTexto("CasosDePruebaTP2\\TP2_Custom1.txt");
 
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
@@ -52,14 +54,14 @@ public class Compilador {
 		TestCompilador.imprimirTablaSimbolos(tablaSimbolos);
 		try {
 			ArchivoTexto.escribirEnDisco("tokensLeidos.txt",parser.getTokensLeidos());
-			ArchivoTexto.escribirEnDisco("erroresEnParsing.txt",parser.getErrores());
+			ArchivoTexto.escribirEnDisco("erroresEnParsing.txt",parser.getErroresDetallados());
 		} catch (IOException e) {
 			
 			e.printStackTrace();
 		}
 		
 		
-		System.out.println("errores \n" + parser.getErrores());
+		System.out.println("errores \n" + parser.getErroresDetallados());
 		
 		
 
