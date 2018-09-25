@@ -1,6 +1,7 @@
 package resources;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -14,15 +15,14 @@ public class Compilador {
 	private static Hashtable<String , List<Object>> tablaSimbolos = new Hashtable<>(); 
 	private static AnalizadorLexico AL;
 	
-		
-
+	
 	
 	
 	public static void main(String[] args) {
 		ArchivoTexto fuente=null;
 		try {
 
-			fuente = new ArchivoTexto("CasosDePrueba\\TP2_2.txt");
+			fuente = new ArchivoTexto("CasosDePrueba\\TP2_3.txt");
 
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
@@ -43,7 +43,7 @@ public class Compilador {
 		
 		int finToken=0;
 		
-		Parser parser= new Parser(AL);
+		Parser parser= new Parser(AL, tablaSimbolos);
 		parser.run();
 		System.out.println("detectado \n" + parser.estructurasGramaticalesDetectadas);
 		
