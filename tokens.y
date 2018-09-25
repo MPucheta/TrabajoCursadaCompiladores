@@ -18,32 +18,33 @@ import java.util.*;
 %%
 
 
-programa 	: 	conjunto_sentencias
-
-		;
+programa 			: 	conjunto_sentencias
+							|		error conjunto_sentencias
+							;
 
 conjunto_sentencias	:	sentencia
-				|	conjunto_sentencias sentencia
-				;
+										|	conjunto_sentencias sentencia
+										;
 sentencia 	: 	declarativa
-		| 	ejecutable
-		|	error ','
-		;
+						| 	ejecutable
+						;
 
 
 
 ejecutable 	: 	sentencia_if
 		|	sentencia_while
-		|	asignacion	{agregarEstructuraDetectada("Asignacion");}
-		|	sentencia_impresion	{agregarEstructuraDetectada("Impresion");}
-		|	id_invocacion {agregarEstructuraDetectada("Invocacion funcion");}
+		|	asignacion 	{agregarEstructuraDetectada("Asignacion");}
+		|	sentencia_impresion
+		|	invocacion
 		;
 
-
+invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");}
+							id_invocacion error {agregarError("En linea: " + AL.nroLinea + " falta ','");}
+						;
 id_invocacion				:	ID '('')'
 										| ID '(' error	{agregarError("En linea: " + AL.nroLinea + " falta )");}
 										;
-sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','
+sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion");}
 										|	PRINT  cadena_cararacteres_entre_parentesis error {agregarError("En linea: " + AL.nroLinea + " falta ','");}
 										;
 
@@ -72,23 +73,26 @@ condicion_entre_parentesis	:	'(' condicion ')'
 
 
 
-declarativa 	: 	declaracion_variables	{agregarEstructuraDetectada("Declaracion variable");}
+declarativa 	: 	declaracion_variables
 		|	declaracion_closure
 		|	declaracion_funcion_simple
 		;
 
-declaracion_variables :	tipo_variable lista_variables ','
-											|	tipo_closure	lista_variables ','
+declaracion_variables :	tipo_variable lista_variables ','	{agregarEstructuraDetectada("Declaracion variable");}
+											|	tipo_closure	lista_variables ','	{agregarEstructuraDetectada("Declaracion de tipo closure");}
+											|	lista_variables ',' error {agregarError("En linea: " + (AL.nroLinea) + " Error en declaracion de tipo");}
+											| tipo_variable error {agregarError("En linea: " + (AL.nroLinea) + " Error en declaracion de tipo, falta ID o ',' ");}
+											| tipo_closure error {agregarError("En linea: " + (AL.nroLinea) + " Error en definicion de closure");}
 											;
 
 tipo_variable	: 	INTEGER
 							| 	USLINTEGER
 							;
 
-tipo_closure	:	FUN	{agregarEstructuraDetectada("Declaracion de tipo closure");}
+tipo_closure	:	FUN
 		;
 
-declaracion_closure			: 	tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}'
+declaracion_closure			: 	tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}' {agregarEstructuraDetectada("Declaracion de tipo closure");}
 												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' error {agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
 												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure error	{agregarError("En linea: " + (AL.nroLinea) + " falta ) ");}
 												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' error 	{agregarError("En linea: " + (AL.nroLinea) + " falta , ");}
@@ -105,6 +109,7 @@ declaracion_funcion_simple	:	VOID id_invocacion '{' conjunto_sentencias  '}'
 retorno_closure	: 	id_invocacion
 			| 	'{' conjunto_sentencias '}'
 			| 	'{' conjunto_sentencias error {agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
+			|		ID error {agregarError("En linea: " + (AL.nroLinea) + " Retorno no es de tipo closure, se espera ID()");}
 			;
 
 lista_variables		:	ID
@@ -141,32 +146,32 @@ term	 	: 	term '*' factor
 		| 	factor
 		;
 
-factor		: 	ID
-					| 	CTE_INTEGER				{List<Object> atts = tablaSimbolos.get($1.sval); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
-																 int valorInteger = (Integer) atts.get(1); //el valor en la posicion 1 es el número de la
-																 if (valorInteger > 32767) //si se pasa del limite positivo
+factor				:	 	ID
+							| 	CTE_INTEGER				{List<Object> atts = tablaSimbolos.get($1.sval); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
+																		 int valorInteger = (Integer) atts.get(1); //el valor en la posicion 1 es el número de la
+																		 if (valorInteger > 32767) //si se pasa del limite positivo
 
-																		if (!tablaSimbolos.containsKey("32767_i")){
+																				if (!tablaSimbolos.containsKey("32767_i")){
+																					List<Object> nuevosAtributos = new ArrayList<Object>();
+																					nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(32767);
+																					tablaSimbolos.put("32767_i", nuevosAtributos);
+																					agregarError("Warning: constante integer fuera de rango. Reemplazo en linea: " + AL.nroLinea);
+																				}
+																			}
+							|	CTE_USLINTEGER
+							| 	'-' CTE_INTEGER		{
+																		int valorInteger = (Integer) tablaSimbolos.get($2.sval).get(1);
+																		String nuevaClave = "-" + valorInteger + "_i";
+																		if (!tablaSimbolos.containsKey(nuevaClave)){
 																			List<Object> nuevosAtributos = new ArrayList<Object>();
-																			nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(32767);
-																			tablaSimbolos.put("32767_i", nuevosAtributos);
-																			agregarError("Warning: constante integer fuera de rango. Reemplazo en linea: " + AL.nroLinea);
+																			nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(new Integer(-valorInteger));
+																			tablaSimbolos.put(nuevaClave, nuevosAtributos);
+																			}
 																		}
-																	}
-					|	CTE_USLINTEGER
-					| 	'-' CTE_INTEGER		{
-																int valorInteger = (Integer) tablaSimbolos.get($2.sval).get(1);
-																String nuevaClave = "-" + valorInteger + "_i";
-																if (!tablaSimbolos.containsKey(nuevaClave)){
-																	List<Object> nuevosAtributos = new ArrayList<Object>();
-																	nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(new Integer(-valorInteger));
-																	tablaSimbolos.put(nuevaClave, nuevosAtributos);
-																	}
-																}
-					;
+							;
 
 asignacion	:	ID ASIGN r_value_asignacion ','
-						|	ID ASIGN r_value_asignacion error {agregarError("En linea: " + (AL.nroLinea) + " falta , ");}
+						|	ID ASIGN  error 	{agregarError("En linea: " + (AL.nroLinea) + " Error detectado de lado derecho de asignacion ");}
 						;
 r_value_asignacion:	expr
 									| id_invocacion
@@ -180,7 +185,8 @@ Hashtable<String, List<Object>> tablaSimbolos;
 AnalizadorLexico AL = null;
 List<String> estructurasGramaticalesDetectadas;
 List<String> tokensLeidos;
-List<String> errores;
+List<String> erroresDetallados;
+List<String> erroresGenerales;
 Token t;
 int ultimoTokenLeido;
 
@@ -202,7 +208,9 @@ int yylex(){
 
 void yyerror(String s)
 {
- System.out.println("En linea: " + AL.nroLinea + ". Ocurrio un error de parsing ( "  + s + " ) al leer el token " + Token.tipoToken(ultimoTokenLeido));
+	String err= "En linea: " + AL.nroLinea + ". Ocurrio un error de parsing ( "  + s + " ) al leer el token " + Token.tipoToken(ultimoTokenLeido) +"\n"; //tambien se puede usar yychar en vez de lo del ultimoTokenLeido
+	this.erroresGenerales.add(err);
+	System.out.println(err);
 }
 
 public Parser(AnalizadorLexico AL, Hashtable<String, List<Object>> tablaSimbolos)
@@ -211,7 +219,8 @@ public Parser(AnalizadorLexico AL, Hashtable<String, List<Object>> tablaSimbolos
 	//yydebug=true;
 	tokensLeidos=new ArrayList<>();
 	estructurasGramaticalesDetectadas=new ArrayList<>();
-	errores=new ArrayList<>();
+	erroresDetallados=new ArrayList<>();
+	erroresGenerales=new ArrayList<>();
 	this.AL=AL;
 	this.tablaSimbolos = tablaSimbolos;
 
@@ -223,11 +232,14 @@ public List<String> getEstructurasGramaticalesDetectadas(){
 public List<String> getTokensLeidos(){
 	return this.tokensLeidos;
 }
-public List<String> getErrores(){
-	return this.errores;
+public List<String> getErroresDetallados(){
+	return this.erroresDetallados;
+}
+public List<String> getErroresGenerales(){
+	return this.erroresGenerales;
 }
 private void agregarError(String e){
-	errores.add(e+"\n");
+	erroresDetallados.add(e+"\n");
 }
 private void agregarEstructuraDetectada(String tipo){
 	String toAdd=tipo + " en linea " + AL.nroLinea + "\n";
