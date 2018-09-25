@@ -1,0 +1,18 @@
+integer _var;_var2,
+integer
+
+_var := 123_i + 150_i, 
+_var2 := 2_i
+if (_var <= _var2)
+_var:= _var+33333_i,
+}
+else _var2 := _var2+20_ul,
+
+integer _var4,
+#
+while (_var3 = 5_ul) {
+	print('_var3 = 5'),
+}
+#
+print('Fin de programa')
+_var2:=_var1(),

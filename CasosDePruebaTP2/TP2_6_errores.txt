@@ -1,0 +1,9 @@
+integer _aux,
+
+#con error que falta end_if#
+
+if(2_i >= 1_i)
+	_aux:=2_i,
+else
+	_aux:=1_i,
+

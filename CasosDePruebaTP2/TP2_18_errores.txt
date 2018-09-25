@@ -1,0 +1,6 @@
+#en una le falta el parentesis ) y al otro el tipo no es el correcto para la conversion#
+
+integer _conversion,
+
+_conversion := uslinteger (2_i + 3_i,
+_conversion := integer (2_ul + 3_ul),

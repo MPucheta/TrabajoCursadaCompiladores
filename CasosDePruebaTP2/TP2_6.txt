@@ -1,0 +1,7 @@
+integer _aux,
+if(2_i >= 1_i)
+	_aux:=2_i,
+else
+	_aux:=1_i,
+end_if
+

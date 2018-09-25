@@ -1,0 +1,6 @@
+integer _var3,
+
+# con error, falta de ) #
+
+while (_var3 = 5_ul 
+	print('_var3 = 5'),

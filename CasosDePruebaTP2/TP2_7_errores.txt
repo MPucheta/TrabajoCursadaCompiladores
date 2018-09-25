@@ -1,0 +1,10 @@
+integer _aux,
+
+#con error que falta condicion, lo siguiente solo es una expresion#
+
+if(2_i)
+	_aux:=2_i,
+else
+	_aux:=1_i,
+end_if
+

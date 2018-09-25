@@ -1,0 +1,7 @@
+integer _aux,
+if(2_i + _aux = 1_i+4_i)
+	_aux:=2_i,
+else
+	_aux:=1_i+3_i,
+end_if
+

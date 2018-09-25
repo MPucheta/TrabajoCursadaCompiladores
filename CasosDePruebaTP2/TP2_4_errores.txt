@@ -1,0 +1,9 @@
+#con error que falta end_if#
+
+if(2_i >= 1_i)
+	_aux:=2_i,
+
+#con error que falta ) #
+if(2_i >= 1_i
+	_aux:=2_i,
+end_if
