@@ -1,0 +1,3 @@
+_var1 := -42769_i,
+_var2:= -5_i,
+print('cadena'),
