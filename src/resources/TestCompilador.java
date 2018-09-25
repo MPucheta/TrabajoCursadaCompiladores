@@ -35,7 +35,7 @@ public class TestCompilador {
 		casosPruebaTP2conErrores=new ArrayList<>();
 		int[] casosCorrespondientes = {1,2,4,5,6,7,8,9,10,11};
 		for(int i=0;i<casosCorrespondientes.length;i++)  { //casos de prueba lexico. Son 11
-			casosPruebaTP1.add("CasosDePruebaTP1\\TP1_"+casosCorrespondientes[i]+".txt");
+			casosPruebaTP1.add("CasosDePrueba\\TP1_"+casosCorrespondientes[i]+".txt");
 			
 		}
 		int[] casosCorrespondientes2 = {1,2,3,4,5,6,7,8,9,12,13,15,16,18};
