@@ -98,7 +98,7 @@ declaracion_closure			: 	tipo_closure id_invocacion '{' conjunto_sentencias RETU
 					;
 
 declaracion_funcion_simple	:	VOID id_invocacion '{' conjunto_sentencias  '}'
-														|	VOID id_invocacion '{' conjunto_sentencias  error {agregarError("En linea: " + (AL.nroLinea) + " falta } ");} 
+														|	VOID id_invocacion '{' conjunto_sentencias  error {agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
 														;
 
 
@@ -142,9 +142,27 @@ term	 	: 	term '*' factor
 		;
 
 factor		: 	ID
-					| 	CTE_INTEGER
+					| 	CTE_INTEGER				{List<Object> atts = tablaSimbolos.get($1.sval); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
+																 int valorInteger = (Integer) atts.get(1); //el valor en la posicion 1 es el número de la
+																 if (valorInteger > 32767) //si se pasa del limite positivo
+
+																		if (!tablaSimbolos.containsKey("32767_i")){
+																			List<Object> nuevosAtributos = new ArrayList<Object>();
+																			nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(32767);
+																			tablaSimbolos.put("32767_i", nuevosAtributos);
+																			agregarError("Warning: constante integer fuera de rango. Reemplazo en linea: " + AL.nroLinea);
+																		}
+																	}
 					|	CTE_USLINTEGER
-					| 	'-' CTE_INTEGER
+					| 	'-' CTE_INTEGER		{
+																int valorInteger = (Integer) tablaSimbolos.get($2.sval).get(1);
+																String nuevaClave = "-" + valorInteger + "_i";
+																if (!tablaSimbolos.containsKey(nuevaClave)){
+																	List<Object> nuevosAtributos = new ArrayList<Object>();
+																	nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(new Integer(-valorInteger));
+																	tablaSimbolos.put(nuevaClave, nuevosAtributos);
+																	}
+																}
 					;
 
 asignacion	:	ID ASIGN r_value_asignacion ','
@@ -158,14 +176,18 @@ r_value_asignacion:	expr
 %%
 
 
+Hashtable<String, List<Object>> tablaSimbolos;
 AnalizadorLexico AL = null;
 List<String> estructurasGramaticalesDetectadas;
 List<String> tokensLeidos;
 List<String> errores;
+Token t;
 int ultimoTokenLeido;
 
 int yylex(){
-	ultimoTokenLeido=AL.yylex();
+	t = AL.getToken();
+	yylval = new ParserVal(t.claveTablaSimbolo);
+	ultimoTokenLeido= t.tipoDeToken;
 	//la siguiente condicion se debe hacer porque estas estructuras (ej, if, while) ocupan varias lineas de texto
 	//por lo que cuando el parsing detecta finalmente que un if termina en un end_if, el AL.nroLinea ya avanzo.
 	//Por lo tanto sin esto el nroLinea mostrado seria el del fin de la estructura y no del comienzo
@@ -183,7 +205,7 @@ void yyerror(String s)
  System.out.println("En linea: " + AL.nroLinea + ". Ocurrio un error de parsing ( "  + s + " ) al leer el token " + Token.tipoToken(ultimoTokenLeido));
 }
 
-public Parser(AnalizadorLexico AL)
+public Parser(AnalizadorLexico AL, Hashtable<String, List<Object>> tablaSimbolos)
 
 {
 	//yydebug=true;
@@ -191,6 +213,7 @@ public Parser(AnalizadorLexico AL)
 	estructurasGramaticalesDetectadas=new ArrayList<>();
 	errores=new ArrayList<>();
 	this.AL=AL;
+	this.tablaSimbolos = tablaSimbolos;
 
 }
 
