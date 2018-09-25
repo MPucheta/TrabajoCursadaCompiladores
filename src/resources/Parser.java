@@ -16,7 +16,7 @@
 
 
 
-//#line 3 ".\tokens.y"
+//#line 3 "tokens.y"
 package resources;
 import java.lang.Math;
 import java.io.*;
@@ -429,17 +429,21 @@ final static String yyrule[] = {
 "r_value_asignacion : id_invocacion",
 };
 
-//#line 159 ".\tokens.y"
+//#line 177 "tokens.y"
 
 
+Hashtable<String, List<Object>> tablaSimbolos;
 AnalizadorLexico AL = null;
 List<String> estructurasGramaticalesDetectadas;
 List<String> tokensLeidos;
 List<String> errores;
+Token t;
 int ultimoTokenLeido;
 
 int yylex(){
-	ultimoTokenLeido=AL.yylex();
+	t = AL.getToken();
+	yylval = new ParserVal(t.claveTablaSimbolo);
+	ultimoTokenLeido= t.tipoDeToken;
 	//la siguiente condicion se debe hacer porque estas estructuras (ej, if, while) ocupan varias lineas de texto
 	//por lo que cuando el parsing detecta finalmente que un if termina en un end_if, el AL.nroLinea ya avanzo.
 	//Por lo tanto sin esto el nroLinea mostrado seria el del fin de la estructura y no del comienzo
@@ -457,7 +461,7 @@ void yyerror(String s)
  System.out.println("En linea: " + AL.nroLinea + ". Ocurrio un error de parsing ( "  + s + " ) al leer el token " + Token.tipoToken(ultimoTokenLeido));
 }
 
-public Parser(AnalizadorLexico AL)
+public Parser(AnalizadorLexico AL, Hashtable<String, List<Object>> tablaSimbolos)
 
 {
 	//yydebug=true;
@@ -465,6 +469,7 @@ public Parser(AnalizadorLexico AL)
 	estructurasGramaticalesDetectadas=new ArrayList<>();
 	errores=new ArrayList<>();
 	this.AL=AL;
+	this.tablaSimbolos = tablaSimbolos;
 
 }
 
@@ -485,7 +490,7 @@ private void agregarEstructuraDetectada(String tipo){
 	this.estructurasGramaticalesDetectadas.add(toAdd);
 
 }
-//#line 417 "Parser.java"
+//#line 422 "Parser.java"
 //###############################################################
 // method: yylexdebug : check lexer state
 //###############################################################
@@ -640,87 +645,113 @@ boolean doaction;
       {
 //########## USER-SUPPLIED ACTIONS ##########
 case 9:
-//#line 37 ".\tokens.y"
+//#line 37 "tokens.y"
 {agregarEstructuraDetectada("Asignacion");}
 break;
 case 10:
-//#line 38 ".\tokens.y"
+//#line 38 "tokens.y"
 {agregarEstructuraDetectada("Impresion");}
 break;
 case 11:
-//#line 39 ".\tokens.y"
+//#line 39 "tokens.y"
 {agregarEstructuraDetectada("Invocacion funcion");}
 break;
 case 13:
-//#line 44 ".\tokens.y"
+//#line 44 "tokens.y"
 {agregarError("En linea: " + AL.nroLinea + " falta )");}
 break;
 case 15:
-//#line 47 ".\tokens.y"
+//#line 47 "tokens.y"
 {agregarError("En linea: " + AL.nroLinea + " falta ','");}
 break;
 case 17:
-//#line 51 ".\tokens.y"
+//#line 51 "tokens.y"
 {agregarError("En linea: " + AL.nroLinea + " falta )");}
 break;
 case 18:
-//#line 52 ".\tokens.y"
+//#line 52 "tokens.y"
 {agregarError("En linea: " + AL.nroLinea + " falta (");}
 break;
 case 21:
-//#line 57 ".\tokens.y"
+//#line 57 "tokens.y"
 {agregarError("En linea: " + AL.nroLinea + " Error en sentencia IF, falta end_if");}
 break;
 case 24:
-//#line 68 ".\tokens.y"
+//#line 68 "tokens.y"
 {agregarError("En linea: " + AL.nroLinea + " falta )");}
 break;
 case 25:
-//#line 69 ".\tokens.y"
+//#line 69 "tokens.y"
 {/*el -1 es porque ya se paso en la lectura*/
 																		agregarError("En linea: " + (AL.nroLinea-1) + " falta (");}
 break;
 case 26:
-//#line 75 ".\tokens.y"
+//#line 75 "tokens.y"
 {agregarEstructuraDetectada("Declaracion variable");}
 break;
 case 33:
-//#line 88 ".\tokens.y"
+//#line 88 "tokens.y"
 {agregarEstructuraDetectada("Declaracion de tipo closure");}
 break;
 case 35:
-//#line 92 ".\tokens.y"
+//#line 92 "tokens.y"
 {agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
 break;
 case 36:
-//#line 93 ".\tokens.y"
+//#line 93 "tokens.y"
 {agregarError("En linea: " + (AL.nroLinea) + " falta ) ");}
 break;
 case 37:
-//#line 94 ".\tokens.y"
+//#line 94 "tokens.y"
 {agregarError("En linea: " + (AL.nroLinea) + " falta , ");}
 break;
 case 39:
-//#line 101 ".\tokens.y"
+//#line 101 "tokens.y"
 {agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
 break;
 case 42:
-//#line 107 ".\tokens.y"
+//#line 107 "tokens.y"
 {agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
 break;
 case 47:
-//#line 118 ".\tokens.y"
+//#line 118 "tokens.y"
 {agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
 break;
 case 60:
-//#line 136 ".\tokens.y"
+//#line 136 "tokens.y"
 {agregarError("En linea: " + (AL.nroLinea) + " falta ) ");}
 break;
+case 65:
+//#line 145 "tokens.y"
+{List<Object> atts = tablaSimbolos.get(val_peek(0).sval); /*$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS*/
+																 int valorInteger = (Integer) atts.get(1); /*el valor en la posicion  es el número de la*/
+																 if (valorInteger > 32767) /*si se pasa del limite positivo*/
+
+																		if (!tablaSimbolos.containsKey("32767_i")){
+																			List<Object> nuevosAtributos = new ArrayList<Object>();
+																			nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(32767);
+																			tablaSimbolos.put("32767_i", nuevosAtributos);
+																			agregarError("Warning: constante integer fuera de rango. Reemplazo en linea: " + AL.nroLinea);
+																		}
+																	}
+break;
+case 67:
+//#line 157 "tokens.y"
+{
+																int valorInteger = (Integer) tablaSimbolos.get(val_peek(0).sval).get(1);
+																String nuevaClave = "-" + valorInteger + "_i";
+																if (!tablaSimbolos.containsKey(nuevaClave)){
+																	List<Object> nuevosAtributos = new ArrayList<Object>();
+																	nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(new Integer(-valorInteger));
+																	tablaSimbolos.put(nuevaClave, nuevosAtributos);
+																	}
+																}
+break;
 case 69:
-//#line 151 ".\tokens.y"
+//#line 169 "tokens.y"
 {agregarError("En linea: " + (AL.nroLinea) + " falta , ");}
 break;
-//#line 647 "Parser.java"
+//#line 678 "Parser.java"
 //########## END OF USER-SUPPLIED ACTIONS ##########
     }//switch
     //#### Now let's reduce... ####
