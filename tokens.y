@@ -39,10 +39,10 @@ ejecutable 	: 	sentencia_if
 		;
 
 invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");}
-						|	id_invocacion error {agregarError("En linea: " + AL.nroLinea + " falta ','");}
 						;
+
 id_invocacion				:	ID '('')'
-										| ID '(' error	{agregarError("En linea: " + AL.nroLinea + " falta )");}
+										| ID '(' error	{agregarError("En linea: " + AL.nroLinea + " falta ) en invocacion");}
 										;
 sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion");}
 										|	PRINT  cadena_cararacteres_entre_parentesis error {agregarError("En linea: " + AL.nroLinea + " falta ','");}
@@ -61,14 +61,14 @@ sentencia_if	:	IF condicion_entre_parentesis bloque_sentencias END_IF
 
 
 sentencia_while	:	WHILE condicion_entre_parentesis bloque_sentencias
-		;
+								;
 
 
 
-condicion_entre_parentesis	:	'(' condicion ')'
-														|	'(' error {agregarError("En linea: " + AL.nroLinea + " falta )");}
-														|	error condicion ')' {//el -1 es porque ya se paso en la lectura
-																		agregarError("En linea: " + (AL.nroLinea-1) + " falta (");}
+condicion_entre_parentesis	:	'(' condicion ')'	{agregarEstructuraDetectada("Condicion");}
+														|	'(' condicion {//esta solucion no es muy agradable, pero usar '(' condicion error puede ocasionar
+														 								//que se coman tokens de mas e incluso no informar el errores
+																						agregarError("En linea: " + AL.nroLinea + " falta ) en condicion");}
 														;
 
 
@@ -78,9 +78,9 @@ declarativa 	: 	declaracion_variables
 		|	declaracion_funcion_simple
 		;
 
-declaracion_variables :	tipo_variable lista_variables ','	{agregarEstructuraDetectada("Declaracion variable");}
-											|	tipo_closure	lista_variables ','	{agregarEstructuraDetectada("Declaracion de tipo closure");}
-											|	lista_variables ',' error {agregarError("En linea: " + (AL.nroLinea) + " Error en declaracion de tipo");}
+declaracion_variables :	tipo_variable lista_variables ','	{agregarEstructuraDetectada("Declaracion variable/s");}
+											|	tipo_closure	lista_variables ','
+											|	 lista_variables ',' error  {agregarError("En linea: " + (AL.nroLinea) + " Declaracion de tipo erronea ");}
 											| tipo_variable error {agregarError("En linea: " + (AL.nroLinea) + " Error en declaracion de tipo, falta ID o ',' ");}
 											| tipo_closure error {agregarError("En linea: " + (AL.nroLinea) + " Error en definicion de closure");}
 											;
@@ -89,27 +89,27 @@ tipo_variable	: 	INTEGER
 							| 	USLINTEGER
 							;
 
-tipo_closure	:	FUN
-		;
+tipo_closure	:	FUN	 {//lo hago aca para que tome la primer linea incluso en funcion closure
+													agregarEstructuraDetectada("Declaracion de tipo closure"); }
+							;
 
-declaracion_closure			: 	tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}' {agregarEstructuraDetectada("Declaracion de tipo closure");}
+declaracion_closure			: 	tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}'
 												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' error {agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
 												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure error	{agregarError("En linea: " + (AL.nroLinea) + " falta ) ");}
 												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' error 	{agregarError("En linea: " + (AL.nroLinea) + " falta , ");}
+												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN  error 	{agregarError("En linea: " + (AL.nroLinea) + " Retorno no es de tipo closure, se espera return( ID() ) o return( {sentencias} )");}
 												;
 
 
-					;
 
-declaracion_funcion_simple	:	VOID id_invocacion '{' conjunto_sentencias  '}'
+
+declaracion_funcion_simple	:	VOID id_invocacion '{' conjunto_sentencias  '}'	{agregarEstructuraDetectada("Declaracion de funcion simple");}
 														|	VOID id_invocacion '{' conjunto_sentencias  error {agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
 														;
 
 
 retorno_closure	: 	id_invocacion
 			| 	'{' conjunto_sentencias '}'
-			| 	'{' conjunto_sentencias error {agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
-			|		ID error {agregarError("En linea: " + (AL.nroLinea) + " Retorno no es de tipo closure, se espera ID()");}
 			;
 
 lista_variables		:	ID
@@ -132,14 +132,19 @@ condicion	:	expr '=' expr
 		|	expr COMP_MENOR_IGUAL expr
 		|	expr COMP_MAYOR_IGUAL expr
 		|	expr COMP_DISTINTO expr
+		|	error {agregarError("En linea: " + (AL.nroLinea) + "  Condicion no valida: Incorrecta mezcla de operandos y expresiones");}
 		;
 
 expr 		: 	expr '+' term
 		| 	expr '-' term
-		|	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita en línea: " + AL.nroLinea);}
+		|		casting
 		| 	term
-		|	USLINTEGER '('expr error {agregarError("En linea: " + (AL.nroLinea) + " falta ) ");}
 		;
+
+casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita");}
+				|	USLINTEGER '('expr error {agregarError("En linea: " + (AL.nroLinea) + " falta ) en casteo ");}
+				|	error '('expr')'	{agregarError("En linea: " + (AL.nroLinea) + " tipo no valido para casting  ");}
+				;
 
 term	 	: 	term '*' factor
 		| 	term '/' factor
@@ -160,7 +165,7 @@ factor				:	 	ID
 
 																			}
 							|	CTE_USLINTEGER
-							| 	'-' CTE_INTEGER		{
+							| '-' CTE_INTEGER		{	agregarEstructuraDetectada("Negacion de operando");
 																		int valorInteger = (Integer) tablaSimbolos.get($2.sval).get(1);
 																		String nuevaClave = "-" + valorInteger + "_i";
 																		if (!tablaSimbolos.containsKey(nuevaClave)){
@@ -169,13 +174,14 @@ factor				:	 	ID
 																			tablaSimbolos.put(nuevaClave, nuevosAtributos);
 																			}
 																		}
+							|	'-' error {agregarError("En linea: " + (AL.nroLinea) + " Negacion no permitida con este operando  ");}
 							;
 
 asignacion	:	ID ASIGN r_value_asignacion ','
-						|	ID ASIGN  error 	{agregarError("En linea: " + (AL.nroLinea) + " Error detectado de lado derecho de asignacion ");}
+						|	ID ASIGN r_value_asignacion error 	{agregarError("En linea: " + (AL.nroLinea) + " Error detectado de lado derecho de asignacion ");}
 						;
 r_value_asignacion:	expr
-									| id_invocacion
+									| id_invocacion	{agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
 									;
 
 
@@ -198,9 +204,16 @@ int yylex(){
 	//la siguiente condicion se debe hacer porque estas estructuras (ej, if, while) ocupan varias lineas de texto
 	//por lo que cuando el parsing detecta finalmente que un if termina en un end_if, el AL.nroLinea ya avanzo.
 	//Por lo tanto sin esto el nroLinea mostrado seria el del fin de la estructura y no del comienzo
-	if(ultimoTokenLeido==Token.IF || ultimoTokenLeido ==Token.WHILE){
-		agregarEstructuraDetectada("Sentencia " + Token.tipoToken(ultimoTokenLeido));
+	switch(ultimoTokenLeido){
+		case(Token.IF):
+				agregarEstructuraDetectada("Sentencia " + Token.tipoToken(ultimoTokenLeido)); break;
+		case(Token.WHILE):
+				agregarEstructuraDetectada("Sentencia " + Token.tipoToken(ultimoTokenLeido));break;
+		default:
+				break;
+
 	}
+
 	String leido= "Linea: " + AL.nroLinea + " Token leido: " + ultimoTokenLeido + " designado como: " + Token.tipoToken(ultimoTokenLeido) + "\n";
 	tokensLeidos.add(leido);
 	return ultimoTokenLeido;
