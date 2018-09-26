@@ -16,7 +16,7 @@
 
 
 
-//#line 3 ".\tokensProduccionesErroresJuntas.y"
+//#line 3 "tokens.y"
 package resources;
 import java.lang.Math;
 import java.io.*;
@@ -449,7 +449,7 @@ final static String yyrule[] = {
 "r_value_asignacion : id_invocacion",
 };
 
-//#line 189 ".\tokensProduccionesErroresJuntas.y"
+//#line 189 "tokens.y"
 
 
 Hashtable<String, List<Object>> tablaSimbolos;
@@ -478,7 +478,7 @@ int yylex(){
 
 	}
 
-	String leido= "Linea: " + AL.nroLinea + " Token leido: " + ultimoTokenLeido + " designado como: " + Token.tipoToken(ultimoTokenLeido) + "\n";
+	String leido= "Linea: " + AL.nroLinea + ". Token leido: '" + ultimoTokenLeido + "' reconocido como: " + Token.tipoToken(ultimoTokenLeido) + "\n";
 	tokensLeidos.add(leido);
 	return ultimoTokenLeido;
 
@@ -679,114 +679,114 @@ boolean doaction;
       {
 //########## USER-SUPPLIED ACTIONS ##########
 case 9:
-//#line 36 ".\tokensProduccionesErroresJuntas.y"
+//#line 36 "tokens.y"
 {agregarEstructuraDetectada("Asignacion");}
 break;
-case 10:
-//#line 37 ".\tokensProduccionesErroresJuntas.y"
-{agregarEstructuraDetectada("Impresion");}
-break;
 case 12:
-//#line 41 ".\tokensProduccionesErroresJuntas.y"
+//#line 41 "tokens.y"
 {agregarEstructuraDetectada("Invocacion funcion");}
 break;
 case 14:
-//#line 45 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + AL.nroLinea + " falta ) en invocacion");}
+//#line 45 "tokens.y"
+{agregarError("Error: falta ')' en invocacion. Linea: " + AL.nroLinea);}
+break;
+case 15:
+//#line 47 "tokens.y"
+{agregarEstructuraDetectada("Impresion");}
 break;
 case 16:
-//#line 48 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + AL.nroLinea + " falta ','");}
+//#line 48 "tokens.y"
+{agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + AL.nroLinea);}
 break;
 case 18:
-//#line 52 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + AL.nroLinea + " falta )");}
+//#line 52 "tokens.y"
+{agregarError("Error: falta ')' luego de la cadena de caracteres. Linea: " + AL.nroLinea);}
 break;
 case 19:
-//#line 53 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + AL.nroLinea + " falta (");}
+//#line 53 "tokens.y"
+{agregarError("Error: falta '(' antes de la cadena de caracteres. Linea: " + AL.nroLinea);}
 break;
 case 22:
-//#line 58 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + AL.nroLinea + " Error en sentencia IF, falta end_if");}
+//#line 58 "tokens.y"
+{agregarError("Error: falta \"end_if\" de la sentencia IF. Linea: " + AL.nroLinea);}
 break;
 case 24:
-//#line 68 ".\tokensProduccionesErroresJuntas.y"
+//#line 68 "tokens.y"
 {agregarEstructuraDetectada("Condicion");}
 break;
 case 25:
-//#line 69 ".\tokensProduccionesErroresJuntas.y"
+//#line 69 "tokens.y"
 {/*esta solucion no es muy agradable, pero usar '(' condicion error puede ocasionar*/
 														 								/*que se coman tokens de mas e incluso no informar el errores*/
-																						agregarError("En linea: " + AL.nroLinea + " falta ) en condicion");}
+																						agregarError("Error: falta ')' luego de la condicion. Linea: " + AL.nroLinea);}
 break;
 case 29:
-//#line 81 ".\tokensProduccionesErroresJuntas.y"
+//#line 81 "tokens.y"
 {agregarEstructuraDetectada("Declaracion variable/s");}
 break;
 case 31:
-//#line 83 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " Declaracion de tipo erronea ");}
+//#line 83 "tokens.y"
+{agregarError("Error: declaracion de tipo erronea. Linea: " + AL.nroLinea);}
 break;
 case 32:
-//#line 84 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " Error en declaracion de tipo, falta ID o ',' ");}
+//#line 84 "tokens.y"
+{agregarError("Error: falta ID o ',' en la declaracion de variable/s. Linea: " + AL.nroLinea);}
 break;
 case 33:
-//#line 85 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " Error en definicion de closure");}
+//#line 85 "tokens.y"
+{agregarError("Error: definicion de closure erronea. Linea: " + AL.nroLinea);}
 break;
 case 36:
-//#line 92 ".\tokensProduccionesErroresJuntas.y"
+//#line 92 "tokens.y"
 {/*lo hago aca para que tome la primer linea incluso en funcion closure*/
 													agregarEstructuraDetectada("Declaracion de tipo closure"); }
 break;
 case 38:
-//#line 97 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
+//#line 97 "tokens.y"
+{agregarError("Error: falta '}' de cierre de la declaracion de closure. Linea: " + AL.nroLinea);}
 break;
 case 39:
-//#line 98 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " falta ) ");}
+//#line 98 "tokens.y"
+{agregarError("Error: falta ')' luego del retorno del closure. Linea: " + AL.nroLinea);}
 break;
 case 40:
-//#line 99 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " falta , ");}
+//#line 99 "tokens.y"
+{agregarError("Error: falta ',' luego del retorno del closure. Linea: " + AL.nroLinea);}
 break;
 case 41:
-//#line 100 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " Retorno no es de tipo closure, se espera return( ID() ) o return( {sentencias} )");}
+//#line 100 "tokens.y"
+{agregarError("Error: retorno no es de tipo closure. Se espera \"return( ID() )\" o \"return( {SENTENCIAS} )\"");}
 break;
 case 42:
-//#line 106 ".\tokensProduccionesErroresJuntas.y"
+//#line 106 "tokens.y"
 {agregarEstructuraDetectada("Declaracion de funcion simple");}
 break;
 case 43:
-//#line 107 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
+//#line 107 "tokens.y"
+{agregarError("Error: falta '}' de cierre de la funcion. Linea: " + AL.nroLinea);}
 break;
 case 50:
-//#line 123 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " falta } ");}
+//#line 123 "tokens.y"
+{agregarError("Error: falta '}' de cierre de bloque de sentencias. Linea: " + AL.nroLinea);}
 break;
 case 59:
-//#line 135 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + "  Condicion no valida: Incorrecta mezcla de operandos y expresiones");}
+//#line 135 "tokens.y"
+{agregarError("Error: condicion no válida. Incorrecta mezcla de expresiones y comparador. Linea: " + AL.nroLinea);}
 break;
 case 64:
-//#line 144 ".\tokensProduccionesErroresJuntas.y"
+//#line 144 "tokens.y"
 {agregarEstructuraDetectada("Conversion explicita");}
 break;
 case 65:
-//#line 145 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " falta ) en casteo ");}
+//#line 145 "tokens.y"
+{agregarError("Error: falta ')' en la conversion explicita. Linea: " + AL.nroLinea);}
 break;
 case 66:
-//#line 146 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " tipo no valido para casting  ");}
+//#line 146 "tokens.y"
+{agregarError("Error: tipo no válido para conversion. Linea: " + AL.nroLinea);}
 break;
 case 71:
-//#line 155 ".\tokensProduccionesErroresJuntas.y"
+//#line 155 "tokens.y"
 {List<Object> atts = tablaSimbolos.get(val_peek(0).sval); /*$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS*/
 																		 int valorInteger = (Integer) atts.get(1); /*el valor en la posicion 1 es el número de la*/
 																		 if (valorInteger > 32767) /*si se pasa del limite positivo*/
@@ -801,7 +801,7 @@ case 71:
 																			}
 break;
 case 73:
-//#line 168 ".\tokensProduccionesErroresJuntas.y"
+//#line 168 "tokens.y"
 {	agregarEstructuraDetectada("Negacion de operando");
 																		int valorInteger = (Integer) tablaSimbolos.get(val_peek(0).sval).get(1);
 																		String nuevaClave = "-" + valorInteger + "_i";
@@ -813,15 +813,15 @@ case 73:
 																		}
 break;
 case 74:
-//#line 177 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " Negacion no permitida con este operando  ");}
+//#line 177 "tokens.y"
+{agregarError("Error: negacion no permitida a este operando. Linea: " + AL.nroLinea);}
 break;
 case 76:
-//#line 181 ".\tokensProduccionesErroresJuntas.y"
-{agregarError("En linea: " + (AL.nroLinea) + " Error detectado de lado derecho de asignacion ");}
+//#line 181 "tokens.y"
+{agregarError("Error: lado derecho de la asignacion mal definido. Linea: " + AL.nroLinea);}
 break;
 case 78:
-//#line 184 ".\tokensProduccionesErroresJuntas.y"
+//#line 184 "tokens.y"
 {agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
 break;
 //#line 751 "Parser.java"
