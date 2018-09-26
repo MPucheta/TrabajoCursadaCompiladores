@@ -59,7 +59,7 @@ sentencia_while	:	WHILE condicion_entre_parentesis bloque_sentencias
 
 
 
-condicion_entre_parentesis	:	'(' condicion ')'
+condicion_entre_parentesis	:	'(' condicion ')'	{agregarEstructuraDetectada("Condicion");}
 														;
 
 
@@ -69,24 +69,25 @@ declarativa 	: 	declaracion_variables
 		|	declaracion_funcion_simple
 		;
 
-declaracion_variables :	tipo_variable lista_variables ','	{agregarEstructuraDetectada("Declaracion variable");}
-											|	tipo_closure	lista_variables ','	{agregarEstructuraDetectada("Declaracion de tipo closure");}
+declaracion_variables :	tipo_variable lista_variables ',' {agregarEstructuraDetectada("Declaracion variable/s");}
+											|	tipo_closure	lista_variables ','	
 											;
 
 tipo_variable	: 	INTEGER
 							| 	USLINTEGER
 							;
 
-tipo_closure	:	FUN
+tipo_closure	:	FUN	{//lo hago aca para que tome la primer linea incluso en funcion closure
+													agregarEstructuraDetectada("Declaracion de tipo closure"); }
 		;
 
-declaracion_closure			: 	tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}' {agregarEstructuraDetectada("Declaracion de tipo closure");}
+declaracion_closure			: 	tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}'
 												;
 
 
 					;
 
-declaracion_funcion_simple	:	VOID id_invocacion '{' conjunto_sentencias  '}'
+declaracion_funcion_simple	:	VOID id_invocacion '{' conjunto_sentencias  '}'	{agregarEstructuraDetectada("Declaracion de funcion simple");}
 														;
 
 
@@ -116,11 +117,13 @@ condicion	:	expr '=' expr
 		;
 
 expr 		: 	expr '+' term
-		| 	expr '-' term
-		|	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita en línea: " + AL.nroLinea);}
-		| 	term
-		;
+				| 	expr '-' term
+				|		casting
+				| 	term
+				;
 
+casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita");}
+				;
 term	 	: 	term '*' factor
 		| 	term '/' factor
 		| 	factor
@@ -140,7 +143,7 @@ factor				:	 	ID
 
 																			}
 							|	CTE_USLINTEGER
-							| 	'-' CTE_INTEGER		{
+							| 	'-' CTE_INTEGER		{	agregarEstructuraDetectada("Negacion de operando");
 																		int valorInteger = (Integer) tablaSimbolos.get($2.sval).get(1);
 																		String nuevaClave = "-" + valorInteger + "_i";
 																		if (!tablaSimbolos.containsKey(nuevaClave)){
@@ -154,7 +157,7 @@ factor				:	 	ID
 asignacion	:	ID ASIGN r_value_asignacion ','
 						;
 r_value_asignacion:	expr
-									| id_invocacion
+									| id_invocacion	{agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
 									;
 
 
