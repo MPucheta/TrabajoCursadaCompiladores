@@ -39,7 +39,7 @@ ejecutable 	: 	sentencia_if
 		;
 
 invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");}
-							id_invocacion error {agregarError("En linea: " + AL.nroLinea + " falta ','");}
+						|	id_invocacion error {agregarError("En linea: " + AL.nroLinea + " falta ','");}
 						;
 id_invocacion				:	ID '('')'
 										| ID '(' error	{agregarError("En linea: " + AL.nroLinea + " falta )");}
@@ -136,9 +136,9 @@ condicion	:	expr '=' expr
 
 expr 		: 	expr '+' term
 		| 	expr '-' term
-		|	CTE_USLINTEGER '('expr')'
+		|	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita en línea: " + AL.nroLinea);}
 		| 	term
-		|	CTE_USLINTEGER '('expr error {agregarError("En linea: " + (AL.nroLinea) + " falta ) ");}
+		|	USLINTEGER '('expr error {agregarError("En linea: " + (AL.nroLinea) + " falta ) ");}
 		;
 
 term	 	: 	term '*' factor
@@ -157,6 +157,7 @@ factor				:	 	ID
 																					tablaSimbolos.put("32767_i", nuevosAtributos);
 																					agregarError("Warning: constante integer fuera de rango. Reemplazo en linea: " + AL.nroLinea);
 																				}
+
 																			}
 							|	CTE_USLINTEGER
 							| 	'-' CTE_INTEGER		{
