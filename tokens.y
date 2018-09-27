@@ -19,6 +19,7 @@ import java.util.*;
 
 
 programa 			: 	conjunto_sentencias
+
 							|		error conjunto_sentencias
 							;
 
@@ -39,13 +40,14 @@ ejecutable 	: 	sentencia_if
 		;
 
 invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");}
+						| id_invocacion error {agregarError("Error: falta ',' en invocacion ejecutable. Linea: " + AL.nroLinea);}
 						;
 
 id_invocacion				:	ID '('')'
 										| ID '(' error	{agregarError("Error: falta ')' en invocacion. Linea: " + AL.nroLinea);}
 										;
 sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion");}
-										|	PRINT  cadena_cararacteres_entre_parentesis error {agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + AL.nroLinea);}
+										|	PRINT  cadena_cararacteres_entre_parentesis  {agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + AL.nroLinea);}
 										;
 
 cadena_cararacteres_entre_parentesis	:	'(' CADENA_CARACTERES ')'
@@ -132,7 +134,7 @@ condicion	:	expr '=' expr
 		|	expr COMP_MENOR_IGUAL expr
 		|	expr COMP_MAYOR_IGUAL expr
 		|	expr COMP_DISTINTO expr
-		|	error {agregarError("Error: condicion no válida. Incorrecta mezcla de expresiones y comparador. Linea: " + AL.nroLinea);}
+		|	error {agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + AL.nroLinea);}
 		;
 
 expr 		: 	expr '+' term
@@ -143,7 +145,7 @@ expr 		: 	expr '+' term
 
 casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita");}
 				|	USLINTEGER '('expr error {agregarError("Error: falta ')' en la conversion explicita. Linea: " + AL.nroLinea);}
-				|	error '('expr')'	{agregarError("Error: tipo no válido para conversion. Linea: " + AL.nroLinea);}
+				|	error '('expr')'	{agregarError("Error: tipo no valido para conversion. Linea: " + AL.nroLinea);}
 				;
 
 term	 	: 	term '*' factor
@@ -178,7 +180,8 @@ factor				:	 	ID
 							;
 
 asignacion	:	ID ASIGN r_value_asignacion ','
-						|	ID ASIGN r_value_asignacion error 	{agregarError("Error: lado derecho de la asignacion mal definido. Linea: " + AL.nroLinea);}
+						|	ID ASIGN r_value_asignacion		{agregarError("Error: falta ',' en asignacion. Linea: " + AL.nroLinea);}
+						|	ID ASIGN error ',' 	{agregarError("Error: r-value de la asignacion mal definido. Linea: " + AL.nroLinea);}
 						;
 r_value_asignacion:	expr
 									| id_invocacion	{agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
