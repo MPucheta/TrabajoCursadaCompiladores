@@ -30,6 +30,7 @@ public class Token {
 	
 	public static String tipoToken(int nro){
 		switch (nro){
+		case 256: return "***ERROR***";
 		case 257: return "ID";
 		case 258: return "CTE_INTEGER";
 		case 259: return "INTEGER";
@@ -49,6 +50,7 @@ public class Token {
 		case 273: return "FUN";
 		case 274: return "RETURN";
 		case 275: return "ID";
+		case 0: return "FIN_DE_ARCHIVO";
 		
 		}
 		return Character.toString((char)nro);

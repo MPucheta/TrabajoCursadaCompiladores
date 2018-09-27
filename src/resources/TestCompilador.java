@@ -29,6 +29,20 @@ public class TestCompilador {
 			
 		}
 	}
+	
+	public static String stringTablaSimbolos(Hashtable<String, List<Object>> TS){
+		String salida = "";
+		for (String s: TS.keySet()) {
+			List<Object> atributos = TS.get(s);
+			String atts="";
+			for(Object o: atributos)
+				atts = atts + o.toString() + " | ";
+			salida += s + " --> " + atts + "\n";
+			
+		}
+		return salida;
+	}
+	
 	private static void initCasosPrueba() {
 		casosPruebaTP1=new ArrayList<>();
 		casosPruebaTP2=new ArrayList<>();
@@ -65,8 +79,9 @@ public class TestCompilador {
 				System.out.println("Error al abrir el archivo.");
 				e.printStackTrace();
 			}
-			salidaTP1.add("\n\n\n*******************************************************\n \n \n");
+			salidaTP1.add("\n\n\n**************************************************************************************************************\n");
 			salidaTP1.add(" SALIDA PARA " + casosPruebaTP1.get(i) + "\n \n \n");
+			salidaTP1.add("*****\nTokens detectados por el Analizador Lexico:\n\n");
 			Hashtable<String , List<Object>> tablaSimbolos = new Hashtable<>(); 
 			AnalizadorLexico AL;
 			String programa= fuente.leerArchivo();
@@ -83,22 +98,25 @@ public class TestCompilador {
 			AL = new AnalizadorLexico(programa, tablaSimbolos);
 			
 			
-			int finToken=-1;
+			int nroToken=-1;
 			String s;
 			String tipo;
-			while(finToken!=0) {
-				Token token=AL.getToken();
-				tipo=Token.tipoToken(finToken);
-				finToken=token.tipoDeToken;
-				if(finToken==0)
-					tipo = "END OF FILE (EOF) ";
+			while(nroToken!=0) {
+				Token token = AL.getToken();
+				nroToken = token.tipoDeToken;
+				tipo = Token.tipoToken(nroToken);
 				
-				s="Linea: " + AL.nroLinea + ". Detecado token " + finToken + " identificado como " + tipo + "\n";
+				
+				s="Linea: " + AL.nroLinea + ". Detectado token '" + nroToken + "' identificado como " + tipo + "\n";
 				salidaTP1.add(s);
 				
 			}
 			
+			salidaTP1.add("\n\n*****\nErrores Lexicos:\n\n");
+			salidaTP1.add(AL.erroresLexicos());
 			
+			salidaTP1.add("\n\n*****\nTabla de simbolos:\n\n");
+			salidaTP1.add(stringTablaSimbolos(tablaSimbolos));
 		}
 		try {
 			ArchivoTexto.escribirEnDisco("SalidaTP1.txt", salidaTP1);
@@ -121,7 +139,7 @@ public class TestCompilador {
 				System.out.println("Error al abrir el archivo.");
 				e.printStackTrace();
 			}
-			salidaTP2.add("\n\n\n*******************************************************\n \n \n");
+			salidaTP2.add("\n\n\n**************************************************************************************************************\n");
 			salidaTP2.add(" SALIDA PARA " + casosPruebaTP2.get(i) + "\n \n \n");
 			
 			
@@ -145,13 +163,18 @@ public class TestCompilador {
 			Parser parser= new Parser(AL, tablaSimbolos);
 			parser.run();
 			
-			salidaTP2.add("Estructuras Gramaticales Detectadas \n\n\n");
+			salidaTP2.add("*****\nTokens detectados por el Analizador Lexico: \n\n");
+			salidaTP2.addAll(parser.getTokensLeidos());
+			salidaTP2.add("\n*****\nErrores Lexicos: \n\n");
+			salidaTP2.add(AL.erroresLexicos());
+			salidaTP2.add("\n*****\nEstructuras Gramaticales Detectadas por el Analizador Sintactico: \n\n");
 			salidaTP2.addAll(parser.getEstructurasGramaticalesDetectadas());
-			salidaTP2.add("\n\n\nErrores de parsing generales \n\n\n");
+			salidaTP2.add("\n\n*****\nErrores de parsing generales: \n\n");
 			salidaTP2.addAll(parser.getErroresGenerales());
-			salidaTP2.add("\n\n\nErrores de parsing identificados \n\n\n");
+			salidaTP2.add("\n\n*****\nErrores de parsing identificados: \n\n");
 			salidaTP2.addAll(parser.getErroresDetallados());
-			
+			salidaTP2.add("\n\n*****\nTabla de simbolos: \n\n");
+			salidaTP2.add(stringTablaSimbolos(tablaSimbolos));
 		}
 		
 		try {
@@ -163,7 +186,7 @@ public class TestCompilador {
 		
 		//*****************************CASOSPRUEBATP2 con errores**********************************//
 		
-salidaTP2.add("EJECUCION DEL ANALIZADOR SINTACTICO SOBRE LOS CASOS DE PRUEBA CON ERRORES ");
+		salidaTP2errores.add("EJECUCION DEL ANALIZADOR SINTACTICO SOBRE LOS CASOS DE PRUEBA CON ERRORES ");
 		
 		
 		for(int i=0;i<casosPruebaTP2conErrores.size();i++) { //probando casosPruebTP2
@@ -175,7 +198,7 @@ salidaTP2.add("EJECUCION DEL ANALIZADOR SINTACTICO SOBRE LOS CASOS DE PRUEBA CON
 				System.out.println("Error al abrir el archivo.");
 				e.printStackTrace();
 			}
-			salidaTP2errores.add("\n\n\n*******************************************************\n \n \n");
+			salidaTP2errores.add("\n\n\n**************************************************************************************************************\n");
 			salidaTP2errores.add(" SALIDA PARA " + casosPruebaTP2conErrores.get(i) + "\n \n \n");
 			
 			
@@ -199,12 +222,18 @@ salidaTP2.add("EJECUCION DEL ANALIZADOR SINTACTICO SOBRE LOS CASOS DE PRUEBA CON
 			Parser parser= new Parser(AL, tablaSimbolos);
 			parser.run();
 			
-			salidaTP2errores.add("Estructuras Gramaticales Detectadas \n\n\n");
+			salidaTP2errores.add("*****\nTokens detectados por el Analizador Lexico: \n\n");
+			salidaTP2errores.addAll(parser.getTokensLeidos());
+			salidaTP2errores.add("\n*****\nErrores Lexicos: \n\n");
+			salidaTP2errores.add(AL.erroresLexicos());
+			salidaTP2errores.add("\n*****\nEstructuras Gramaticales Detectadas por el Analizador Sintactico: \n\n");
 			salidaTP2errores.addAll(parser.getEstructurasGramaticalesDetectadas());
-			salidaTP2errores.add("\n\n\nErrores de parsing generales \n\n\n");
+			salidaTP2errores.add("\n\n*****\nErrores de parsing generales: \n\n");
 			salidaTP2errores.addAll(parser.getErroresGenerales());
-			salidaTP2errores.add("\n\n\nErrores de parsing identificados \n\n\n");
+			salidaTP2errores.add("\n\n*****\nErrores de parsing identificados: \n\n");
 			salidaTP2errores.addAll(parser.getErroresDetallados());
+			salidaTP2errores.add("\n\n*****\nTabla de simbolos: \n\n");
+			salidaTP2errores.add(stringTablaSimbolos(tablaSimbolos));
 			
 		}
 		
