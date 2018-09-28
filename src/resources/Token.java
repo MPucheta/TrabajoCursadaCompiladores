@@ -5,7 +5,7 @@ package resources;
 public class Token {
 	public int tipoDeToken; //por ejemplo, para el literal =, el numero 17
 	public String claveTablaSimbolo; //esto es por si en algunos casos se debe retornar cosas como <cte,punteroTablaSimbolo>
-	
+	public int nroLinea;
 	
 	public final static short ID=257;
 	public final static short CTE_INTEGER=258;
@@ -57,9 +57,10 @@ public class Token {
 	}
 
 	//como se implementa la TS como un hashtable, no necesito un puntero si no la clave de acceso
-	public Token(int numAsignado, String clave) {
+	public Token(int numAsignado, String clave, int nroLinea) {
 		tipoDeToken=numAsignado;
 		claveTablaSimbolo=clave;
+		this.nroLinea = nroLinea;
 			
 	}
 	

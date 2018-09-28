@@ -17,7 +17,7 @@ public class AccionSemantica6 implements AccionSemantica {
 		AL.pos--;
 		Token token = null;
 		if (AL.existePalabraReservada(AL.buffer))
-			token = new Token(AL.mapeoTipoTokens.get(AL.buffer), null);
+			token = new Token(AL.mapeoTipoTokens.get(AL.buffer), null, AL.nroLinea);
 		else
 			AL.agregarError("Error: la palabra '" + AL.buffer + "' no se pudo identificar como palabra reservada. Linea: " + AL.nroLinea);
 		return token;

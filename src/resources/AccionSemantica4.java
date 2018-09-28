@@ -36,7 +36,7 @@ public class AccionSemantica4 implements AccionSemantica {
 			
 		}
 			
-		devuelto= new Token(Token.CTE_INTEGER,claveTS); 
+		devuelto= new Token(Token.CTE_INTEGER,claveTS, AL.nroLinea); 
 		//si no existia, se creo antes, si existia devuelvo el TIPO DE TOKEN y su clave de acceso a la tabla de simbolos
 		//Se incrementa para que se pueda hacer otra entrada a la TablaSimbolos con otra clave
 		

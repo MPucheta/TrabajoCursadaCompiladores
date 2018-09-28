@@ -11,7 +11,7 @@ public class AccionSemantica7 implements AccionSemantica {
 		else
 			equivalente=AL.mapeoTipoTokens.get(AL.buffer);
 		
-		return new Token(equivalente, null);
+		return new Token(equivalente, null, AL.nroLinea);
 	}
 
 }

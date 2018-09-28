@@ -115,7 +115,7 @@ public class AnalizadorLexico {
 		int estadoAnterior = -1; //para errores
 		while (estado != ERROR){
 				if (pos >= fuente.length()) {
-					return new Token(0, "FIN_PROGRAMA");	//fin del programa
+					return new Token(0, "FIN_PROGRAMA", this.nroLinea);	//fin del programa
 				}
 				/*poniendo este chequeo aca evita que salten excepciones y permite
 										 * que devuelva el token de error, indicando que el token que aparecio
@@ -133,7 +133,7 @@ public class AnalizadorLexico {
 
 
 			if (estado == FINAL)
-				return (token==null)?(new Token(Token.YYERRCODE, "ERROR")):token;
+				return (token==null)?(new Token(Token.YYERRCODE, "ERROR", this.nroLinea)):token;
 		}
 
 
@@ -142,7 +142,7 @@ public class AnalizadorLexico {
 			pos--; //se vuelve atras para releer el caracter que dio originó el error
 		this.agregarError(estadoAnterior);
 
-		return new Token(Token.YYERRCODE, "ERROR");
+		return new Token(Token.YYERRCODE, "ERROR", this.nroLinea);
 	}
 
 	private int equivalencia(char c){

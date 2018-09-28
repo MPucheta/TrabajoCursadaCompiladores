@@ -24,7 +24,7 @@ public class Compilador {
 		
 		try {
 
-			fuente = new ArchivoTexto("CasosDePruebaTP2\\TP2_15_errores.txt");
+			fuente = new ArchivoTexto("CasosDePruebaTP2\\test.txt");
 
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
@@ -42,8 +42,7 @@ public class Compilador {
 		// cortado por la mitad
 		
 		AL = new AnalizadorLexico(programa, tablaSimbolos);
-		
-		int finToken=0;
+
 		
 		Parser parser= new Parser(AL, tablaSimbolos);
 		parser.run();
