@@ -68,7 +68,7 @@ sentencia_while	:	WHILE condicion_entre_parentesis bloque_sentencias {$$ = $3;}
 
 
 condicion_entre_parentesis	:	'(' condicion ')'	{agregarEstructuraDetectada("Condicion"); $$ = $3;}
-														| 	condicion ')' {agregarError("Error: falta '(' antes de la condicion. Linea: " + ((Token) $2.obj).nroLinea);$$ = $2;}
+														| 	error condicion ')' {agregarError("Error: falta '(' antes de la condicion. Linea: " + ((Token) $1.obj).nroLinea);$$ = $3;}
 														|	'(' condicion {//esta solucion no es muy agradable, pero usar '(' condicion error puede ocasionar
 														 								//que se coman tokens de mas e incluso no informar el errores
 																						agregarError("Error: falta ')' luego de la condicion. Linea: " + ((Token) $2.obj).nroLinea);$$ = $2;}
