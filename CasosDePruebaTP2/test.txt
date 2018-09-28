@@ -1,0 +1,24 @@
+_var := uslinteger 
+(
+5_i
+
+,
+
+while 
+
+5_i 
+< 5_i)
+
+
+{
+_vart := 
+
+5_i
+
+}
+
+
+integer _var
+
+; _var
+,
