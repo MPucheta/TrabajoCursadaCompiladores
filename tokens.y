@@ -44,15 +44,17 @@ invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion")
 						;
 
 id_invocacion				:	ID '('')' {$$ = $3;}
-										| ID '(' error	{agregarError("Error: falta ')' en invocacion. Linea: " + ((Token) $2.obj).nroLinea);}
+										| ID '(' error	{agregarError("Error: falta ')' en invocacion o declaracion de closure/funcion. Linea: " + ((Token) $2.obj).nroLinea);}
 										;
 sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion"); $$ = $3;}
 										|	PRINT  cadena_cararacteres_entre_parentesis  {agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + ((Token) $2.obj).nroLinea); $$ = $2;}
+										| PRINT error ','{agregarError("Error: sentencia de impresion erronea. Linea: " + ((Token) $1.obj).nroLinea);}
 										;
 
 cadena_cararacteres_entre_parentesis	:	'(' CADENA_CARACTERES ')' {$$ = $3;}
 																			|	'(' CADENA_CARACTERES error {agregarError("Error: falta ')' luego de la cadena de caracteres. Linea: " + ((Token) $2.obj).nroLinea); $$ = $2;}
 																			|	 error CADENA_CARACTERES ')' {agregarError("Error: falta '(' antes de la cadena de caracteres. Linea: " + ((Token) $2.obj).nroLinea); $$ = $3;}
+																			| '(' error ')' {agregarError("Error: solo se pueden imprimir cadenas de caracteres. Linea: " + ((Token) $2.obj).nroLinea);$$ = $3;}
 																			;
 
 sentencia_if	:	IF condicion_entre_parentesis bloque_sentencias END_IF {$$ = $4;}
