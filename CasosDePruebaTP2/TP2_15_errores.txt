@@ -1,0 +1,13 @@
+fun _idVal,
+fun _f1 ( ) {
+integer _x,
+_x := 5_i,
+void _g () {integer _y, _z := _z + 1_i, print('suma'),}
+return(_g( )),
+}
+
+#errores de parentesis#
+
+_idVal:= _f1(,
+
+_idVal,

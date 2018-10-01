@@ -1,0 +1,3 @@
+integer _neg,
+
+_neg := -32768_ul, #no hay negativos definidos para ul/ enteros largos sin signo# 

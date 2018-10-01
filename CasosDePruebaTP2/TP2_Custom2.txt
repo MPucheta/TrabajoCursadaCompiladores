@@ -1,0 +1,1 @@
+_var:= integer(_var) + 1_i

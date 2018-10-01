@@ -1,0 +1,2 @@
+integer #error de tipo, no hay variables#
+uslinteger _var2 #falta cerrar la sentencia#

@@ -1,0 +1,5 @@
+print ('testing', #falta )#
+print ('testingDevuelta') #falta , #
+
+print(cadenaNoDefinida), #esto es un error lexico y en el parsing seguro salta de que no hubo una regla equivalente, lo que es correcto #
+

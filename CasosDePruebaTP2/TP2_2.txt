@@ -1,0 +1,3 @@
+integer _var1;_VAr1,
+uslinteger _var2;_VAR2,
+fun _var3;_VARIABLE3,

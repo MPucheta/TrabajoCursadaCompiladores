@@ -1,0 +1,10 @@
+integer _var3,
+
+
+# con error, falta de end_if) #
+
+while (_var3 <= 10_ul) {
+	if(_var3= 5_ul)
+		print('5_ul '),
+	
+}

@@ -1,0 +1,4 @@
+integer _neg,
+
+_neg := -32768_i,
+_neg := 30000_i -_neg,
