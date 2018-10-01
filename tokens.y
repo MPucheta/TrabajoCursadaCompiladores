@@ -24,7 +24,7 @@ programa 			: 	conjunto_sentencias
 							;
 
 conjunto_sentencias	:	sentencia
-										|	conjunto_sentencias sentencia
+										|	conjunto_sentencias sentencia {$$ = $2;}
 										;
 sentencia 	: 	declarativa
 						| 	ejecutable
@@ -39,38 +39,41 @@ ejecutable 	: 	sentencia_if
 		|	invocacion
 		;
 
-invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");}
-						| id_invocacion error {agregarError("Error: falta ',' en invocacion ejecutable. Linea: " + AL.nroLinea);}
+invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");$$ = $2;}
+						| id_invocacion error {agregarError("Error: falta ',' en invocacion ejecutable. Linea: " + ((Token) $1.obj).nroLinea);}
 						;
 
-id_invocacion				:	ID '('')'
-										| ID '(' error	{agregarError("Error: falta ')' en invocacion. Linea: " + AL.nroLinea);}
+id_invocacion				:	ID '('')' {$$ = $3;}
+										| ID '(' error	{agregarError("Error: falta ')' en invocacion o declaracion de closure/funcion. Linea: " + ((Token) $2.obj).nroLinea);}
 										;
-sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion");}
-										|	PRINT  cadena_cararacteres_entre_parentesis  {agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + AL.nroLinea);}
+sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion"); $$ = $3;}
+										|	PRINT  cadena_cararacteres_entre_parentesis  {agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + ((Token) $2.obj).nroLinea); $$ = $2;}
+										| PRINT error ','{agregarError("Error: sentencia de impresion erronea. Linea: " + ((Token) $1.obj).nroLinea);}
 										;
 
-cadena_cararacteres_entre_parentesis	:	'(' CADENA_CARACTERES ')'
-																			|	'(' CADENA_CARACTERES error {agregarError("Error: falta ')' luego de la cadena de caracteres. Linea: " + AL.nroLinea);}
-																			|	 error CADENA_CARACTERES ')' {agregarError("Error: falta '(' antes de la cadena de caracteres. Linea: " + AL.nroLinea);}
+cadena_cararacteres_entre_parentesis	:	'(' CADENA_CARACTERES ')' {$$ = $3;}
+																			|	'(' CADENA_CARACTERES error {agregarError("Error: falta ')' luego de la cadena de caracteres. Linea: " + ((Token) $2.obj).nroLinea); $$ = $2;}
+																			|	 error CADENA_CARACTERES ')' {agregarError("Error: falta '(' antes de la cadena de caracteres. Linea: " + ((Token) $2.obj).nroLinea); $$ = $3;}
+																			| '(' error ')' {agregarError("Error: solo se pueden imprimir cadenas de caracteres. Linea: " + ((Token) $2.obj).nroLinea);$$ = $3;}
 																			;
 
-sentencia_if	:	IF condicion_entre_parentesis bloque_sentencias END_IF
-							| IF condicion_entre_parentesis bloque_sentencias ELSE bloque_sentencias END_IF
-							|	IF condicion_entre_parentesis bloque_sentencias error  {agregarError("Error: falta \"end_if\" de la sentencia IF. Linea: " + AL.nroLinea);}
+sentencia_if	:	IF condicion_entre_parentesis bloque_sentencias END_IF {$$ = $4;}
+							| IF condicion_entre_parentesis bloque_sentencias ELSE bloque_sentencias END_IF {$$ = $5;}
+							|	IF condicion_entre_parentesis bloque_sentencias error  {agregarError("Error: falta \"end_if\" de la sentencia IF. Linea: " + ((Token) $3.obj).nroLinea);$$ = $3;}
 							;
 
 
 
-sentencia_while	:	WHILE condicion_entre_parentesis bloque_sentencias
+sentencia_while	:	WHILE condicion_entre_parentesis bloque_sentencias {$$ = $3;}
 								;
 
 
 
-condicion_entre_parentesis	:	'(' condicion ')'	{agregarEstructuraDetectada("Condicion");}
+condicion_entre_parentesis	:	'(' condicion ')'	{agregarEstructuraDetectada("Condicion"); $$ = $3;}
+														| 	error condicion ')' {agregarError("Error: falta '(' antes de la condicion. Linea: " + ((Token) $1.obj).nroLinea);$$ = $3;}
 														|	'(' condicion {//esta solucion no es muy agradable, pero usar '(' condicion error puede ocasionar
 														 								//que se coman tokens de mas e incluso no informar el errores
-																						agregarError("Error: falta ')' luego de la condicion. Linea: " + AL.nroLinea);}
+																						agregarError("Error: falta ')' luego de la condicion. Linea: " + ((Token) $2.obj).nroLinea);$$ = $2;}
 														;
 
 
@@ -80,11 +83,11 @@ declarativa 	: 	declaracion_variables
 		|	declaracion_funcion_simple
 		;
 
-declaracion_variables :	tipo_variable lista_variables ','	{agregarEstructuraDetectada("Declaracion variable/s");}
-											|	tipo_closure	lista_variables ','
-											|	 lista_variables ',' error  {agregarError("Error: declaracion de tipo erronea. Linea: " + AL.nroLinea);}
-											| tipo_variable error {agregarError("Error: falta ID o ',' en la declaracion de variable/s. Linea: " + AL.nroLinea);}
-											| tipo_closure error {agregarError("Error: definicion de closure erronea. Linea: " + AL.nroLinea);}
+declaracion_variables :	tipo_variable lista_variables ','	{agregarEstructuraDetectada("Declaracion variable/s"); $$ = $3;}
+											|	tipo_closure	lista_variables ',' {$$ = $3;}
+											|	 lista_variables ',' error  {agregarError("Error: declaracion de tipo erronea. Linea: " + ((Token) $2.obj).nroLinea); $$ = $2;}
+											| tipo_variable error {agregarError("Error: falta ID o ',' en la declaracion de variable/s. Linea: " + ((Token) $1.obj).nroLinea);}
+											| tipo_closure error {agregarError("Error: definicion de closure erronea. Linea: " + ((Token) $1.obj).nroLinea);}
 											;
 
 tipo_variable	: 	INTEGER
@@ -95,66 +98,66 @@ tipo_closure	:	FUN	 {//lo hago aca para que tome la primer linea incluso en func
 													agregarEstructuraDetectada("Declaracion de tipo closure"); }
 							;
 
-declaracion_closure			: 	tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}'
-												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' error {agregarError("Error: falta '}' de cierre de la declaracion de closure. Linea: " + AL.nroLinea);}
-												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure error	{agregarError("Error: falta ')' luego del retorno del closure. Linea: " + AL.nroLinea);}
-												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' error 	{agregarError("Error: falta ',' luego del retorno del closure. Linea: " + AL.nroLinea);}
-												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN  error 	{agregarError("Error: retorno no es de tipo closure. Se espera \"return( ID() )\" o \"return( {SENTENCIAS} )\"");}
+declaracion_closure			: 	tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}' {$$ = $10;}
+												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' error {agregarError("Error: falta '}' de cierre de la declaracion de closure. Linea: " + ((Token) $9.obj).nroLinea); $$ = $9;}
+												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure error	{agregarError("Error: falta ')' luego del retorno del closure. Linea: " + ((Token) $7.obj).nroLinea); $$ = $7;}
+												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' error 	{agregarError("Error: falta ',' luego del retorno del closure. Linea: " + ((Token) $8.obj).nroLinea); $$ = $8;}
+												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN  error 	{agregarError("Error: retorno no es de tipo closure. Se espera \"return( ID() )\" o \"return( {SENTENCIAS} )\". Linea: " + ((Token) $5.obj).nroLinea); $$ = $5;}/**/
 												;
 
 
 
 
-declaracion_funcion_simple	:	VOID id_invocacion '{' conjunto_sentencias  '}'	{agregarEstructuraDetectada("Declaracion de funcion simple");}
-														|	VOID id_invocacion '{' conjunto_sentencias  error {agregarError("Error: falta '}' de cierre de la funcion. Linea: " + AL.nroLinea);}
+declaracion_funcion_simple	:	VOID id_invocacion '{' conjunto_sentencias  '}'	{agregarEstructuraDetectada("Declaracion de funcion simple"); $$ = $5;}
+														|	VOID id_invocacion '{' conjunto_sentencias  error {agregarError("Error: falta '}' de cierre de la funcion. Linea: " + ((Token) $4.obj).nroLinea); $$ = $4;}
 														;
 
 
 retorno_closure	: 	id_invocacion
-			| 	'{' conjunto_sentencias '}'
+			| 	'{' conjunto_sentencias '}' {$$ = $3;}
 			;
 
 lista_variables		:	ID
-			|	lista_variables ';' ID
-			;
+									|	lista_variables ';' ID {$$ = $3;}
+									;
 
 
 
 bloque_sentencias 	:	ejecutable
-			| 	'{' sentencias_ejecutables '}'
-			|		'{' sentencias_ejecutables error	 {agregarError("Error: falta '}' de cierre de bloque de sentencias. Linea: " + AL.nroLinea);}
+			| 	'{' sentencias_ejecutables '}'			{$$ = $3;}
+			|		'{' sentencias_ejecutables error	 {agregarError("Error: falta '}' de cierre de bloque de sentencias. Linea: " +((Token) $2.obj).nroLinea); $$ = $2;}
 			;
 sentencias_ejecutables 	:	ejecutable
-			|	sentencias_ejecutables ejecutable
+			|	sentencias_ejecutables ejecutable {$$ = $2;}
 			;
 
-condicion	:	expr '=' expr
-		|	expr '<' expr
-		|	expr '>' expr
-		|	expr COMP_MENOR_IGUAL expr
-		|	expr COMP_MAYOR_IGUAL expr
-		|	expr COMP_DISTINTO expr
-		|	error {agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + AL.nroLinea);}
+condicion	:	expr '=' expr								{$$ = $3;}
+		|	expr '<' expr											{$$ = $3;}
+		|	expr '>' expr											{$$ = $3;}
+		|	expr COMP_MENOR_IGUAL expr				{$$ = $3;}
+		|	expr COMP_MAYOR_IGUAL expr				{$$ = $3;}
+		|	expr COMP_DISTINTO expr						{$$ = $3;}
+		|	error {agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + ((Token) $1.obj).nroLinea);}
 		;
 
-expr 		: 	expr '+' term
-		| 	expr '-' term
+expr 		: 	expr '+' term 			{$$ = $3;}
+		| 	expr '-' term 					{$$ = $3;}
 		|		casting
 		| 	term
 		;
 
-casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita");}
-				|	USLINTEGER '('expr error {agregarError("Error: falta ')' en la conversion explicita. Linea: " + AL.nroLinea);}
-				|	error '('expr')'	{agregarError("Error: tipo no valido para conversion. Linea: " + AL.nroLinea);}
+casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita"); $$ = $4;}
+				|	USLINTEGER '('expr error {agregarError("Error: falta ')' en la conversion explicita. Linea: " + ((Token)$3.obj).nroLinea); $$ = $3;}
+				|	error '('expr')'	{agregarError("Error: tipo no valido para conversion. Linea: " + ((Token)$1.obj).nroLinea); $$ = $4;}
 				;
 
-term	 	: 	term '*' factor
-		| 	term '/' factor
+term	 	: 	term '*' factor {$$ = $3;}
+		| 	term '/' factor {$$ = $3;}
 		| 	factor
 		;
 
 factor				:	 	ID
-							| 	CTE_INTEGER				{List<Object> atts = tablaSimbolos.get($1.sval); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
+							| 	CTE_INTEGER				{List<Object> atts = tablaSimbolos.get(((Token)$1.obj).claveTablaSimbolo); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
 																		 int valorInteger = (Integer) atts.get(1); //el valor en la posicion 1 es el número de la
 																		 if (valorInteger > 32767) //si se pasa del limite positivo
 
@@ -162,26 +165,27 @@ factor				:	 	ID
 																					List<Object> nuevosAtributos = new ArrayList<Object>();
 																					nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(32767);
 																					tablaSimbolos.put("32767_i", nuevosAtributos);
-																					agregarError("Warning: constante integer fuera de rango. Reemplazo en linea: " + AL.nroLinea);
+																					agregarError("Warning: constante integer fuera de rango. Reemplazo en linea: " + ((Token)$1.obj).nroLinea);
 																				}
 
 																			}
 							|	CTE_USLINTEGER
 							| '-' CTE_INTEGER		{	agregarEstructuraDetectada("Negacion de operando");
-																		int valorInteger = (Integer) tablaSimbolos.get($2.sval).get(1);
+																		int valorInteger = (Integer) tablaSimbolos.get(((Token)$2.obj).claveTablaSimbolo).get(1);
 																		String nuevaClave = "-" + valorInteger + "_i";
 																		if (!tablaSimbolos.containsKey(nuevaClave)){
 																			List<Object> nuevosAtributos = new ArrayList<Object>();
 																			nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(new Integer(-valorInteger));
 																			tablaSimbolos.put(nuevaClave, nuevosAtributos);
 																			}
+																		$$ = $2;
 																		}
-							|	'-' error {agregarError("Error: negacion no permitida a este operando. Linea: " + AL.nroLinea);}
+							|	'-' error {agregarError("Error: negacion no permitida a este operando. Linea: " + ((Token) $1.obj).nroLinea);}
 							;
 
-asignacion	:	ID ASIGN r_value_asignacion ','
-						|	ID ASIGN r_value_asignacion		{agregarError("Error: falta ',' en asignacion. Linea: " + AL.nroLinea);}
-						|	ID ASIGN error ',' 	{agregarError("Error: r-value de la asignacion mal definido. Linea: " + AL.nroLinea);}
+asignacion	:	ID ASIGN r_value_asignacion ',' {$$ = $3;}
+						|	ID ASIGN r_value_asignacion		{agregarError("Error: falta ',' en asignacion. Linea: " + ((Token) $3.obj).nroLinea); $$ = $3;}
+						|	ID ASIGN error ',' 	{agregarError("Error: r-value de la asignacion mal definido. Linea: " + ((Token) $3.obj).nroLinea); $$ = $4;}
 						;
 r_value_asignacion:	expr
 									| id_invocacion	{agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
@@ -202,7 +206,7 @@ int ultimoTokenLeido;
 
 int yylex(){
 	t = AL.getToken();
-	yylval = new ParserVal(t.claveTablaSimbolo);
+	yylval = new ParserVal(t);
 	ultimoTokenLeido= t.tipoDeToken;
 	//la siguiente condicion se debe hacer porque estas estructuras (ej, if, while) ocupan varias lineas de texto
 	//por lo que cuando el parsing detecta finalmente que un if termina en un end_if, el AL.nroLinea ya avanzo.
@@ -217,7 +221,7 @@ int yylex(){
 
 	}
 
-	String leido= "Linea: " + AL.nroLinea + ". Token leido: '" + ultimoTokenLeido + "' reconocido como: " + Token.tipoToken(ultimoTokenLeido) + "\n";
+	String leido= "Linea: " + t.nroLinea + ". Token leido: '" + ultimoTokenLeido + "' reconocido como: " + Token.tipoToken(ultimoTokenLeido) + "\n";
 	tokensLeidos.add(leido);
 	return ultimoTokenLeido;
 

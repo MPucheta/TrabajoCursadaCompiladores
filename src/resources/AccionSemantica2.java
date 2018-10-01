@@ -12,7 +12,7 @@ public class AccionSemantica2 implements AccionSemantica{
 			AL.altaEnTablaSimbolos(claveTS,"CADENA_CARACTERES",cadena);
 		
 		
-		return new Token(Token.CADENA_CARACTERES, claveTS);
+		return new Token(Token.CADENA_CARACTERES, claveTS, AL.nroLinea);
 		
 	}
 	

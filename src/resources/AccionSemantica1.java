@@ -19,12 +19,12 @@ public class AccionSemantica1 implements AccionSemantica {
 
 		if(AL.buffer.length()>25) {
 			AL.agregarError("Error: un identificador solo puede tener hasta 25 caracteres de longitud. Linea: " + AL.nroLinea); 
-			devuelto=new Token(Token.YYERRCODE,null); //token de error, ver de redefinir cualca
+			devuelto=new Token(Token.YYERRCODE,null, AL.nroLinea); //token de error, ver de redefinir cualca
 		}
 		else {
 			if(!AL.TS.containsKey(AL.buffer))
 				AL.altaEnTablaSimbolos(AL.buffer, "ID", AL.buffer); //clave, tipo de token, lexema
-			devuelto= new Token(Token.ID,AL.buffer);
+			devuelto= new Token(Token.ID,AL.buffer, AL.nroLinea);
 		}
 		return devuelto;
 	}
