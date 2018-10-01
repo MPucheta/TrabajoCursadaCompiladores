@@ -16,7 +16,7 @@
 
 
 
-//#line 3 "tokens.y"
+//#line 3 ".\tokens.y"
 package resources;
 import java.lang.Math;
 import java.io.*;
@@ -183,6 +183,7 @@ public final static short NEG=275;
 public final static short YYERRCODE=256;
 final static short yylhs[] = {                           -1,
     0,    0,    1,    1,    2,    2,    4,    4,    4,    4,
+
     4,    9,    9,   10,   10,    8,    8,    8,   11,   11,
    11,   11,    5,    5,    5,    6,   12,   12,   12,    3,
     3,    3,   15,   15,   15,   15,   15,   18,   18,   20,
@@ -191,10 +192,12 @@ final static short yylhs[] = {                           -1,
    14,   14,   14,   23,   23,   23,   23,   25,   25,   25,
    24,   24,   24,   26,   26,   26,   26,   26,    7,    7,
     7,   27,   27,
+
 };
 final static short yylen[] = {                            2,
     1,    2,    1,    2,    1,    1,    1,    1,    1,    1,
     1,    2,    2,    3,    3,    3,    2,    3,    3,    3,
+
     3,    3,    4,    6,    4,    3,    3,    3,    2,    1,
     1,    1,    3,    3,    3,    2,    2,    1,    1,    1,
    10,   10,    8,    9,    6,    5,    5,    1,    3,    1,
@@ -252,10 +255,12 @@ final static short yyrindex[] = {                         0,
     0,    0,    0,    0,    0,    0,    0,   16,    0,    0,
     0,   69,    0,    0,    0,    0,    0,   89,    1,    0,
     0,  129,    0,    0,  -41,    0,    0,    0,  -86,    0,
+
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+
     0,    0,    0,    0,    0,    0,    0,   23,   47,    0,
     0,  -30,  -25,  -23,  138,  154,  160,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -322,12 +327,14 @@ yytable = new short[]{                         63,
     0,    5,    0,    0,    6,    7,    8,    9,  134,    2,
     0,    3,    0,    4,    0,    0,    0,    0,    0,    5,
     0,    0,    6,    7,    8,    9,
+
 };
 }
 static short yycheck[];
 static { yycheck(); }
 static void yycheck() {
 yycheck = new short[] {                         41,
+
     0,   40,   43,   40,   45,   40,   44,  125,   44,  125,
    41,  256,   40,  258,  125,   41,   44,   41,  256,   60,
    61,   62,    0,   41,  123,   43,   40,   45,  266,  123,
@@ -355,6 +362,7 @@ yycheck = new short[] {                         41,
   271,  267,  256,  267,  270,  271,  270,  271,  256,  256,
   256,  257,  258,  125,  260,  261,  256,  257,   -1,  259,
   123,  261,  256,  263,  264,  265,  256,  267,  268,  269,
+
   270,  271,  272,  273,  274,   -1,  123,   -1,  256,  257,
    -1,  259,  123,  261,   -1,  263,  264,  265,   -1,  267,
   268,  269,  270,  271,  272,  273,  274,  257,  258,   -1,
@@ -366,18 +374,22 @@ yycheck = new short[] {                         41,
    -1,   -1,   -1,   -1,   -1,  267,  268,  269,  270,  271,
   272,  273,  274,   -1,   -1,  256,  257,   -1,  259,   -1,
   261,   -1,   -1,   -1,   -1,   -1,  267,  268,  269,  270,
+
   271,  272,  273,  274,  256,  257,   28,  259,   -1,  261,
+
    -1,   -1,   -1,   -1,  257,  267,  268,  269,  270,  271,
   272,  273,  274,   -1,  267,   -1,   -1,  270,  271,   -1,
   257,   -1,   -1,  256,  257,  258,  257,  260,  261,   -1,
   267,   -1,   -1,  270,  271,   -1,  267,   -1,   -1,  270,
   271,  256,  257,  258,   -1,  260,  261,  256,  257,   -1,
+
   259,   -1,  261,   -1,   -1,   87,   88,   -1,  267,   -1,
    -1,  270,  271,  272,  273,   97,   98,   99,  100,  101,
   102,  257,   -1,  259,   -1,  261,   -1,   -1,   -1,   -1,
    -1,  267,   -1,   -1,  270,  271,  272,  273,  274,  257,
    -1,  259,   -1,  261,   -1,   -1,   -1,   -1,   -1,  267,
    -1,   -1,  270,  271,  272,  273,
+
 };
 }
 final static short YYFINAL=10;
@@ -494,6 +506,7 @@ final static String yyrule[] = {
 //#line 196 "tokens.y"
 
 
+
 Hashtable<String, List<Object>> tablaSimbolos;
 AnalizadorLexico AL = null;
 List<String> estructurasGramaticalesDetectadas;
@@ -566,7 +579,9 @@ private void agregarEstructuraDetectada(String tipo){
 	this.estructurasGramaticalesDetectadas.add(toAdd);
 
 }
+
 //#line 498 "Parser.java"
+
 //###############################################################
 // method: yylexdebug : check lexer state
 //###############################################################
@@ -725,6 +740,7 @@ case 4:
 {yyval = val_peek(0);}
 break;
 case 9:
+
 //#line 37 "tokens.y"
 {agregarEstructuraDetectada("Asignacion");}
 break;
@@ -934,6 +950,7 @@ break;
 case 75:
 //#line 160 "tokens.y"
 {List<Object> atts = tablaSimbolos.get(((Token)val_peek(0).obj).claveTablaSimbolo); /*$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS*/
+
 																		 int valorInteger = (Integer) atts.get(1); /*el valor en la posicion 1 es el número de la*/
 																		 if (valorInteger > 32767) /*si se pasa del limite positivo*/
 
@@ -946,8 +963,10 @@ case 75:
 
 																			}
 break;
+
 case 77:
 //#line 173 "tokens.y"
+
 {	agregarEstructuraDetectada("Negacion de operando");
 																		int valorInteger = (Integer) tablaSimbolos.get(((Token)val_peek(0).obj).claveTablaSimbolo).get(1);
 																		String nuevaClave = "-" + valorInteger + "_i";
@@ -959,6 +978,7 @@ case 77:
 																		yyval = val_peek(0);
 																		}
 break;
+
 case 78:
 //#line 183 "tokens.y"
 {agregarError("Error: negacion no permitida a este operando. Linea: " + ((Token) val_peek(1).obj).nroLinea);}
@@ -980,6 +1000,7 @@ case 83:
 {agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
 break;
 //#line 906 "Parser.java"
+
 //########## END OF USER-SUPPLIED ACTIONS ##########
     }//switch
     //#### Now let's reduce... ####
