@@ -21,7 +21,7 @@ public class Compilador {
 	
 	public static void main(String[] args) {
 		ArchivoTexto fuente=null;
-		
+		Arbol raizArbol=null;
 		try {
 
 
@@ -46,7 +46,7 @@ public class Compilador {
 		AL = new AnalizadorLexico(programa, tablaSimbolos);
 
 		
-		Parser parser= new Parser(AL, tablaSimbolos);
+		Parser parser= new Parser(AL, tablaSimbolos,raizArbol);
 		parser.run();
 		System.out.println("detectado \n" + parser.estructurasGramaticalesDetectadas);
 		
@@ -65,8 +65,13 @@ public class Compilador {
 		System.out.println("errores \n" + parser.getErroresDetallados());
 		
 		
-
+		System.out.println(parser.getArbolSintactico().imprimir(""));
 		
 	}
 
 }
+
+
+
+
+
