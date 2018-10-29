@@ -18,13 +18,13 @@ import java.util.*;
 %%
 
 
-programa 			: 	conjunto_sentencias
+programa 			: 	conjunto_sentencias {	this.raizArbolSintactico=(Arbol)$1.obj;}
 
 							|		error conjunto_sentencias
 							;
 
 conjunto_sentencias	:	sentencia
-										|	conjunto_sentencias sentencia {$$ = $2;}
+										|	sentencia conjunto_sentencias {$$ = agregarNodo("conjunto_sentencias",$1,$2);}
 										;
 sentencia 	: 	declarativa
 						| 	ejecutable
@@ -39,37 +39,37 @@ ejecutable 	: 	sentencia_if
 		|	invocacion
 		;
 
-invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");$$ = $2;}
+invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");$$ = agregarHoja(obtenerLexema($1));}
 						| id_invocacion error {agregarError("Error: falta ',' en invocacion ejecutable. Linea: " + ((Token) $1.obj).nroLinea);}
 						;
 
-id_invocacion				:	ID '('')' {$$ = $3;}
+id_invocacion				:	ID '('')' {$$ = $1;} //ROMPO ACÁ, VALOR ANTERIOR $3
 										| ID '(' error	{agregarError("Error: falta ')' en invocacion o declaracion de closure/funcion. Linea: " + ((Token) $2.obj).nroLinea);}
 										;
-sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion"); $$ = $3;}
+sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion"); $$ = agregarNodoRengo("Impresion",$2);} //se quiere agarrar el string de cadena entre parentesis
 										|	PRINT  cadena_cararacteres_entre_parentesis  {agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + ((Token) $2.obj).nroLinea); $$ = $2;}
 										| PRINT error ','{agregarError("Error: sentencia de impresion erronea. Linea: " + ((Token) $1.obj).nroLinea);}
 										;
 
-cadena_cararacteres_entre_parentesis	:	'(' CADENA_CARACTERES ')' {$$ = $3;}
+cadena_cararacteres_entre_parentesis	:	'(' CADENA_CARACTERES ')' {$$ = agregarHoja(obtenerLexema($2));} //$2 es un token, uso el metodo obtenerLexema para sacar lo que dice.ROMPO ACÁ. VALOR ANTERIOR $3
 																			|	'(' CADENA_CARACTERES error {agregarError("Error: falta ')' luego de la cadena de caracteres. Linea: " + ((Token) $2.obj).nroLinea); $$ = $2;}
 																			|	 error CADENA_CARACTERES ')' {agregarError("Error: falta '(' antes de la cadena de caracteres. Linea: " + ((Token) $2.obj).nroLinea); $$ = $3;}
 																			| '(' error ')' {agregarError("Error: solo se pueden imprimir cadenas de caracteres. Linea: " + ((Token) $2.obj).nroLinea);$$ = $3;}
 																			;
 
-sentencia_if	:	IF condicion_entre_parentesis bloque_sentencias END_IF {$$ = $4;}
-							| IF condicion_entre_parentesis bloque_sentencias ELSE bloque_sentencias END_IF {$$ = $5;}
+sentencia_if	:	IF condicion_entre_parentesis bloque_sentencias END_IF {$$ = agregarNodo("if",$2,agregarNodoRengo("cuerpo",agregarNodoRengo("then",$3)));}
+							| IF condicion_entre_parentesis bloque_sentencias ELSE bloque_sentencias END_IF {$$ = agregarNodo("if_else",$2,agregarNodo("cuerpo",agregarNodoRengo("then",$3),agregarNodoRengo("else",$5)));} //genero el nodo if y el nodo cuerpo generando las ramas en la misma linea. Esto puede ser confuso, cualquier cosa ver el diagrama de arbol con checkpoints de la catedra de gen de codigo
 							|	IF condicion_entre_parentesis bloque_sentencias error  {agregarError("Error: falta \"end_if\" de la sentencia IF. Linea: " + ((Token) $3.obj).nroLinea);$$ = $3;}
 							;
 
 
 
-sentencia_while	:	WHILE condicion_entre_parentesis bloque_sentencias {$$ = $3;}
+sentencia_while	:	WHILE condicion_entre_parentesis bloque_sentencias {$$ = agregarNodo("while",$2,$3);}
 								;
 
 
 
-condicion_entre_parentesis	:	'(' condicion ')'	{agregarEstructuraDetectada("Condicion"); $$ = $3;}
+condicion_entre_parentesis	:	'(' condicion ')'	{agregarEstructuraDetectada("Condicion"); $$ = agregarNodoRengo("condicion",$2);}
 														| 	error condicion ')' {agregarError("Error: falta '(' antes de la condicion. Linea: " + ((Token) $1.obj).nroLinea);$$ = $3;}
 														|	'(' condicion {//esta solucion no es muy agradable, pero usar '(' condicion error puede ocasionar
 														 								//que se coman tokens de mas e incluso no informar el errores
@@ -124,40 +124,41 @@ lista_variables		:	ID
 
 
 bloque_sentencias 	:	ejecutable
-			| 	'{' sentencias_ejecutables '}'			{$$ = $3;}
+			| 	'{' sentencias_ejecutables '}'			{$$ = $2;}//ROMPO ACA. Valor previo $$=$3
 			|		'{' sentencias_ejecutables error	 {agregarError("Error: falta '}' de cierre de bloque de sentencias. Linea: " +((Token) $2.obj).nroLinea); $$ = $2;}
 			;
 sentencias_ejecutables 	:	ejecutable
-			|	sentencias_ejecutables ejecutable {$$ = $2;}
+			|	 ejecutable sentencias_ejecutables{$$ = $2;}
 			;
 
-condicion	:	expr '=' expr								{$$ = $3;}
-		|	expr '<' expr											{$$ = $3;}
-		|	expr '>' expr											{$$ = $3;}
-		|	expr COMP_MENOR_IGUAL expr				{$$ = $3;}
-		|	expr COMP_MAYOR_IGUAL expr				{$$ = $3;}
-		|	expr COMP_DISTINTO expr						{$$ = $3;}
+condicion	:	expr '=' expr								{$$ = agregarNodo("=",$1,$3);}
+		|	expr '<' expr											{$$ = agregarNodo("<",$1,$3);}
+		|	expr '>' expr											{$$ = agregarNodo(">",$1,$3);}
+		|	expr COMP_MENOR_IGUAL expr				{$$ = agregarNodo(((Token)$2.obj).claveTablaSimbolo,$1,$3);}
+		|	expr COMP_MAYOR_IGUAL expr				{$$ = agregarNodo(((Token)$2.obj).claveTablaSimbolo,$1,$3);}
+		|	expr COMP_DISTINTO expr						{$$ = agregarNodo(((Token)$2.obj).claveTablaSimbolo,$1,$3);}
 		|	error {agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + ((Token) $1.obj).nroLinea);}
 		;
 
-expr 		: 	expr '+' term 			{$$ = $3;}
-		| 	expr '-' term 					{$$ = $3;}
+expr 		: 	expr '+' term 			{$$ = agregarNodo("+",$1,$3);}
+		| 	expr '-' term 					{$$ = agregarNodo("-",$1,$3);}
 		|		casting
 		| 	term
 		;
 
-casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita"); $$ = $4;}
+casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita"); $$ = agregarNodoRengo("casting",$3);}
 				|	USLINTEGER '('expr error {agregarError("Error: falta ')' en la conversion explicita. Linea: " + ((Token)$3.obj).nroLinea); $$ = $3;}
 				|	error '('expr')'	{agregarError("Error: tipo no valido para conversion. Linea: " + ((Token)$1.obj).nroLinea); $$ = $4;}
 				;
 
-term	 	: 	term '*' factor {$$ = $3;}
-		| 	term '/' factor {$$ = $3;}
+term	 	: 	term '*' factor {$$ = agregarNodo("*",$1,$3);}
+		| 	term '/' factor {$$ = agregarNodo("/",$1,$3);} //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
 		| 	factor
 		;
 
-factor				:	 	ID
-							| 	CTE_INTEGER				{List<Object> atts = tablaSimbolos.get(((Token)$1.obj).claveTablaSimbolo); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
+factor				:	 	ID								{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);}
+							| 	CTE_INTEGER				{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);
+																		 List<Object> atts = tablaSimbolos.get(((Token)$1.obj).claveTablaSimbolo); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
 																		 int valorInteger = (Integer) atts.get(1); //el valor en la posicion 1 es el número de la
 																		 if (valorInteger > 32767) //si se pasa del limite positivo
 
@@ -183,7 +184,7 @@ factor				:	 	ID
 							|	'-' error {agregarError("Error: negacion no permitida a este operando. Linea: " + ((Token) $1.obj).nroLinea);}
 							;
 
-asignacion	:	ID ASIGN r_value_asignacion ',' {$$ = $3;}
+asignacion	:	ID ASIGN r_value_asignacion ',' {$$ = agregarNodo(":=",agregarHoja(((Token)$1.obj).claveTablaSimbolo),$3);}
 						|	ID ASIGN r_value_asignacion		{agregarError("Error: falta ',' en asignacion. Linea: " + ((Token) $3.obj).nroLinea); $$ = $3;}
 						|	ID ASIGN error ',' 	{agregarError("Error: r-value de la asignacion mal definido. Linea: " + ((Token) $3.obj).nroLinea); $$ = $4;}
 						;
@@ -203,6 +204,7 @@ List<String> erroresDetallados;
 List<String> erroresGenerales;
 Token t;
 int ultimoTokenLeido;
+Arbol raizArbolSintactico;
 
 int yylex(){
 	t = AL.getToken();
@@ -234,7 +236,7 @@ void yyerror(String s)
 	System.out.println(err);
 }
 
-public Parser(AnalizadorLexico AL, Hashtable<String, List<Object>> tablaSimbolos)
+public Parser(AnalizadorLexico AL, Hashtable<String, List<Object>> tablaSimbolos, Arbol raizArbolSintactico)
 
 {
 	//yydebug=true;
@@ -244,7 +246,7 @@ public Parser(AnalizadorLexico AL, Hashtable<String, List<Object>> tablaSimbolos
 	erroresGenerales=new ArrayList<>();
 	this.AL=AL;
 	this.tablaSimbolos = tablaSimbolos;
-
+	this.raizArbolSintactico=raizArbolSintactico;
 }
 
 public List<String> getEstructurasGramaticalesDetectadas(){
@@ -259,11 +261,38 @@ public List<String> getErroresDetallados(){
 public List<String> getErroresGenerales(){
 	return this.erroresGenerales;
 }
+
+public Arbol getArbolSintactico(){
+	//en presencia de un error sintactico puedo setear un boolean o algo que haga que la raiz sea null y no generar codigo
+	return this.raizArbolSintactico;
+
+}
 private void agregarError(String e){
 	erroresDetallados.add(e+"\n");
 }
 private void agregarEstructuraDetectada(String tipo){
 	String toAdd=tipo + " en linea " + AL.nroLinea + "\n";
 	this.estructurasGramaticalesDetectadas.add(toAdd);
+
+}
+
+
+private ParserVal agregarNodoRengo(String value, ParserVal primero){
+
+	return new ParserVal(new NodoRengo(value,(Arbol)primero.obj));
+
+}
+private ParserVal agregarNodo(String value, ParserVal primero, ParserVal segundo){
+	return new ParserVal(new Nodo(value,(Arbol)primero.obj,(Arbol)segundo.obj));
+
+}
+
+private ParserVal agregarHoja(String value){
+	return new ParserVal(new Hoja(value));
+
+}
+
+private String obtenerLexema(ParserVal pv){
+	return ((Token)pv.obj).claveTablaSimbolo;
 
 }
