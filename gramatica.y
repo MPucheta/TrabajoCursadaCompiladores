@@ -23,8 +23,8 @@ programa 			: 	conjunto_sentencias {	this.raizArbolSintactico=(Arbol)$1.obj;}
 							|		error conjunto_sentencias
 							;
 
-conjunto_sentencias	:	sentencia
-										|	sentencia conjunto_sentencias {$$ = agregarNodo("conjunto_sentencias",$1,$2);}
+conjunto_sentencias	:	sentencia {$$ = agregarNodo("lista_sentencias", $1, new ParserVal(new Hoja(null)));}
+										|	sentencia conjunto_sentencias {$$ = agregarNodo("lista_sentencias",$1,$2);}
 										;
 sentencia 	: 	declarativa
 						| 	ejecutable
@@ -123,12 +123,12 @@ lista_variables		:	ID
 
 
 
-bloque_sentencias 	:	ejecutable
+bloque_sentencias 	:	ejecutable {$$ = agregarNodo("lista_sentencias", $1, new ParserVal(new Hoja(null)));}
 			| 	'{' sentencias_ejecutables '}'			{$$ = $2;}//ROMPO ACA. Valor previo $$=$3
 			|		'{' sentencias_ejecutables error	 {agregarError("Error: falta '}' de cierre de bloque de sentencias. Linea: " +((Token) $2.obj).nroLinea); $$ = $2;}
 			;
-sentencias_ejecutables 	:	ejecutable
-			|	 ejecutable sentencias_ejecutables{$$ = $2;}
+sentencias_ejecutables 	:	ejecutable	{$$ = agregarNodo("lista_sentencias", $1, new ParserVal(new Hoja(null)));}
+			|	 ejecutable sentencias_ejecutables{$$ = agregarNodo("lista_sentencias", $1, $2);} //ROMPO ACA. valor previo $$=$2
 			;
 
 condicion	:	expr '=' expr								{$$ = agregarNodo("=",$1,$3);}
@@ -282,8 +282,8 @@ private ParserVal agregarNodoRengo(String value, ParserVal primero){
 	return new ParserVal(new NodoRengo(value,(Arbol)primero.obj));
 
 }
-private ParserVal agregarNodo(String value, ParserVal primero, ParserVal segundo){
-	return new ParserVal(new Nodo(value,(Arbol)primero.obj,(Arbol)segundo.obj));
+private ParserVal agregarNodo(String value, ParserVal izquierdo, ParserVal derecho){
+	return new ParserVal(new Nodo(value,(Arbol)izquierdo.obj,(Arbol)derecho.obj));
 
 }
 
