@@ -84,8 +84,8 @@ public class TestCompilador {
 			
 			AL = new AnalizadorLexico(programa, tablaSimbolos);
 			
-			
-			Parser parser= new Parser(AL, tablaSimbolos);
+			Arbol raizArbol=null;
+			Parser parser= new Parser(AL, tablaSimbolos, raizArbol);
 			parser.run();
 			
 			salidaArchivo.add("*****\nTokens detectados por el Analizador Lexico: \n\n");
@@ -200,8 +200,8 @@ public class TestCompilador {
 				
 				AL = new AnalizadorLexico(programa, tablaSimbolos);
 				
-	
-				Parser parser= new Parser(AL, tablaSimbolos);
+				Arbol raizArbol=null;
+				Parser parser= new Parser(AL, tablaSimbolos,raizArbol);
 				parser.run();
 				
 				salidaTP2.add("*****\nTokens detectados por el Analizador Lexico: \n\n");
@@ -254,8 +254,8 @@ public class TestCompilador {
 				
 				AL = new AnalizadorLexico(programa, tablaSimbolos);
 				
-	
-				Parser parser= new Parser(AL, tablaSimbolos);
+				Arbol raizArbol=null;
+				Parser parser= new Parser(AL, tablaSimbolos, raizArbol);
 				parser.run();
 				
 				salidaTP2errores.add("*****\nTokens detectados por el Analizador Lexico: \n\n");

@@ -65,7 +65,7 @@ public class Compilador {
 		System.out.println("errores \n" + parser.getErroresDetallados());
 		
 		
-		System.out.println(parser.getArbolSintactico().imprimir(""));
+		System.out.println(parser.getArbolSintactico().imprimir("", ""));
 		
 	}
 
