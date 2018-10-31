@@ -7,7 +7,7 @@ public class Hoja extends Arbol{
 	}
 
 	
-	public String imprimir(String offset) {
-		return offset + "Hoja '" + this.getValor() + "'\n";
+	public String imprimir(String offset, String prefijo) {
+		return offset + prefijo + " Hoja " + this.getValor() + "\n";
 	}
 }

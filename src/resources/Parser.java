@@ -572,8 +572,8 @@ private ParserVal agregarNodoRengo(String value, ParserVal primero){
 	return new ParserVal(new NodoRengo(value,(Arbol)primero.obj));
 
 }
-private ParserVal agregarNodo(String value, ParserVal primero, ParserVal segundo){
-	return new ParserVal(new Nodo(value,(Arbol)primero.obj,(Arbol)segundo.obj));
+private ParserVal agregarNodo(String value, ParserVal izquierdo, ParserVal derecho){
+	return new ParserVal(new Nodo(value,(Arbol)izquierdo.obj,(Arbol)derecho.obj));
 
 }
 
@@ -744,9 +744,13 @@ case 1:
 //#line 21 ".\gramatica.y"
 {	this.raizArbolSintactico=(Arbol)val_peek(0).obj;}
 break;
+case 3:
+//#line 26 ".\gramatica.y"
+{yyval = agregarNodo("lista_sentencias", val_peek(0), new ParserVal(new Hoja(null)));}
+break;
 case 4:
 //#line 27 ".\gramatica.y"
-{yyval = agregarNodo("conjunto_sentencias",val_peek(1),val_peek(0));}
+{yyval = agregarNodo("lista_sentencias",val_peek(1),val_peek(0));}
 break;
 case 9:
 //#line 37 ".\gramatica.y"
@@ -887,6 +891,10 @@ case 51:
 //#line 121 ".\gramatica.y"
 {yyval = val_peek(0);}
 break;
+case 52:
+//#line 126 ".\gramatica.y"
+{yyval = agregarNodo("lista_sentencias", val_peek(0), new ParserVal(new Hoja(null)));}
+break;
 case 53:
 //#line 127 ".\gramatica.y"
 {yyval = val_peek(1);}
@@ -895,9 +903,13 @@ case 54:
 //#line 128 ".\gramatica.y"
 {agregarError("Error: falta '}' de cierre de bloque de sentencias. Linea: " +((Token) val_peek(1).obj).nroLinea); yyval = val_peek(1);}
 break;
+case 55:
+//#line 130 ".\gramatica.y"
+{yyval = agregarNodo("lista_sentencias", val_peek(0), new ParserVal(new Hoja(null)));}
+break;
 case 56:
 //#line 131 ".\gramatica.y"
-{yyval = val_peek(0);}
+{yyval = agregarNodo("lista_sentencias", val_peek(1), val_peek(0));}
 break;
 case 57:
 //#line 134 ".\gramatica.y"
@@ -1008,7 +1020,7 @@ case 83:
 //#line 192 ".\gramatica.y"
 {agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
 break;
-//#line 935 "Parser.java"
+//#line 947 "Parser.java"
 //########## END OF USER-SUPPLIED ACTIONS ##########
     }//switch
     //#### Now let's reduce... ####
