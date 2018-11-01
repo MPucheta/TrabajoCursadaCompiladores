@@ -16,29 +16,22 @@ public class TestCompilador {
 	private static List<String> casosPruebaTP2;
 	private static List<String> casosPruebaTP2conErrores;
 	
-	public static void imprimirTablaSimbolos(Hashtable<String, List<Object>> TS) {
+	public static void imprimirTablaSimbolos(Hashtable<String, Atributos> TS) {
 		
 		System.out.println("\n***TABLA DE SIMBOLOS***\n");
 		
 		for (String s: TS.keySet()) {
-			List<Object> atributos = TS.get(s);
-			String atts="";
-			for(Object o: atributos)
-				atts = atts + o.toString() + " ";
+			String atts= TS.get(s).toString();
 			System.out.println(s + " --> " + atts);
 			
 		}
 	}
 	
-	public static String stringTablaSimbolos(Hashtable<String, List<Object>> TS){
+	public static String stringTablaSimbolos(Hashtable<String, Atributos> tablaSimbolos){
 		String salida = "";
-		for (String s: TS.keySet()) {
-			List<Object> atributos = TS.get(s);
-			String atts="";
-			for(Object o: atributos)
-				atts = atts + o.toString() + " | ";
-			salida += s + " --> " + atts + "\n";
-			
+		for (String s: tablaSimbolos.keySet()) {
+			String atts= tablaSimbolos.get(s).toString();
+			salida += s + " --> " + atts;
 		}
 		return salida;
 	}
@@ -73,7 +66,7 @@ public class TestCompilador {
 			salidaArchivo.add("**************************************************************************************************************\n");
 			salidaArchivo.add(" SALIDA PARA " + args[0] + "\n \n \n");
 			
-			Hashtable<String , List<Object>> tablaSimbolos = new Hashtable<>(); 
+			Hashtable<String , Atributos> tablaSimbolos = new Hashtable<>(); 
 			AnalizadorLexico AL;
 			String programa= fuente.leerArchivo();
 
@@ -128,7 +121,7 @@ public class TestCompilador {
 				salidaTP1.add("\n\n\n**************************************************************************************************************\n");
 				salidaTP1.add(" SALIDA PARA " + casosPruebaTP1.get(i) + "\n \n \n");
 				salidaTP1.add("*****\nTokens detectados por el Analizador Lexico:\n\n");
-				Hashtable<String , List<Object>> tablaSimbolos = new Hashtable<>(); 
+				Hashtable<String , Atributos> tablaSimbolos = new Hashtable<String, Atributos>(); 
 				AnalizadorLexico AL;
 				String programa= fuente.leerArchivo();
 	
@@ -190,7 +183,7 @@ public class TestCompilador {
 				
 				
 				
-				Hashtable<String , List<Object>> tablaSimbolos = new Hashtable<>(); 
+				Hashtable<String , Atributos> tablaSimbolos = new Hashtable<>(); 
 				AnalizadorLexico AL;
 				String programa= fuente.leerArchivo();
 	
@@ -244,7 +237,7 @@ public class TestCompilador {
 				
 				
 				
-				Hashtable<String , List<Object>> tablaSimbolos = new Hashtable<>(); 
+				Hashtable<String , Atributos> tablaSimbolos = new Hashtable<>(); 
 				AnalizadorLexico AL;
 				String programa= fuente.leerArchivo();
 	
