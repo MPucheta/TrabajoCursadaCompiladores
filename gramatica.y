@@ -39,7 +39,7 @@ ejecutable 	: 	sentencia_if
 		|	invocacion
 		;
 
-invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");$$ = agregarHoja(obtenerLexema($1));}
+invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");$$ = agregarHoja(obtenerLexema($1));}/*falta agregar algo para diferenciar que es una invocacion*/
 						| id_invocacion error {agregarError("Error: falta ',' en invocacion ejecutable. Linea: " + ((Token) $1.obj).nroLinea);}
 						;
 
@@ -158,26 +158,26 @@ term	 	: 	term '*' factor {$$ = agregarNodo("*",$1,$3);}
 
 factor				:	 	ID								{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);}
 							| 	CTE_INTEGER				{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);
-																		 List<Object> atts = tablaSimbolos.get(((Token)$1.obj).claveTablaSimbolo); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
-																		 int valorInteger = (Integer) atts.get(1); //el valor en la posicion 1 es el número de la
+																		 Atributos atts = tablaSimbolos.get(((Token)$1.obj).claveTablaSimbolo); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
+																		 int valorInteger = (Integer) atts.get("Valor"); //el valor en la posicion 1 es el número de la
 																		 if (valorInteger > 32767) //si se pasa del limite positivo
 
 																				if (!tablaSimbolos.containsKey("32767_i")){
-																					List<Object> nuevosAtributos = new ArrayList<Object>();
-																					nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(32767);
-																					tablaSimbolos.put("32767_i", nuevosAtributos);
+																					Atributos nuevosAtts = new Atributos();
+																					nuevosAtts.set("Token", "CTE_INTEGER");nuevosAtts.set("Valor", 32767);
+																					tablaSimbolos.put("32767_i", nuevosAtts);
 																					agregarError("Warning: constante integer fuera de rango. Reemplazo en linea: " + ((Token)$1.obj).nroLinea);
 																				}
 
 																			}
-							|	CTE_USLINTEGER
+							|	CTE_USLINTEGER		{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);}
 							| '-' CTE_INTEGER		{	agregarEstructuraDetectada("Negacion de operando");
-																		int valorInteger = (Integer) tablaSimbolos.get(((Token)$2.obj).claveTablaSimbolo).get(1);
+																		int valorInteger = (Integer) tablaSimbolos.get(((Token)$2.obj).claveTablaSimbolo).get("Valor");
 																		String nuevaClave = "-" + valorInteger + "_i";
 																		if (!tablaSimbolos.containsKey(nuevaClave)){
-																			List<Object> nuevosAtributos = new ArrayList<Object>();
-																			nuevosAtributos.add("CTE_INTEGER");nuevosAtributos.add(new Integer(-valorInteger));
-																			tablaSimbolos.put(nuevaClave, nuevosAtributos);
+																			Atributos atts = new Atributos();
+																			atts.set("Token", "CTE_INTEGER"); atts.set("Valor", new Integer(-valorInteger));
+																			tablaSimbolos.put(nuevaClave, atts);
 																			}
 																		$$ = $2;
 																		}
@@ -196,7 +196,7 @@ r_value_asignacion:	expr
 %%
 
 
-Hashtable<String, List<Object>> tablaSimbolos;
+Hashtable<String, Atributos> tablaSimbolos;
 AnalizadorLexico AL = null;
 List<String> estructurasGramaticalesDetectadas;
 List<String> tokensLeidos;
@@ -236,7 +236,7 @@ void yyerror(String s)
 	System.out.println(err);
 }
 
-public Parser(AnalizadorLexico AL, Hashtable<String, List<Object>> tablaSimbolos, Arbol raizArbolSintactico)
+public Parser(AnalizadorLexico AL, Hashtable<String, Atributos> tablaSimbolos, Arbol raizArbolSintactico)
 
 {
 	//yydebug=true;

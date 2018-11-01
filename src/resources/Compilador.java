@@ -13,7 +13,7 @@ public class Compilador {
 	//va a crear una instancia de analizador sintactico que se va a ir encargando de pedir tokens y demas
 	
 	
-	private static Hashtable<String , List<Object>> tablaSimbolos = new Hashtable<>(); 
+	private static Hashtable<String , Atributos> tablaSimbolos = new Hashtable<>(); 
 	private static AnalizadorLexico AL;
 	
 	

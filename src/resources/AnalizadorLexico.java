@@ -20,7 +20,7 @@ public class AnalizadorLexico {
 	Set<String> palabrasReservadas;
 	String fuente;
 	private List<String> erroresLexicos = new ArrayList<String>();
-	Hashtable<String, List<Object>> TS;
+	Hashtable<String, Atributos> TS;
 
 
 	//no descartar definir una interfaz llamada Symbol
@@ -67,7 +67,7 @@ public class AnalizadorLexico {
 
 
 
-	public AnalizadorLexico(String programa, Hashtable<String, List<Object>> tablaSimbolos){
+	public AnalizadorLexico(String programa, Hashtable<String, Atributos> tablaSimbolos){
 		fuente = programa;
 		TS = tablaSimbolos;
 
@@ -208,19 +208,11 @@ public class AnalizadorLexico {
 		return palabrasReservadas.contains(palabra);
 	}
 
-	public void altaEnTablaSimbolos(String clave, Object ... atributos) {
+	public void altaEnTablaSimbolos(String clave, Atributos atts) {
 		//metodo pensado para dar de alta en la tabla de simbolos. La cantidad de atributos es variable, de esta manera
 		//no es necesario cambiar en cada archivo como se da de alta.
 
-
-		//SE ESPERA DE IGUAL MANERA QUE LOS ATRIBUTOS SEAN PRESENTADOS COMO TIPODATO,TIPOTOKEN,LEXEMA
-		List<Object> nuevosAtributos= new ArrayList<Object>();
-
-		for(Object o: atributos) {
-			nuevosAtributos.add(o);
-
-		}
-		this.TS.put(clave, nuevosAtributos);
+		this.TS.put(clave, atts);
 	}
 
 	public void inicializarBuffer(){
