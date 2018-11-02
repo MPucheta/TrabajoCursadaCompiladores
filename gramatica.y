@@ -131,33 +131,65 @@ sentencias_ejecutables 	:	ejecutable	{$$ = agregarNodo("lista_sentencias", $1, n
 			|	 ejecutable sentencias_ejecutables{$$ = agregarNodo("lista_sentencias", $1, $2);} //ROMPO ACA. valor previo $$=$2
 			;
 
-condicion	:	expr '=' expr								{$$ = agregarNodo("=",$1,$3);}
-		|	expr '<' expr											{$$ = agregarNodo("<",$1,$3);}
-		|	expr '>' expr											{$$ = agregarNodo(">",$1,$3);}
-		|	expr COMP_MENOR_IGUAL expr				{$$ = agregarNodo(((Token)$2.obj).claveTablaSimbolo,$1,$3);}
-		|	expr COMP_MAYOR_IGUAL expr				{$$ = agregarNodo(((Token)$2.obj).claveTablaSimbolo,$1,$3);}
-		|	expr COMP_DISTINTO expr						{$$ = agregarNodo(((Token)$2.obj).claveTablaSimbolo,$1,$3);}
+condicion	:	expr '=' expr								{if (verificarTipos($1, $3, "condicion '='"))
+																						$$ = agregarNodo("=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																					}
+		|	expr '<' expr											{if (verificarTipos($1, $3, "condicion '<'"))
+																								$$ = agregarNodo("<",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																							}
+		|	expr '>' expr											{if (verificarTipos($1, $3, "condicion '>'"))
+																								$$ = agregarNodo(">",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																							}
+		|	expr COMP_MENOR_IGUAL expr				{if (verificarTipos($1, $3, "condicion '<='"))
+																								$$ = agregarNodo("<=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																							}
+		|	expr COMP_MAYOR_IGUAL expr				{if (verificarTipos($1, $3, "condicion '=>'"))
+																								$$ = agregarNodo(">=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																							}
+		|	expr COMP_DISTINTO expr						{if (verificarTipos($1, $3, "condicion '!='"))
+																								$$ = agregarNodo("!=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																							}
 		|	error {agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + ((Token) $1.obj).nroLinea);}
 		;
 
-expr 		: 	expr '+' term 			{$$ = agregarNodo("+",$1,$3);}
-		| 	expr '-' term 					{$$ = agregarNodo("-",$1,$3);}
-		|		casting
+expr 		: 	expr '+' term	{	if (verificarTipos($1, $3, "operacion '+'")){
+																$$ = agregarNodo("+",$1,$3);
+																cambiarTipo($$, $1.sval);
+															}
+														}
+				| 	expr '-' term 				{
+																if (verificarTipos($1, $3, "operacion '/'")){
+																		$$ = agregarNodo("/",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																		cambiarTipo($$, $1.sval);
+																	}
+												}
+
 		| 	term
 		;
 
-casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita"); $$ = agregarNodoRengo("casting",$3);}
+casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita"); $$ = agregarNodoRengo("casting",$3); cambiarTipo($$, "uslinteger");} /*verificar si la expresion no es uslinteger?*/
 				|	USLINTEGER '('expr error {agregarError("Error: falta ')' en la conversion explicita. Linea: " + ((Token)$3.obj).nroLinea); $$ = $3;}
 				|	error '('expr')'	{agregarError("Error: tipo no valido para conversion. Linea: " + ((Token)$1.obj).nroLinea); $$ = $4;}
 				;
 
-term	 	: 	term '*' factor {$$ = agregarNodo("*",$1,$3);}
-		| 	term '/' factor {$$ = agregarNodo("/",$1,$3);} //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+term	 	: 	term '*' factor {
+														if (verificarTipos($1, $3, "operacion '*'")){
+																$$ = agregarNodo("*",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘*‘ ; T.ptr ; F.ptr )
+																cambiarTipo($$, $1.sval);
+															}
+														}
+		| 	term '/' factor {
+												if (verificarTipos($1, $3, "operacion '/'")){
+														$$ = agregarNodo("/",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+														cambiarTipo($$, $1.sval);
+													}
+												}
 		| 	factor
 		;
 
 factor				:	 	ID								{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);}
 							| 	CTE_INTEGER				{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);
+																			cambiarTipo($$, "integer");
 																		 Atributos atts = tablaSimbolos.get(((Token)$1.obj).claveTablaSimbolo); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
 																		 int valorInteger = (Integer) atts.get("Valor"); //el valor en la posicion 1 es el número de la
 																		 if (valorInteger > 32767) //si se pasa del limite positivo
@@ -170,7 +202,8 @@ factor				:	 	ID								{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);}
 																				}
 
 																			}
-							|	CTE_USLINTEGER		{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);}
+							|	CTE_USLINTEGER		{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);
+																		cambiarTipo($$, "uslinteger");}
 							| '-' CTE_INTEGER		{	agregarEstructuraDetectada("Negacion de operando");
 																		int valorInteger = (Integer) tablaSimbolos.get(((Token)$2.obj).claveTablaSimbolo).get("Valor");
 																		String nuevaClave = "-" + valorInteger + "_i";
@@ -180,9 +213,10 @@ factor				:	 	ID								{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);}
 																			tablaSimbolos.put(nuevaClave, atts);
 																			}
 																		$$ = $2;
+																		cambiarTipo($$, "integer");
 																		}
 							|	'-' error {agregarError("Error: negacion no permitida a este operando. Linea: " + ((Token) $1.obj).nroLinea);}
-							;
+							|		casting;
 
 asignacion	:	ID ASIGN r_value_asignacion ',' {$$ = agregarNodo(":=",agregarHoja(((Token)$1.obj).claveTablaSimbolo),$3);}
 						|	ID ASIGN r_value_asignacion		{agregarError("Error: falta ',' en asignacion. Linea: " + ((Token) $3.obj).nroLinea); $$ = $3;}
@@ -295,4 +329,20 @@ private ParserVal agregarHoja(String value){
 private String obtenerLexema(ParserVal pv){
 	return ((Token)pv.obj).claveTablaSimbolo;
 
+}
+
+private void cambiarTipo(ParserVal pv,String tipo){
+	//metodo pensado para cambiar el tipo en vez de usar $$.sval=tipo (por ejemplo 'integer'). Ya que sería muy oscuro
+	pv.sval=tipo;
+
+}
+
+private boolean verificarTipos(ParserVal p1, ParserVal p2, String tipoSentencia){
+ //verdadero si son iguales, falso si son distintos
+	if (p1.sval != p2.sval)
+		System.out.println("Error de tipos en " + tipoSentencia + ": no se puede realizar entre "
+												+ p1.sval+ " y " + p2.sval +"\n"); /*cambiar*/
+	else
+		return true;
+	return false;
 }
