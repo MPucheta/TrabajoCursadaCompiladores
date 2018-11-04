@@ -18,38 +18,44 @@ import java.util.*;
 %%
 
 
-programa 			: 	conjunto_sentencias {	this.raizArbolSintactico=(Arbol)$1.obj;}
-
+programa 			: 	conjunto_sentencias {	this.raizArbolSintactico = engancharSentencias();}
 							|		error conjunto_sentencias
 							;
 
-conjunto_sentencias	:	sentencia {$$ = agregarNodo("lista_sentencias", $1, new ParserVal(new Hoja(null)));}
-										|	sentencia conjunto_sentencias {$$ = agregarNodo("lista_sentencias",$1,$2);}
-										;
-sentencia 	: 	declarativa
-						| 	ejecutable
-						;
 
+conjunto_sentencias	:	sentencia //{$$ = agregarNodo("lista_sentencias", $1, new ParserVal(new Hoja(null)));}
+										|	sentencia conjunto_sentencias //{$$ = agregarNodo("lista_sentencias",$1,$2);}
+										;
+
+
+sentencia 	: 	declarativa
+						| 	ejecutable {sentenciasEjecutables.add(0, (Arbol)$1.obj);}
+						;
 
 
 ejecutable 	: 	sentencia_if
-		|	sentencia_while
-		|	asignacion 	{agregarEstructuraDetectada("Asignacion");}
-		|	sentencia_impresion
-		|	invocacion
-		;
+						|		sentencia_while
+						|		asignacion 	{agregarEstructuraDetectada("Asignacion");}
+						|		sentencia_impresion
+						|		invocacion
+						;
 
-invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");$$ = agregarHoja(obtenerLexema($1));}/*falta agregar algo para diferenciar que es una invocacion*/
+
+invocacion	:	id_invocacion ',' {agregarEstructuraDetectada("Invocacion funcion");$$ = agregarHoja(obtenerLexema($1)); cambiarTipo($$, "funcion");}/*falta agregar algo para diferenciar que es una invocacion*/
 						| id_invocacion error {agregarError("Error: falta ',' en invocacion ejecutable. Linea: " + ((Token) $1.obj).nroLinea);}
 						;
 
-id_invocacion				:	ID '('')' {$$ = $1;} //ROMPO ACÁ, VALOR ANTERIOR $3
+
+id_invocacion				:	ID '('')' {$$ = agregarNodoRengo("invocacion", agregarHoja(obtenerLexema($1))); cambiarTipo($$, "funcion");} //ROMPO ACÁ, VALOR ANTERIOR $3
 										| ID '(' error	{agregarError("Error: falta ')' en invocacion o declaracion de closure/funcion. Linea: " + ((Token) $2.obj).nroLinea);}
 										;
+
+
 sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion"); $$ = agregarNodoRengo("Impresion",$2);} //se quiere agarrar el string de cadena entre parentesis
 										|	PRINT  cadena_cararacteres_entre_parentesis  {agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + ((Token) $2.obj).nroLinea); $$ = $2;}
 										| PRINT error ','{agregarError("Error: sentencia de impresion erronea. Linea: " + ((Token) $1.obj).nroLinea);}
 										;
+
 
 cadena_cararacteres_entre_parentesis	:	'(' CADENA_CARACTERES ')' {$$ = agregarHoja(obtenerLexema($2));} //$2 es un token, uso el metodo obtenerLexema para sacar lo que dice.ROMPO ACÁ. VALOR ANTERIOR $3
 																			|	'(' CADENA_CARACTERES error {agregarError("Error: falta ')' luego de la cadena de caracteres. Linea: " + ((Token) $2.obj).nroLinea); $$ = $2;}
@@ -57,17 +63,15 @@ cadena_cararacteres_entre_parentesis	:	'(' CADENA_CARACTERES ')' {$$ = agregarHo
 																			| '(' error ')' {agregarError("Error: solo se pueden imprimir cadenas de caracteres. Linea: " + ((Token) $2.obj).nroLinea);$$ = $3;}
 																			;
 
+
 sentencia_if	:	IF condicion_entre_parentesis bloque_sentencias END_IF {$$ = agregarNodo("if",$2,agregarNodoRengo("cuerpo",agregarNodoRengo("then",$3)));}
 							| IF condicion_entre_parentesis bloque_sentencias ELSE bloque_sentencias END_IF {$$ = agregarNodo("if_else",$2,agregarNodo("cuerpo",agregarNodoRengo("then",$3),agregarNodoRengo("else",$5)));} //genero el nodo if y el nodo cuerpo generando las ramas en la misma linea. Esto puede ser confuso, cualquier cosa ver el diagrama de arbol con checkpoints de la catedra de gen de codigo
 							|	IF condicion_entre_parentesis bloque_sentencias error  {agregarError("Error: falta \"end_if\" de la sentencia IF. Linea: " + ((Token) $3.obj).nroLinea);$$ = $3;}
 							;
 
 
-
 sentencia_while	:	WHILE condicion_entre_parentesis bloque_sentencias {$$ = agregarNodo("while",$2,$3);}
 								;
-
-
 
 condicion_entre_parentesis	:	'(' condicion ')'	{agregarEstructuraDetectada("Condicion"); $$ = agregarNodoRengo("condicion",$2);}
 														| 	error condicion ')' {agregarError("Error: falta '(' antes de la condicion. Linea: " + ((Token) $1.obj).nroLinea);$$ = $3;}
@@ -77,35 +81,41 @@ condicion_entre_parentesis	:	'(' condicion ')'	{agregarEstructuraDetectada("Cond
 														;
 
 
-
 declarativa 	: 	declaracion_variables
-		|	declaracion_closure
-		|	declaracion_funcion_simple
-		;
+							|		declaracion_closure
+							|		declaracion_funcion_simple
+							;
 
-declaracion_variables :	tipo_variable lista_variables ','	{agregarEstructuraDetectada("Declaracion variable/s"); $$ = $3;}
-											|	tipo_closure	lista_variables ',' {$$ = $3;}
+
+declaracion_variables :	tipo_variable lista_variables ','	{ declararVariables($1);
+																														agregarEstructuraDetectada("Declaracion variable/s"); $$ = $3;}
+											|	tipo_closure	lista_variables ',' { declararVariables($1);
+																														$$ = $3;}
+
 											|	 lista_variables ',' error  {agregarError("Error: declaracion de tipo erronea. Linea: " + ((Token) $2.obj).nroLinea); $$ = $2;}
 											| tipo_variable error {agregarError("Error: falta ID o ',' en la declaracion de variable/s. Linea: " + ((Token) $1.obj).nroLinea);}
 											| tipo_closure error {agregarError("Error: definicion de closure erronea. Linea: " + ((Token) $1.obj).nroLinea);}
 											;
 
-tipo_variable	: 	INTEGER
-							| 	USLINTEGER
+
+tipo_variable	: 	INTEGER 		{$$ = new ParserVal("integer");}
+							| 	USLINTEGER	{$$ = new ParserVal("uslinteger");}
 							;
 
+
 tipo_closure	:	FUN	 {//lo hago aca para que tome la primer linea incluso en funcion closure
+													$$ = new ParserVal("funcion");;
 													agregarEstructuraDetectada("Declaracion de tipo closure"); }
 							;
 
+
 declaracion_closure			: 	tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' '}' {$$ = $10;}
+
 												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' ',' error {agregarError("Error: falta '}' de cierre de la declaracion de closure. Linea: " + ((Token) $9.obj).nroLinea); $$ = $9;}
 												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure error	{agregarError("Error: falta ')' luego del retorno del closure. Linea: " + ((Token) $7.obj).nroLinea); $$ = $7;}
 												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN '('  retorno_closure  ')' error 	{agregarError("Error: falta ',' luego del retorno del closure. Linea: " + ((Token) $8.obj).nroLinea); $$ = $8;}
 												|		tipo_closure id_invocacion '{' conjunto_sentencias RETURN  error 	{agregarError("Error: retorno no es de tipo closure. Se espera \"return( ID() )\" o \"return( {SENTENCIAS} )\". Linea: " + ((Token) $5.obj).nroLinea); $$ = $5;}/**/
 												;
-
-
 
 
 declaracion_funcion_simple	:	VOID id_invocacion '{' conjunto_sentencias  '}'	{agregarEstructuraDetectada("Declaracion de funcion simple"); $$ = $5;}
@@ -114,80 +124,100 @@ declaracion_funcion_simple	:	VOID id_invocacion '{' conjunto_sentencias  '}'	{ag
 
 
 retorno_closure	: 	id_invocacion
-			| 	'{' conjunto_sentencias '}' {$$ = $3;}
-			;
+								| 	'{' conjunto_sentencias '}' {$$ = $3;}
+								;
 
-lista_variables		:	ID
-									|	lista_variables ';' ID {$$ = $3;}
+lista_variables		:	ID 											{variablesADeclarar.add(obtenerLexema($1));}
+									|	lista_variables ';' ID { variablesADeclarar.add(obtenerLexema($3)); $$ = $3;}
 									;
 
 
-
 bloque_sentencias 	:	ejecutable {$$ = agregarNodo("lista_sentencias", $1, new ParserVal(new Hoja(null)));}
-			| 	'{' sentencias_ejecutables '}'			{$$ = $2;}//ROMPO ACA. Valor previo $$=$3
-			|		'{' sentencias_ejecutables error	 {agregarError("Error: falta '}' de cierre de bloque de sentencias. Linea: " +((Token) $2.obj).nroLinea); $$ = $2;}
-			;
+										| 	'{' sentencias_ejecutables '}'			{$$ = $2;}//ROMPO ACA. Valor previo $$=$3
+										|		'{' sentencias_ejecutables error	 {agregarError("Error: falta '}' de cierre de bloque de sentencias. Linea: " +((Token) $2.obj).nroLinea); $$ = $2;}
+										;
+
+
 sentencias_ejecutables 	:	ejecutable	{$$ = agregarNodo("lista_sentencias", $1, new ParserVal(new Hoja(null)));}
-			|	 ejecutable sentencias_ejecutables{$$ = agregarNodo("lista_sentencias", $1, $2);} //ROMPO ACA. valor previo $$=$2
-			;
+												|	 ejecutable sentencias_ejecutables{$$ = agregarNodo("lista_sentencias", $1, $2);} //ROMPO ACA. valor previo $$=$2
+												;
 
-condicion	:	expr '=' expr								{if (verificarTipos($1, $3, "condicion '='"))
-																						$$ = agregarNodo("=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
-																					}
-		|	expr '<' expr											{if (verificarTipos($1, $3, "condicion '<'"))
-																								$$ = agregarNodo("<",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
-																							}
-		|	expr '>' expr											{if (verificarTipos($1, $3, "condicion '>'"))
-																								$$ = agregarNodo(">",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
-																							}
-		|	expr COMP_MENOR_IGUAL expr				{if (verificarTipos($1, $3, "condicion '<='"))
-																								$$ = agregarNodo("<=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
-																							}
-		|	expr COMP_MAYOR_IGUAL expr				{if (verificarTipos($1, $3, "condicion '=>'"))
-																								$$ = agregarNodo(">=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
-																							}
-		|	expr COMP_DISTINTO expr						{if (verificarTipos($1, $3, "condicion '!='"))
-																								$$ = agregarNodo("!=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
-																							}
-		|	error {agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + ((Token) $1.obj).nroLinea);}
-		;
 
-expr 		: 	expr '+' term	{	if (verificarTipos($1, $3, "operacion '+'")){
-																$$ = agregarNodo("+",$1,$3);
-																cambiarTipo($$, $1.sval);
-															}
-														}
-				| 	expr '-' term 				{
+condicion	:	expr '=' expr											{if (verificarTipos($1, $3, "condicion '='"))
+																									$$ = agregarNodo("=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																								}
+
+					|	expr '<' expr											{if (verificarTipos($1, $3, "condicion '<'"))
+																											$$ = agregarNodo("<",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																										}
+
+					|	expr '>' expr											{if (verificarTipos($1, $3, "condicion '>'"))
+																											$$ = agregarNodo(">",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																										}
+
+					|	expr COMP_MENOR_IGUAL expr				{if (verificarTipos($1, $3, "condicion '<='"))
+																											$$ = agregarNodo("<=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																										}
+
+					|	expr COMP_MAYOR_IGUAL expr				{if (verificarTipos($1, $3, "condicion '=>'"))
+																											$$ = agregarNodo(">=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																										}
+
+					|	expr COMP_DISTINTO expr						{if (verificarTipos($1, $3, "condicion '!='"))
+																											$$ = agregarNodo("!=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																										}
+
+					|	error {agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + ((Token) $1.obj).nroLinea);}
+					;
+
+
+expr 		: 	expr '+' term	{
+															if (verificarTipos($1, $3, "operacion '+'")){
+																	$$ = agregarNodo("+",$1,$3);
+																	cambiarTipo($$, $1.sval);
+																}
+													}
+
+				| 	expr '-' term 		{
 																if (verificarTipos($1, $3, "operacion '/'")){
 																		$$ = agregarNodo("/",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
 																		cambiarTipo($$, $1.sval);
 																	}
-												}
+																}
 
-		| 	term
-		;
-
-casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita"); $$ = agregarNodoRengo("casting",$3); cambiarTipo($$, "uslinteger");} /*verificar si la expresion no es uslinteger?*/
-				|	USLINTEGER '('expr error {agregarError("Error: falta ')' en la conversion explicita. Linea: " + ((Token)$3.obj).nroLinea); $$ = $3;}
-				|	error '('expr')'	{agregarError("Error: tipo no valido para conversion. Linea: " + ((Token)$1.obj).nroLinea); $$ = $4;}
+				| 	term
 				;
 
-term	 	: 	term '*' factor {
-														if (verificarTipos($1, $3, "operacion '*'")){
-																$$ = agregarNodo("*",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘*‘ ; T.ptr ; F.ptr )
-																cambiarTipo($$, $1.sval);
-															}
-														}
-		| 	term '/' factor {
-												if (verificarTipos($1, $3, "operacion '/'")){
-														$$ = agregarNodo("/",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
-														cambiarTipo($$, $1.sval);
-													}
-												}
-		| 	factor
-		;
 
-factor				:	 	ID								{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);}
+casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita"); $$ = agregarNodoRengo("casting",$3); cambiarTipo($$, "uslinteger");} /*verificar si la expresion no es uslinteger?*/
+
+				|	USLINTEGER '('expr error {agregarError("Error: falta ')' en la conversion explicita. Linea: " + ((Token)$3.obj).nroLinea); $$ = $3;}
+
+				|	error '('expr')'	{agregarError("Error: tipo no valido para conversion. Linea: " + ((Token)$1.obj).nroLinea); $$ = $4;}
+
+				;
+
+
+term	 	: 	term '*' factor {
+																	if (verificarTipos($1, $3, "operacion '*'")){
+																			$$ = agregarNodo("*",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘*‘ ; T.ptr ; F.ptr )
+																			cambiarTipo($$, $1.sval);
+																		}
+														}
+				| 	term '/' factor {
+																if (verificarTipos($1, $3, "operacion '/'")){
+																		$$ = agregarNodo("/",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
+																		cambiarTipo($$, $1.sval);
+																	}
+														}
+				| 	factor
+				;
+
+
+factor				:	 	ID								{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);
+																			if (verificarDeclaracion($1))
+																					cambiarTipo($$, (String)tablaSimbolos.get(obtenerLexema($1)).get("Tipo"));
+																				}
 							| 	CTE_INTEGER				{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);
 																			cambiarTipo($$, "integer");
 																		 Atributos atts = tablaSimbolos.get(((Token)$1.obj).claveTablaSimbolo); //$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS
@@ -216,12 +246,24 @@ factor				:	 	ID								{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);}
 																		cambiarTipo($$, "integer");
 																		}
 							|	'-' error {agregarError("Error: negacion no permitida a este operando. Linea: " + ((Token) $1.obj).nroLinea);}
-							|		casting;
+							|		casting
+							;
 
-asignacion	:	ID ASIGN r_value_asignacion ',' {$$ = agregarNodo(":=",agregarHoja(((Token)$1.obj).claveTablaSimbolo),$3);}
+
+asignacion	:	ID ASIGN r_value_asignacion ',' {
+																							if (verificarDeclaracion($1)){  //se fija si la variable del lado izquierdo esta declarada
+																									cambiarTipo($1, (String)tablaSimbolos.get(obtenerLexema($1)).get("Tipo")); //se le setea el tipo
+																									verificarTipos($1, $3, "asignacion"); 																		//se verifica que los tipos de los dos lados sean iguales
+																									$$ = agregarNodo(":=",agregarHoja(((Token)$1.obj).claveTablaSimbolo),$3);
+																							}
+																						}
+
 						|	ID ASIGN r_value_asignacion		{agregarError("Error: falta ',' en asignacion. Linea: " + ((Token) $3.obj).nroLinea); $$ = $3;}
+
 						|	ID ASIGN error ',' 	{agregarError("Error: r-value de la asignacion mal definido. Linea: " + ((Token) $3.obj).nroLinea); $$ = $4;}
 						;
+
+
 r_value_asignacion:	expr
 									| id_invocacion	{agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
 									;
@@ -236,6 +278,8 @@ List<String> estructurasGramaticalesDetectadas;
 List<String> tokensLeidos;
 List<String> erroresDetallados;
 List<String> erroresGenerales;
+List<String> variablesADeclarar;
+List<Arbol> sentenciasEjecutables;
 Token t;
 int ultimoTokenLeido;
 Arbol raizArbolSintactico;
@@ -278,6 +322,8 @@ public Parser(AnalizadorLexico AL, Hashtable<String, Atributos> tablaSimbolos, A
 	estructurasGramaticalesDetectadas=new ArrayList<>();
 	erroresDetallados=new ArrayList<>();
 	erroresGenerales=new ArrayList<>();
+	variablesADeclarar = new ArrayList<>();
+	sentenciasEjecutables = new ArrayList<>();
 	this.AL=AL;
 	this.tablaSimbolos = tablaSimbolos;
 	this.raizArbolSintactico=raizArbolSintactico;
@@ -341,8 +387,41 @@ private boolean verificarTipos(ParserVal p1, ParserVal p2, String tipoSentencia)
  //verdadero si son iguales, falso si son distintos
 	if (p1.sval != p2.sval)
 		System.out.println("Error de tipos en " + tipoSentencia + ": no se puede realizar entre "
-												+ p1.sval+ " y " + p2.sval +"\n"); /*cambiar*/
+												+ p1.sval+ " y " + p2.sval); /*cambiar*/
 	else
 		return true;
 	return false;
+}
+
+private boolean verificarDeclaracion(ParserVal p1){
+ //retorna verdadero si esta declarada
+ 	String claveTS = obtenerLexema(p1);
+	if (tablaSimbolos.get(claveTS).get("Declarada").equals("No")) // se busca en la TS el atributo "Declarada" y se fija si tiene valor "No"
+		System.out.println("Error: variable '_" + claveTS +  "' no declarada."); /*cambiar*/
+	else
+		return true;
+	return false;
+}
+
+
+private void declararVariables(ParserVal tipo){
+	for (String variable: variablesADeclarar){
+		if (tablaSimbolos.get(variable).get("Declarada").equals("Si"))
+			System.out.println("Error: redeclaracion de variable '_" + variable + "'.");
+		else{
+			tablaSimbolos.get(variable).set("Declarada", "Si");
+			tablaSimbolos.get(variable).set("Tipo", tipo.sval);
+
+		}
+	}
+
+	variablesADeclarar.clear(); //ya se declararon las variables, se vacia la lista de variables a declarar
+
+}
+
+private Arbol engancharSentencias(){
+	Arbol salida = new Hoja(null);
+	for (Arbol a: sentenciasEjecutables)
+		salida = new Nodo("lista_sentencias", a, salida);
+	return salida;
 }
