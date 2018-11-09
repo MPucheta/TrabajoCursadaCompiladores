@@ -31,9 +31,11 @@ public class AccionSemantica4 implements AccionSemantica {
 		}
 		
 		if(!AL.TS.containsKey(claveTS)) {
-			
-			AL.altaEnTablaSimbolos(claveTS,"CTE_INTEGER",valorCte);
-			
+			Atributos atts = new Atributos();
+			atts.set("Token", "CTE_INTEGER");
+			atts.set("Valor", valorCte);
+			atts.set("Tipo", "integer");
+			AL.altaEnTablaSimbolos(claveTS, atts);
 		}
 			
 		devuelto= new Token(Token.CTE_INTEGER,claveTS, AL.nroLinea); 

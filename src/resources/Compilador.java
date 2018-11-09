@@ -13,7 +13,7 @@ public class Compilador {
 	//va a crear una instancia de analizador sintactico que se va a ir encargando de pedir tokens y demas
 	
 	
-	private static Hashtable<String , List<Object>> tablaSimbolos = new Hashtable<>(); 
+	private static Hashtable<String , Atributos> tablaSimbolos = new Hashtable<>(); 
 	private static AnalizadorLexico AL;
 	
 	
@@ -21,7 +21,7 @@ public class Compilador {
 	
 	public static void main(String[] args) {
 		ArchivoTexto fuente=null;
-		
+		Arbol raizArbol=null;
 		try {
 
 
@@ -46,7 +46,7 @@ public class Compilador {
 		AL = new AnalizadorLexico(programa, tablaSimbolos);
 
 		
-		Parser parser= new Parser(AL, tablaSimbolos);
+		Parser parser= new Parser(AL, tablaSimbolos,raizArbol);
 		parser.run();
 		System.out.println("detectado \n" + parser.estructurasGramaticalesDetectadas);
 		
@@ -65,8 +65,32 @@ public class Compilador {
 		System.out.println("errores \n" + parser.getErroresDetallados());
 		
 		
-
+		System.out.println(parser.getArbolSintactico().imprimir("", ""));
 		
+		for(String s: parser.getErroresChequeoSemantico())
+			System.out.println(s);
+		
+		GeneradorCodigo g= new GeneradorCodigo();
+		
+		List<String> datos=g.generarSeccionDatos(tablaSimbolos);
+		List<String> header =g.generarHeader();
+		List<String> includes = g.generarIncludes();
+		
+		List<String> asm=header;
+		asm.addAll(includes);
+		asm.addAll(datos);
+		
+		try {
+			ArchivoTexto.escribirEnDisco("asm.txt", asm);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }
+
+
+
+
+

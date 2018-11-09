@@ -27,10 +27,11 @@ public class AccionSemantica5 implements AccionSemantica{
 			}
 
 			if(!AL.TS.containsKey(claveTS)) {
-
-				AL.altaEnTablaSimbolos(claveTS, "CTE_USLINTEGER",valorCte);
-
-
+				Atributos atts = new Atributos();
+				atts.set("Token", "CTE_USLINTEGER");
+				atts.set("Valor", valorCte);
+				atts.set("Tipo", "uslinteger");
+				AL.altaEnTablaSimbolos(claveTS, atts);
 			}
 
 			devuelto= new Token(Token.CTE_USLINTEGER,claveTS, AL.nroLinea);

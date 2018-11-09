@@ -22,8 +22,13 @@ public class AccionSemantica1 implements AccionSemantica {
 			devuelto=new Token(Token.YYERRCODE,null, AL.nroLinea); //token de error, ver de redefinir cualca
 		}
 		else {
-			if(!AL.TS.containsKey(AL.buffer))
-				AL.altaEnTablaSimbolos(AL.buffer, "ID", AL.buffer); //clave, tipo de token, lexema
+			if(!AL.TS.containsKey(AL.buffer)){
+				Atributos atts = new Atributos();
+				atts.set("Token", "ID");
+				atts.set("Lexema", "_" + AL.buffer);
+				atts.set("Declarada", "No");
+				AL.altaEnTablaSimbolos(AL.buffer, atts);
+			}
 			devuelto= new Token(Token.ID,AL.buffer, AL.nroLinea);
 		}
 		return devuelto;

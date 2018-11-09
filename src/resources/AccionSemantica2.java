@@ -8,8 +8,13 @@ public class AccionSemantica2 implements AccionSemantica{
 		String cadena = AL.buffer;
 		String claveTS = "'" + AL.buffer + "'"; 
 		
-		if(!AL.TS.containsKey(claveTS)) 
-			AL.altaEnTablaSimbolos(claveTS,"CADENA_CARACTERES",cadena);
+		if(!AL.TS.containsKey(claveTS)) {
+			Atributos atts = new Atributos();
+			atts.set("Token", "CADENA_CARACTERES");
+			atts.set("Lexema", cadena);
+			atts.set("Tipo", "cadena_caracteres");
+			AL.altaEnTablaSimbolos(AL.buffer, atts);
+		}
 		
 		
 		return new Token(Token.CADENA_CARACTERES, claveTS, AL.nroLinea);
