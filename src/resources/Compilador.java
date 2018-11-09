@@ -67,6 +67,25 @@ public class Compilador {
 		
 		System.out.println(parser.getArbolSintactico().imprimir("", ""));
 		
+		for(String s: parser.getErroresChequeoSemantico())
+			System.out.println(s);
+		
+		GeneradorCodigo g= new GeneradorCodigo();
+		
+		List<String> datos=g.generarSeccionDatos(tablaSimbolos);
+		List<String> header =g.generarHeader();
+		List<String> includes = g.generarIncludes();
+		
+		List<String> asm=header;
+		asm.addAll(includes);
+		asm.addAll(datos);
+		
+		try {
+			ArchivoTexto.escribirEnDisco("asm.txt", asm);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

@@ -26,6 +26,7 @@ public class AccionSemantica1 implements AccionSemantica {
 				Atributos atts = new Atributos();
 				atts.set("Token", "ID");
 				atts.set("Lexema", "_" + AL.buffer);
+				atts.set("Declarada", "No");
 				AL.altaEnTablaSimbolos(AL.buffer, atts);
 			}
 			devuelto= new Token(Token.ID,AL.buffer, AL.nroLinea);

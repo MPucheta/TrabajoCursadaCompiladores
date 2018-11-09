@@ -30,6 +30,7 @@ public class AccionSemantica5 implements AccionSemantica{
 				Atributos atts = new Atributos();
 				atts.set("Token", "CTE_USLINTEGER");
 				atts.set("Valor", valorCte);
+				atts.set("Tipo", "uslinteger");
 				AL.altaEnTablaSimbolos(claveTS, atts);
 			}
 

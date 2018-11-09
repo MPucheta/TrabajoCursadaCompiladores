@@ -16,7 +16,7 @@
 
 
 
-//#line 3 ".\gramatica.y"
+//#line 3 ".\gramatica6.y"
 package resources;
 import java.lang.Math;
 import java.io.*;
@@ -483,7 +483,7 @@ final static String yyrule[] = {
 "r_value_asignacion : id_invocacion",
 };
 
-//#line 231 ".\gramatica.y"
+//#line 365 ".\gramatica6.y"
 
 
 Hashtable<String, Atributos> tablaSimbolos;
@@ -492,10 +492,18 @@ List<String> estructurasGramaticalesDetectadas;
 List<String> tokensLeidos;
 List<String> erroresDetallados;
 List<String> erroresGenerales;
+List<String> variablesADeclarar;
+String ambitoActual;
+List<String> funcionesADeclarar;
+List<Arbol> sentenciasEjecutables;
 Token t;
 int ultimoTokenLeido;
 Arbol raizArbolSintactico;
-
+boolean nuevaPosibleFuncion;
+boolean posibleFuncion;
+String ultimoAmbitoPosible;
+boolean errorSintaxis;
+List<String> erroresChequeoSemantico;
 int yylex(){
 	t = AL.getToken();
 	yylval = new ParserVal(t);
@@ -503,15 +511,35 @@ int yylex(){
 	//la siguiente condicion se debe hacer porque estas estructuras (ej, if, while) ocupan varias lineas de texto
 	//por lo que cuando el parsing detecta finalmente que un if termina en un end_if, el AL.nroLinea ya avanzo.
 	//Por lo tanto sin esto el nroLinea mostrado seria el del fin de la estructura y no del comienzo
+
+
+	if(posibleFuncion && ultimoTokenLeido==AL.ASCIIToken('(')){
+		agregarAmbito(ultimoAmbitoPosible);
+
+		posibleFuncion=false;
+ 	}
+
+	if(nuevaPosibleFuncion && ultimoTokenLeido==Token.ID){
+				posibleFuncion=true;
+				nuevaPosibleFuncion=false;
+				ultimoAmbitoPosible=t.claveTablaSimbolo; //t refiere al token nuevo, ultimoTokenLeido refiere al numero TIPO DE TOKEN
+	}
+
 	switch(ultimoTokenLeido){
 		case(Token.IF):
 				agregarEstructuraDetectada("Sentencia " + Token.tipoToken(ultimoTokenLeido)); break;
 		case(Token.WHILE):
 				agregarEstructuraDetectada("Sentencia " + Token.tipoToken(ultimoTokenLeido));break;
+		case(Token.FUN):
+				nuevaPosibleFuncion=true;break;
+		case(Token.VOID):
+				nuevaPosibleFuncion=true;break;
 		default:
 				break;
 
 	}
+
+
 
 	String leido= "Linea: " + t.nroLinea + ". Token leido: '" + ultimoTokenLeido + "' reconocido como: " + Token.tipoToken(ultimoTokenLeido) + "\n";
 	tokensLeidos.add(leido);
@@ -521,6 +549,9 @@ int yylex(){
 
 void yyerror(String s)
 {
+	if(errorSintaxis==false){
+		errorSintaxis=!errorSintaxis;
+	}
 	String err= "En linea: " + AL.nroLinea + ". Ocurrio un error de parsing ( "  + s + " ) al leer el token " + Token.tipoToken(ultimoTokenLeido) +"\n"; //tambien se puede usar yychar en vez de lo del ultimoTokenLeido
 	this.erroresGenerales.add(err);
 	System.out.println(err);
@@ -534,6 +565,17 @@ public Parser(AnalizadorLexico AL, Hashtable<String, Atributos> tablaSimbolos, A
 	estructurasGramaticalesDetectadas=new ArrayList<>();
 	erroresDetallados=new ArrayList<>();
 	erroresGenerales=new ArrayList<>();
+	variablesADeclarar = new ArrayList<>();
+	ambitoActual="main";
+  funcionesADeclarar = new ArrayList<>();
+	sentenciasEjecutables = new ArrayList<>();
+
+	nuevaPosibleFuncion=false;
+	posibleFuncion=false;
+	ultimoAmbitoPosible="main";
+
+	errorSintaxis=false;
+	erroresChequeoSemantico=new ArrayList<>();
 	this.AL=AL;
 	this.tablaSimbolos = tablaSimbolos;
 	this.raizArbolSintactico=raizArbolSintactico;
@@ -552,13 +594,26 @@ public List<String> getErroresGenerales(){
 	return this.erroresGenerales;
 }
 
+public List<String> getErroresChequeoSemantico(){
+	return this.erroresChequeoSemantico;
+
+}
 public Arbol getArbolSintactico(){
 	//en presencia de un error sintactico puedo setear un boolean o algo que haga que la raiz sea null y no generar codigo
+	if(errorSintaxis){
+		return new Hoja("null");
+	}
 	return this.raizArbolSintactico;
 
 }
 private void agregarError(String e){
+	errorSintaxis = true;
 	erroresDetallados.add(e+"\n");
+}
+
+private void agregarErrorChequeoSemantico(String e){
+
+	erroresChequeoSemantico.add(e+"\n");
 }
 private void agregarEstructuraDetectada(String tipo){
 	String toAdd=tipo + " en linea " + AL.nroLinea + "\n";
@@ -568,16 +623,24 @@ private void agregarEstructuraDetectada(String tipo){
 
 
 private ParserVal agregarNodoRengo(String value, ParserVal primero){
-
+  if(errorSintaxis){
+		return new ParserVal(new Hoja(null));
+	}
 	return new ParserVal(new NodoRengo(value,(Arbol)primero.obj));
 
 }
 private ParserVal agregarNodo(String value, ParserVal izquierdo, ParserVal derecho){
+	if(errorSintaxis){
+		return new ParserVal(new Hoja(null));
+	}
 	return new ParserVal(new Nodo(value,(Arbol)izquierdo.obj,(Arbol)derecho.obj));
 
 }
 
 private ParserVal agregarHoja(String value){
+	if(errorSintaxis){
+		return new ParserVal(new Hoja(null));
+	}
 	return new ParserVal(new Hoja(value));
 
 }
@@ -595,14 +658,180 @@ private void cambiarTipo(ParserVal pv,String tipo){
 
 private boolean verificarTipos(ParserVal p1, ParserVal p2, String tipoSentencia){
  //verdadero si son iguales, falso si son distintos
-	if (p1.sval != p2.sval)
-		System.out.println("Error de tipos en " + tipoSentencia + ": no se puede realizar entre "
-												+ p1.sval+ " y " + p2.sval +"\n"); /*cambiar*/
-	else
+	if (p1.sval != p2.sval){
+		String aux="Error de tipos en " + tipoSentencia + ": no se puede realizar entre "
+												+ p1.sval+ " y " + p2.sval;// + ". En linea " + nroLinea(p1);
+		agregarErrorChequeoSemantico(aux);
+		System.out.println(aux); /*cambiar*/
+	}else
 		return true;
 	return false;
 }
-//#line 534 "Parser.java"
+
+private boolean verificarDeclaracion(ParserVal p1){
+ //retorna verdadero si esta declarada
+ 	String claveTS = obtenerLexema(p1);
+	if (tablaSimbolos.get(claveTS).get("Declarada").equals("No")){ // se busca en la TS el atributo "Declarada" y se fija si tiene valor "No"
+		String aux="Error: variable '_" + claveTS +  "' no declarada. ";// + nroLinea(p1);
+		agregarErrorChequeoSemantico(aux);
+		System.out.println(aux); /*cambiar*/
+	}else{
+
+		return true;
+	}
+
+	return false;
+}
+
+private boolean verificarAccesibilidadPorAmbito(ParserVal p1){
+	String claveTS = obtenerLexema(p1);
+	String ambitoVariable=(String)tablaSimbolos.get(claveTS).get("Ambito");
+
+	//System.out.println("AMBITO " + ambitoVariable +" var " + claveTS + " ambito actual " + ambitoActual);
+	if(ambitoActual.toLowerCase().contains(ambitoVariable.toLowerCase())){
+		//podria retornar de una esto pero bue. por ejemplo si la variable esta en main@f1 puede usar variables de main.
+		//ya que "main@f1" contiene a "main" (hablando de strings)
+		//ahora bien si la variable esta en el ambito "main@f1@g". "main" no puede usar esa variable
+		//ya que "main" no contiene a "main@f1@g". Es justamente al revez, "main" es subtring de "main@f1@g"
+
+		return true;
+	}else{
+		String error="Error: variable/funcion '_" + obtenerLexema(p1) + "' no accesible en el ambito " + ambitoActual + ". Linea: " + ((Token)p1.obj).nroLinea;
+		agregarErrorChequeoSemantico(error);
+		System.out.println(error);
+	}
+	return false;
+}
+private void declararVariables(ParserVal tipo, String uso){
+	for (String variable: variablesADeclarar){
+		if (tablaSimbolos.get(variable).get("Declarada").equals("Si")){
+			String aux="Error: redeclaracion de variable '_" + variable + "'. En linea " + nroLinea(tipo);
+			agregarErrorChequeoSemantico(aux);
+			System.out.println(aux); //ERROR CHEQUEO SEMANTICO
+		}else{
+			tablaSimbolos.get(variable).set("Declarada", "Si");
+			tablaSimbolos.get(variable).set("Tipo", tipo.sval);
+			tablaSimbolos.get(variable).set("Ambito", ambitoActual);
+			if(!uso.equals("")){
+				tablaSimbolos.get(variable).set("Uso", uso); //el uso solo es distinto en el caso de los closure
+			}
+
+		}
+	}
+
+	variablesADeclarar.clear(); //ya se declararon las variables, se vacia la lista de variables a declarar
+
+}
+
+private Arbol engancharSentencias(){
+	Arbol salida = new Hoja(null);
+	for (Arbol a: sentenciasEjecutables)
+		salida = new Nodo("lista_sentencias", a, salida);
+	return salida;
+}
+
+/*
+private void cambiarAmbitoVariablesInternas(String ambito){
+		for (String variable: variablesInternasFunciones){
+				tablaSimbolos.get(variable).set("Ambito",ambito);
+		}
+
+		variablesInternasFunciones.clear();
+
+}
+*/
+private void declararFuncionesPendientes(String ambito,String tipo){
+	if(funcionesADeclarar.size()!=1){
+		String aux="El numero de funciones debe ser exactamente igual a uno (1). En ambito " + ambito;
+		agregarErrorChequeoSemantico(aux);
+		System.out.println(aux); //ERROR SEMANTICO
+
+	}else{
+		String func=funcionesADeclarar.get(0);
+
+	  if(func!=null){
+			if (tablaSimbolos.get(func).get("Declarada").equals("Si")) //ver si agrego de preguntar sobre los ambitos
+				System.out.println("Error: nombre previamente usado '" + func + "'."); //ERROR CHEQUEO SEMANTICO
+			else{
+				tablaSimbolos.get(func).set("Declarada", "Si");
+				tablaSimbolos.get(func).set("Tipo", tipo); //las funciones pendientes son siembre de tipo void, quizas debiera plantear una List<ParserVal> ?
+
+				String[] partes=ambitoActual.split("@");
+
+				String aux="";
+				for(int i=0;i<partes.length;i++){
+					aux+=partes[i];
+
+					if(partes[i].equals(ambito)){
+						break;
+					}
+					aux+="@";
+				}
+				tablaSimbolos.get(func).set("Ambito",aux); //obtengo los ambitos hasta lo que me interesa
+				tablaSimbolos.get(func).set("Uso", "funcion"); //el uso solo es distinto en el caso de los closure
+
+			}
+
+			funcionesADeclarar.clear();
+
+		}
+	}
+
+}
+
+private void eliminarUltimoAmbito(){
+	String[] partes=ambitoActual.split("@");
+
+	if(partes.length!=0){
+		ambitoActual=partes[0];
+		for(int i=1; i<partes.length-1;i++){
+			ambitoActual=ambitoActual+"@"+partes[i];
+
+		}
+	}
+	else
+		ambitoActual="main";
+
+
+}
+
+private void agregarAmbito(String ambito){
+	ambitoActual=ambitoActual+"@"+ambito;
+
+}
+
+private void setNroLinea(ParserVal p1, ParserVal p2){
+	p1.ival = p2.ival;
+
+}
+
+private void setNroLinea(ParserVal p1, int val){
+	p1.ival = val;
+
+}
+
+private void setNroLinea(ParserVal p1, Token t){
+	p1.ival = t.nroLinea;
+
+}
+
+private int nroLinea(ParserVal pv){
+	return pv.ival;
+}
+
+private ParserVal hojaError(){
+	return new ParserVal(new Hoja(null));
+
+}
+
+private void verificarAmbito(ParserVal var, String ambito){
+	if (!ambito.contains(((String)tablaSimbolos.get(((Token)var.obj).claveTablaSimbolo).get("Ambito"))) && !ambito.equals(((String)tablaSimbolos.get(((Token)var.obj).claveTablaSimbolo).get("Ambito")))){
+		String s = "Error: variable '_" + ((Token)var.obj).claveTablaSimbolo + "' no se puede utilizar en el ambito " + ambito + ", ya que pertenece al ambito " + tablaSimbolos.get(((Token)var.obj).claveTablaSimbolo).get("Ambito") +". Linea: " + ((Token)var.obj).nroLinea;
+		agregarErrorChequeoSemantico(s);
+		System.out.println(s);
+	}
+}
+//#line 763 "Parser.java"
 //###############################################################
 // method: yylexdebug : check lexer state
 //###############################################################
@@ -757,269 +986,382 @@ boolean doaction;
       {
 //########## USER-SUPPLIED ACTIONS ##########
 case 1:
-//#line 21 ".\gramatica.y"
-{	this.raizArbolSintactico=(Arbol)val_peek(0).obj;}
+//#line 21 ".\gramatica6.y"
+{	this.raizArbolSintactico = engancharSentencias();}
 break;
-case 3:
-//#line 26 ".\gramatica.y"
-{yyval = agregarNodo("lista_sentencias", val_peek(0), new ParserVal(new Hoja(null)));}
-break;
-case 4:
-//#line 27 ".\gramatica.y"
-{yyval = agregarNodo("lista_sentencias",val_peek(1),val_peek(0));}
+case 6:
+//#line 32 ".\gramatica6.y"
+{sentenciasEjecutables.add(0, (Arbol)val_peek(0).obj);}
 break;
 case 9:
-//#line 37 ".\gramatica.y"
+//#line 38 ".\gramatica6.y"
 {agregarEstructuraDetectada("Asignacion");}
 break;
 case 12:
-//#line 42 ".\gramatica.y"
-{agregarEstructuraDetectada("Invocacion funcion");yyval = agregarHoja(obtenerLexema(val_peek(1)));}
+//#line 44 ".\gramatica6.y"
+{				Arbol arbol = (Arbol) val_peek(1).obj;
+																				if (arbol.getValor() != null){ /*si no es hoja error*/
+																						Atributos atts = tablaSimbolos.get(arbol.getValor());
+																						String declarada = "No";
+																						String ambito = "*";
+																						if (atts != null){
+																								declarada = (String) atts.get("Declarada");
+																								ambito = (String) atts.get("Ambito");
+																								if (ambito == null)
+																									ambito = "*";
+																							}
+																						if (declarada.equals("Si")){
+																									agregarEstructuraDetectada("Invocacion funcion");
+																									yyval = agregarNodoRengo("invocacion", val_peek(1));
+																									String clave=((Arbol)val_peek(1).obj).getValor();
+																									if(!tablaSimbolos.get(clave).get("Tipo").equals("fun")){
+																											String aux="Error: '_" + clave + "' no es de tipo fun. Solo se permiten invocaciones de tipo fun. Linea: " + nroLinea(val_peek(1));
+																											agregarErrorChequeoSemantico(aux);
+																											System.out.println(aux);
+																									}
+																									else{
+																											cambiarTipo(yyval, "invocacion");
+																											}
+																									if (!ambito.equals("*"))
+																										if (!ambitoActual.contains(ambito)){
+																											agregarErrorChequeoSemantico("Error: variable '" + atts.get("Lexema") + "' utilizada fuera de su ambito. Linea: " + nroLinea(val_peek(1)));
+																											System.out.println("Error: variable '" + atts.get("Lexema") + "' utilizada fuera de su ambito. Linea: " + nroLinea(val_peek(1)));
+																										}
+
+																					}else{
+																						agregarErrorChequeoSemantico("Error: funcion '_" + "' no declarada. Linea: " + nroLinea(val_peek(1)));
+																						yyval = hojaError();
+																					}
+
+																				}else
+																					yyval = hojaError();/*NO SE AGREGA ERROR PORQUE SI LLEGA ACA SIGNIFICA QUE YA VIENE UN ERROR DE ANTES EN ID_INVOCACION*/
+																				setNroLinea(yyval, (Token) val_peek(0).obj);
+																			}
 break;
 case 13:
-//#line 43 ".\gramatica.y"
-{agregarError("Error: falta ',' en invocacion ejecutable. Linea: " + ((Token) val_peek(1).obj).nroLinea);}
+//#line 82 ".\gramatica6.y"
+{agregarError("Error: falta ',' en invocacion ejecutable. Linea: " + nroLinea(val_peek(1)));}
 break;
 case 14:
-//#line 46 ".\gramatica.y"
-{yyval = val_peek(2);}
+//#line 86 ".\gramatica6.y"
+{
+																	yyval = agregarHoja(obtenerLexema(val_peek(2)));
+																	cambiarTipo(yyval, "fun");
+																	setNroLinea(yyval, (Token) val_peek(0).obj);
+																}
 break;
 case 15:
-//#line 47 ".\gramatica.y"
-{agregarError("Error: falta ')' en invocacion o declaracion de closure/funcion. Linea: " + ((Token) val_peek(1).obj).nroLinea);}
+//#line 91 ".\gramatica6.y"
+{agregarError("Error: falta ')' en invocacion o declaracion de closure/funcion. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = hojaError();setNroLinea(yyval, (Token) val_peek(1).obj);}
 break;
 case 16:
-//#line 49 ".\gramatica.y"
+//#line 95 ".\gramatica6.y"
 {agregarEstructuraDetectada("Impresion"); yyval = agregarNodoRengo("Impresion",val_peek(1));}
 break;
 case 17:
-//#line 50 ".\gramatica.y"
-{agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + ((Token) val_peek(0).obj).nroLinea); yyval = val_peek(0);}
+//#line 96 ".\gramatica6.y"
+{agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + nroLinea(val_peek(0)));yyval = hojaError(); setNroLinea(yyval, val_peek(0));}
 break;
 case 18:
-//#line 51 ".\gramatica.y"
-{agregarError("Error: sentencia de impresion erronea. Linea: " + ((Token) val_peek(2).obj).nroLinea);}
+//#line 97 ".\gramatica6.y"
+{agregarError("Error: sentencia de impresion erronea. Linea: " + ((Token) val_peek(2).obj).nroLinea);yyval = hojaError();setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 19:
-//#line 54 ".\gramatica.y"
-{yyval = agregarHoja(obtenerLexema(val_peek(1)));}
+//#line 101 ".\gramatica6.y"
+{yyval = agregarHoja(obtenerLexema(val_peek(1)));setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 20:
-//#line 55 ".\gramatica.y"
-{agregarError("Error: falta ')' luego de la cadena de caracteres. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = val_peek(1);}
+//#line 102 ".\gramatica6.y"
+{agregarError("Error: falta ')' luego de la cadena de caracteres. Linea: " + ((Token) val_peek(1).obj).nroLinea); setNroLinea(yyval, (Token) val_peek(1).obj);}
 break;
 case 21:
-//#line 56 ".\gramatica.y"
-{agregarError("Error: falta '(' antes de la cadena de caracteres. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = val_peek(0);}
+//#line 103 ".\gramatica6.y"
+{agregarError("Error: falta '(' antes de la cadena de caracteres. Linea: " + ((Token) val_peek(1).obj).nroLinea); setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 22:
-//#line 57 ".\gramatica.y"
-{agregarError("Error: solo se pueden imprimir cadenas de caracteres. Linea: " + ((Token) val_peek(1).obj).nroLinea);yyval = val_peek(0);}
+//#line 104 ".\gramatica6.y"
+{agregarError("Error: solo se pueden imprimir cadenas de caracteres. Linea: " + ((Token) val_peek(1).obj).nroLinea);setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 23:
-//#line 60 ".\gramatica.y"
-{yyval = agregarNodo("if",val_peek(2),agregarNodoRengo("cuerpo",agregarNodoRengo("then",val_peek(1))));}
+//#line 108 ".\gramatica6.y"
+{yyval = agregarNodo("if",val_peek(2),agregarNodoRengo("cuerpo",agregarNodoRengo("then",val_peek(1))));setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 24:
-//#line 61 ".\gramatica.y"
-{yyval = agregarNodo("if_else",val_peek(4),agregarNodo("cuerpo",agregarNodoRengo("then",val_peek(3)),agregarNodoRengo("else",val_peek(1))));}
+//#line 109 ".\gramatica6.y"
+{yyval = agregarNodo("if_else",val_peek(4),agregarNodo("cuerpo",agregarNodoRengo("then",val_peek(3)),agregarNodoRengo("else",val_peek(1))));setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 25:
-//#line 62 ".\gramatica.y"
-{agregarError("Error: falta \"end_if\" de la sentencia IF. Linea: " + ((Token) val_peek(1).obj).nroLinea);yyval = val_peek(1);}
+//#line 110 ".\gramatica6.y"
+{agregarError("Error: falta \"end_if\" de la sentencia IF. Linea: " + nroLinea(val_peek(1)));yyval = hojaError();setNroLinea(yyval, val_peek(1)); }
 break;
 case 26:
-//#line 67 ".\gramatica.y"
-{yyval = agregarNodo("while",val_peek(1),val_peek(0));}
+//#line 114 ".\gramatica6.y"
+{yyval = agregarNodo("while",val_peek(1),val_peek(0)); }
 break;
 case 27:
-//#line 72 ".\gramatica.y"
-{agregarEstructuraDetectada("Condicion"); yyval = agregarNodoRengo("condicion",val_peek(1));}
+//#line 117 ".\gramatica6.y"
+{agregarEstructuraDetectada("Condicion"); yyval = agregarNodoRengo("condicion",val_peek(1)); setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 28:
-//#line 73 ".\gramatica.y"
-{agregarError("Error: falta '(' antes de la condicion. Linea: " + ((Token) val_peek(2).obj).nroLinea);yyval = val_peek(0);}
+//#line 118 ".\gramatica6.y"
+{agregarError("Error: falta '(' antes de la condicion. Linea: " + ((Token) val_peek(2).obj).nroLinea);yyval = hojaError();setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 29:
-//#line 74 ".\gramatica.y"
+//#line 119 ".\gramatica6.y"
 {/*esta solucion no es muy agradable, pero usar '(' condicion error puede ocasionar*/
 														 								/*que se coman tokens de mas e incluso no informar el errores*/
-																						agregarError("Error: falta ')' luego de la condicion. Linea: " + ((Token) val_peek(0).obj).nroLinea);yyval = val_peek(0);}
+																						agregarError("Error: falta ')' luego de la condicion. Linea: " + nroLinea(val_peek(0)));yyval = hojaError();setNroLinea(yyval, val_peek(0));}
+break;
+case 31:
+//#line 126 ".\gramatica6.y"
+{declararFuncionesPendientes("main","fun");}
 break;
 case 33:
-//#line 86 ".\gramatica.y"
-{agregarEstructuraDetectada("Declaracion variable/s"); yyval = val_peek(0);}
+//#line 131 ".\gramatica6.y"
+{ declararVariables(val_peek(2),"");
+																														agregarEstructuraDetectada("Declaracion variable/s"); setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 34:
-//#line 87 ".\gramatica.y"
-{yyval = val_peek(0);}
+//#line 133 ".\gramatica6.y"
+{ declararVariables(val_peek(2),"variable");
+																														setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 35:
-//#line 88 ".\gramatica.y"
-{agregarError("Error: declaracion de tipo erronea. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = val_peek(1);}
+//#line 136 ".\gramatica6.y"
+{agregarError("Error: declaracion de tipo erronea. Linea: " + ((Token) val_peek(1).obj).nroLinea);yyval = hojaError(); setNroLinea(yyval, (Token) val_peek(1).obj);}
 break;
 case 36:
-//#line 89 ".\gramatica.y"
-{agregarError("Error: falta ID o ',' en la declaracion de variable/s. Linea: " + ((Token) val_peek(1).obj).nroLinea);}
+//#line 137 ".\gramatica6.y"
+{agregarError("Error: falta ID o ',' en la declaracion de variable/s. Linea: " + nroLinea(val_peek(1)));yyval = hojaError();}
 break;
 case 37:
-//#line 90 ".\gramatica.y"
-{agregarError("Error: definicion de closure erronea. Linea: " + ((Token) val_peek(1).obj).nroLinea);}
+//#line 138 ".\gramatica6.y"
+{agregarError("Error: definicion de closure erronea. Linea: " + nroLinea(val_peek(1)));yyval = hojaError();}
+break;
+case 38:
+//#line 142 ".\gramatica6.y"
+{yyval = new ParserVal("integer"); setNroLinea(yyval, (Token) val_peek(0).obj);}
+break;
+case 39:
+//#line 143 ".\gramatica6.y"
+{yyval = new ParserVal("uslinteger"); setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 40:
-//#line 97 ".\gramatica.y"
+//#line 147 ".\gramatica6.y"
 {/*lo hago aca para que tome la primer linea incluso en funcion closure*/
-													agregarEstructuraDetectada("Declaracion de tipo closure"); }
+													yyval = new ParserVal("fun");
+													agregarEstructuraDetectada("Declaracion de tipo closure");
+												setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 41:
-//#line 101 ".\gramatica.y"
-{yyval = val_peek(0);}
+//#line 154 ".\gramatica6.y"
+{
+	/*cambiarAmbitoVariablesInternas(((Arbol)$2.obj).getValor());*/
+																																																												declararFuncionesPendientes(((Arbol)val_peek(8).obj).getValor(),"void");
+																																																												funcionesADeclarar.add(((Arbol)val_peek(8).obj).getValor());
+																																																												cambiarTipo(yyval,"closure");
+																																																												eliminarUltimoAmbito();
+																																																												setNroLinea(yyval, (Token) val_peek(0).obj);
+																																																												}
 break;
 case 42:
-//#line 102 ".\gramatica.y"
-{agregarError("Error: falta '}' de cierre de la declaracion de closure. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = val_peek(1);}
+//#line 162 ".\gramatica6.y"
+{agregarError("Error: falta '}' de cierre de la declaracion de closure. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = hojaError();setNroLinea(yyval, (Token) val_peek(1).obj);eliminarUltimoAmbito();}
 break;
 case 43:
-//#line 103 ".\gramatica.y"
-{agregarError("Error: falta ')' luego del retorno del closure. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = val_peek(1);}
+//#line 163 ".\gramatica6.y"
+{agregarError("Error: falta ')' luego del retorno del closure. Linea: " + nroLinea(val_peek(1))); yyval = hojaError();setNroLinea(yyval, val_peek(1));eliminarUltimoAmbito();}
 break;
 case 44:
-//#line 104 ".\gramatica.y"
-{agregarError("Error: falta ',' luego del retorno del closure. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = val_peek(1);}
+//#line 164 ".\gramatica6.y"
+{agregarError("Error: falta ',' luego del retorno del closure. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = hojaError();setNroLinea(yyval, (Token) val_peek(1).obj);eliminarUltimoAmbito();}
 break;
 case 45:
-//#line 105 ".\gramatica.y"
-{agregarError("Error: retorno no es de tipo closure. Se espera \"return( ID() )\" o \"return( {SENTENCIAS} )\". Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = val_peek(1);}
+//#line 165 ".\gramatica6.y"
+{agregarError("Error: retorno no es de tipo closure. Se espera \"return( ID() )\" o \"return( {SENTENCIAS} )\". Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = hojaError();setNroLinea(yyval, (Token) val_peek(1).obj);eliminarUltimoAmbito();}
 break;
 case 46:
-//#line 111 ".\gramatica.y"
-{agregarEstructuraDetectada("Declaracion de funcion simple"); yyval = val_peek(0);}
+//#line 169 ".\gramatica6.y"
+{
+																																								agregarEstructuraDetectada("Declaracion de funcion simple");
+																																							/*cambiarAmbitoVariablesInternas(((Arbol)$2.obj).getValor());*/
+																																								cambiarTipo(yyval,"void");
+																																							  funcionesADeclarar.add(((Arbol)val_peek(3).obj).getValor());
+																																								eliminarUltimoAmbito();
+																																								setNroLinea(yyval, (Token) val_peek(0).obj);
+													}
 break;
 case 47:
-//#line 112 ".\gramatica.y"
-{agregarError("Error: falta '}' de cierre de la funcion. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = val_peek(1);}
+//#line 178 ".\gramatica6.y"
+{agregarError("Error: falta '}' de cierre de la funcion. Linea: " + nroLinea(val_peek(1))); yyval = hojaError();setNroLinea(yyval, val_peek(1));}
+break;
+case 48:
+//#line 182 ".\gramatica6.y"
+{
+											String clave=((Arbol)val_peek(0).obj).getValor(); /*esto es porque dependiendo del parsing puede que sea null.*/
+
+											if(clave!=null&&tablaSimbolos.get(clave).get("Declarada").equals("Si")&&!tablaSimbolos.get(clave).get("Tipo").equals("void")){
+												/*lo anterior es un poco guaso, pero basicamente tengo que devolver funciones que ya*/
+												/*fueron declaradas. Si dejo solo la segunda parte el parsing ascendente lo rompe*/
+												/*por alguna razon no estaba declarada, por ahi se iba por la regla de la definicion*/
+
+												String aux="Error: El retorno de closure debe ser tipo void. En Linea " + nroLinea(val_peek(0)) ;
+												agregarErrorChequeoSemantico(aux);
+												System.out.println(aux);
+											}
+
+								}
 break;
 case 49:
-//#line 117 ".\gramatica.y"
-{yyval = val_peek(0);}
+//#line 196 ".\gramatica6.y"
+{setNroLinea(yyval, (Token) val_peek(0).obj);}
+break;
+case 50:
+//#line 199 ".\gramatica6.y"
+{variablesADeclarar.add(obtenerLexema(val_peek(0)));}
 break;
 case 51:
-//#line 121 ".\gramatica.y"
-{yyval = val_peek(0);}
+//#line 200 ".\gramatica6.y"
+{ variablesADeclarar.add(obtenerLexema(val_peek(0))); setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 52:
-//#line 126 ".\gramatica.y"
-{yyval = agregarNodo("lista_sentencias", val_peek(0), new ParserVal(new Hoja(null)));}
+//#line 204 ".\gramatica6.y"
+{yyval = agregarNodo("lista_sentencias", val_peek(0), new ParserVal(new Hoja(null))); setNroLinea(yyval,val_peek(0));}
 break;
 case 53:
-//#line 127 ".\gramatica.y"
-{yyval = val_peek(1);}
+//#line 205 ".\gramatica6.y"
+{yyval = val_peek(1); setNroLinea(yyval,(Token) val_peek(0).obj);}
 break;
 case 54:
-//#line 128 ".\gramatica.y"
-{agregarError("Error: falta '}' de cierre de bloque de sentencias. Linea: " +((Token) val_peek(1).obj).nroLinea); yyval = val_peek(1);}
+//#line 206 ".\gramatica6.y"
+{agregarError("Error: falta '}' de cierre de bloque de sentencias. Linea: " +nroLinea(val_peek(1))); yyval = val_peek(1);}
 break;
 case 55:
-//#line 130 ".\gramatica.y"
-{yyval = agregarNodo("lista_sentencias", val_peek(0), new ParserVal(new Hoja(null)));}
+//#line 210 ".\gramatica6.y"
+{yyval = agregarNodo("lista_sentencias", val_peek(0), new ParserVal(new Hoja(null)));setNroLinea(yyval, val_peek(0));}
 break;
 case 56:
-//#line 131 ".\gramatica.y"
-{yyval = agregarNodo("lista_sentencias", val_peek(1), val_peek(0));}
+//#line 211 ".\gramatica6.y"
+{yyval = agregarNodo("lista_sentencias", val_peek(1), val_peek(0)); setNroLinea(yyval, val_peek(0));}
 break;
 case 57:
-//#line 134 ".\gramatica.y"
+//#line 215 ".\gramatica6.y"
 {if (verificarTipos(val_peek(2), val_peek(0), "condicion '='"))
-																						yyval = agregarNodo("=",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
-																					}
+																									yyval = agregarNodo("=",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
+																								setNroLinea(yyval, val_peek(0));}
 break;
 case 58:
-//#line 137 ".\gramatica.y"
+//#line 219 ".\gramatica6.y"
 {if (verificarTipos(val_peek(2), val_peek(0), "condicion '<'"))
-																								yyval = agregarNodo("<",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
-																							}
+																											yyval = agregarNodo("<",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
+																										setNroLinea(yyval, val_peek(0));}
 break;
 case 59:
-//#line 140 ".\gramatica.y"
+//#line 223 ".\gramatica6.y"
 {if (verificarTipos(val_peek(2), val_peek(0), "condicion '>'"))
-																								yyval = agregarNodo(">",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
-																							}
+																											yyval = agregarNodo(">",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
+																									setNroLinea(yyval, val_peek(0));	}
 break;
 case 60:
-//#line 143 ".\gramatica.y"
+//#line 227 ".\gramatica6.y"
 {if (verificarTipos(val_peek(2), val_peek(0), "condicion '<='"))
-																								yyval = agregarNodo("<=",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
-																							}
+																											yyval = agregarNodo("<=",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
+																									setNroLinea(yyval, val_peek(0));	}
 break;
 case 61:
-//#line 146 ".\gramatica.y"
+//#line 231 ".\gramatica6.y"
 {if (verificarTipos(val_peek(2), val_peek(0), "condicion '=>'"))
-																								yyval = agregarNodo(">=",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
-																							}
+																											yyval = agregarNodo(">=",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
+																										setNroLinea(yyval, val_peek(0));}
 break;
 case 62:
-//#line 149 ".\gramatica.y"
+//#line 235 ".\gramatica6.y"
 {if (verificarTipos(val_peek(2), val_peek(0), "condicion '!='"))
-																								yyval = agregarNodo("!=",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
-																							}
+																											yyval = agregarNodo("!=",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
+																									setNroLinea(yyval, val_peek(0));	}
 break;
 case 63:
-//#line 152 ".\gramatica.y"
-{agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + ((Token) val_peek(0).obj).nroLinea);}
+//#line 239 ".\gramatica6.y"
+{agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + ((Token) val_peek(0).obj).nroLinea);yyval = hojaError(); setNroLinea(yyval, (Token)val_peek(0).obj);}
 break;
 case 64:
-//#line 155 ".\gramatica.y"
-{	if (verificarTipos(val_peek(2), val_peek(0), "operacion '+'")){
-																yyval = agregarNodo("+",val_peek(2),val_peek(0));
-																cambiarTipo(yyval, val_peek(2).sval);
-															}
-														}
+//#line 243 ".\gramatica6.y"
+{
+															if (verificarTipos(val_peek(2), val_peek(0), "operacion '+'")){
+																	yyval = agregarNodo("+",val_peek(2),val_peek(0));
+																	cambiarTipo(yyval, val_peek(2).sval);
+																}
+																else
+																	yyval = hojaError();
+																setNroLinea(yyval, val_peek(0));
+													}
 break;
 case 65:
-//#line 160 ".\gramatica.y"
+//#line 253 ".\gramatica6.y"
+{
+																if (verificarTipos(val_peek(2), val_peek(0), "operacion '/'")){
+																		yyval = agregarNodo("-",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘-‘ ; T.ptr ; F.ptr )*/
+																		cambiarTipo(yyval, val_peek(2).sval);
+																	}
+																	else
+																		yyval = hojaError();
+																	setNroLinea(yyval, val_peek(0));
+																}
+break;
+case 66:
+//#line 263 ".\gramatica6.y"
+{setNroLinea(yyval, val_peek(0));}
+break;
+case 67:
+//#line 267 ".\gramatica6.y"
+{agregarEstructuraDetectada("Conversion explicita"); yyval = agregarNodoRengo("casting",val_peek(1)); cambiarTipo(yyval, "uslinteger"); setNroLinea(yyval, (Token) val_peek(0).obj);}
+break;
+case 68:
+//#line 269 ".\gramatica6.y"
+{agregarError("Error: falta ')' en la conversion explicita. Linea: " + nroLinea(val_peek(1))); yyval = hojaError();setNroLinea(yyval, val_peek(1));}
+break;
+case 69:
+//#line 271 ".\gramatica6.y"
+{agregarError("Error: tipo no valido para conversion. Linea: " + ((Token)val_peek(3).obj).nroLinea); yyval = hojaError();setNroLinea(yyval, (Token) val_peek(0).obj);}
+break;
+case 70:
+//#line 276 ".\gramatica6.y"
+{
+																	if (verificarTipos(val_peek(2), val_peek(0), "operacion '*'")){
+																			yyval = agregarNodo("*",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘*‘ ; T.ptr ; F.ptr )*/
+																			cambiarTipo(yyval, val_peek(2).sval);
+																		}
+																		else
+																			yyval = hojaError();
+																		setNroLinea(yyval, val_peek(0));
+														}
+break;
+case 71:
+//#line 285 ".\gramatica6.y"
 {
 																if (verificarTipos(val_peek(2), val_peek(0), "operacion '/'")){
 																		yyval = agregarNodo("/",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
 																		cambiarTipo(yyval, val_peek(2).sval);
 																	}
-												}
-break;
-case 67:
-//#line 170 ".\gramatica.y"
-{agregarEstructuraDetectada("Conversion explicita"); yyval = agregarNodoRengo("casting",val_peek(1)); cambiarTipo(yyval, "uslinteger");}
-break;
-case 68:
-//#line 171 ".\gramatica.y"
-{agregarError("Error: falta ')' en la conversion explicita. Linea: " + ((Token)val_peek(1).obj).nroLinea); yyval = val_peek(1);}
-break;
-case 69:
-//#line 172 ".\gramatica.y"
-{agregarError("Error: tipo no valido para conversion. Linea: " + ((Token)val_peek(3).obj).nroLinea); yyval = val_peek(0);}
-break;
-case 70:
-//#line 175 ".\gramatica.y"
-{
-														if (verificarTipos(val_peek(2), val_peek(0), "operacion '*'")){
-																yyval = agregarNodo("*",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘*‘ ; T.ptr ; F.ptr )*/
-																cambiarTipo(yyval, val_peek(2).sval);
-															}
+																	else
+																	 yyval = hojaError();
+																	setNroLinea(yyval, val_peek(0));
 														}
 break;
-case 71:
-//#line 181 ".\gramatica.y"
-{
-												if (verificarTipos(val_peek(2), val_peek(0), "operacion '/'")){
-														yyval = agregarNodo("/",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
-														cambiarTipo(yyval, val_peek(2).sval);
-													}
-												}
-break;
 case 73:
-//#line 190 ".\gramatica.y"
-{ yyval=agregarHoja(((Token)val_peek(0).obj).claveTablaSimbolo);}
+//#line 298 ".\gramatica6.y"
+{ yyval=agregarHoja(((Token)val_peek(0).obj).claveTablaSimbolo);
+																			if (verificarDeclaracion(val_peek(0))){
+																					cambiarTipo(yyval, (String)tablaSimbolos.get(obtenerLexema(val_peek(0))).get("Tipo"));
+																					verificarAmbito(val_peek(0), ambitoActual);
+																				}
+																			else
+																				yyval = hojaError();
+																			setNroLinea(yyval, (Token) val_peek(0).obj);
+																				}
 break;
 case 74:
-//#line 191 ".\gramatica.y"
+//#line 307 ".\gramatica6.y"
 { yyval=agregarHoja(((Token)val_peek(0).obj).claveTablaSimbolo);
 																			cambiarTipo(yyval, "integer");
 																		 Atributos atts = tablaSimbolos.get(((Token)val_peek(0).obj).claveTablaSimbolo); /*$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS*/
@@ -1032,16 +1374,17 @@ case 74:
 																					tablaSimbolos.put("32767_i", nuevosAtts);
 																					agregarError("Warning: constante integer fuera de rango. Reemplazo en linea: " + ((Token)val_peek(0).obj).nroLinea);
 																				}
-
+																				setNroLinea(yyval, (Token) val_peek(0).obj);
 																			}
 break;
 case 75:
-//#line 205 ".\gramatica.y"
+//#line 321 ".\gramatica6.y"
 { yyval=agregarHoja(((Token)val_peek(0).obj).claveTablaSimbolo);
-																		cambiarTipo(yyval, "uslinteger");}
+																		cambiarTipo(yyval, "uslinteger");
+																	setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 76:
-//#line 207 ".\gramatica.y"
+//#line 324 ".\gramatica6.y"
 {	agregarEstructuraDetectada("Negacion de operando");
 																		int valorInteger = (Integer) tablaSimbolos.get(((Token)val_peek(0).obj).claveTablaSimbolo).get("Valor");
 																		String nuevaClave = "-" + valorInteger + "_i";
@@ -1050,31 +1393,42 @@ case 76:
 																			atts.set("Token", "CTE_INTEGER"); atts.set("Valor", new Integer(-valorInteger));
 																			tablaSimbolos.put(nuevaClave, atts);
 																			}
-																		yyval = val_peek(0);
+																		yyval =agregarNodoRengo("-",agregarHoja(((Token)val_peek(0).obj).claveTablaSimbolo)); /*agrego dos nodos de una, un - unario y una hoja con el valor en si*/
 																		cambiarTipo(yyval, "integer");
+																		setNroLinea(yyval, (Token) val_peek(0).obj);
 																		}
 break;
 case 77:
-//#line 218 ".\gramatica.y"
-{agregarError("Error: negacion no permitida a este operando. Linea: " + ((Token) val_peek(1).obj).nroLinea);}
+//#line 336 ".\gramatica6.y"
+{agregarError("Error: negacion no permitida a este operando. Linea: " + ((Token) val_peek(1).obj).nroLinea);yyval = hojaError();setNroLinea(yyval, (Token) val_peek(1).obj);}
 break;
 case 79:
-//#line 221 ".\gramatica.y"
-{yyval = agregarNodo(":=",agregarHoja(((Token)val_peek(3).obj).claveTablaSimbolo),val_peek(1));}
+//#line 341 ".\gramatica6.y"
+{
+
+																							if (verificarDeclaracion(val_peek(3))&&verificarAccesibilidadPorAmbito(val_peek(3))){  /*se fija si la variable del lado izquierdo esta declarada*/
+																									cambiarTipo(val_peek(3), (String)tablaSimbolos.get(obtenerLexema(val_peek(3))).get("Tipo")); /*se le setea el tipo*/
+																									verificarTipos(val_peek(3), val_peek(1), "asignacion"); 																		/*se verifica que los tipos de los dos lados sean iguales*/
+																									yyval = agregarNodo(":=",agregarHoja(((Token)val_peek(3).obj).claveTablaSimbolo),val_peek(1));
+																							}
+																							else
+																								yyval = hojaError();
+																							setNroLinea(yyval, (Token) val_peek(0).obj);
+																						}
 break;
 case 80:
-//#line 222 ".\gramatica.y"
-{agregarError("Error: falta ',' en asignacion. Linea: " + ((Token) val_peek(0).obj).nroLinea); yyval = val_peek(0);}
+//#line 353 ".\gramatica6.y"
+{agregarError("Error: falta ',' en asignacion. Linea: " + nroLinea(val_peek(0))); yyval = hojaError();setNroLinea(yyval, val_peek(0));}
 break;
 case 81:
-//#line 223 ".\gramatica.y"
-{agregarError("Error: r-value de la asignacion mal definido. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = val_peek(0);}
+//#line 355 ".\gramatica6.y"
+{agregarError("Error: r-value de la asignacion mal definido. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = hojaError();setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 83:
-//#line 226 ".\gramatica.y"
+//#line 360 ".\gramatica6.y"
 {agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
 break;
-//#line 1001 "Parser.java"
+//#line 1355 "Parser.java"
 //########## END OF USER-SUPPLIED ACTIONS ##########
     }//switch
     //#### Now let's reduce... ####
