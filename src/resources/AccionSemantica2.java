@@ -12,6 +12,7 @@ public class AccionSemantica2 implements AccionSemantica{
 			Atributos atts = new Atributos();
 			atts.set("Token", "CADENA_CARACTERES");
 			atts.set("Lexema", cadena);
+			atts.set("Tipo", "cadena_caracteres");
 			AL.altaEnTablaSimbolos(AL.buffer, atts);
 		}
 		
