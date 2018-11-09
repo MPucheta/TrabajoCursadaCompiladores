@@ -1,38 +1,19 @@
 integer _var,
 uslinteger _var2; _var3,
-fun _var4
 
-fun _f1 ( { 
-	integer _x,
+fun _var4,
+
+fun _f1 () { 
+	integer _x;_h,
 	_x := 5_i,
 	if(_x <=5_i)
 		_x := 10_i,
-	
-	void _g () {integer _y, _z := _z + 1_i, print('suma'),
-	return(_g( ),
+	end_if
+	void _g () {integer _y; _z,_z := _z + 1_i, print('suma'),}
+	_z:=3_i +_y,
+	integer _l,
+	return(_x()),
 }
 
-_var := 123_i + 150_i, #comentario
+_y(),
 
-_var := 124_ul#
-
-_var2:=123_ul
-
-if (_var <= _var2)
-{
-_var:= _var+33333_i,
-_var:= _var+33333_i,
-}
-else _var2 := _var2+20_ul,
-
-
-while (_var3 = 5_ul {
-	print('_var3 = 5'),
-}
-
-print('Fin de programa'),
-_var:= integer(_var)
-
-print('Fin de programa'
-
-_var:= integer(_var) 

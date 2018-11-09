@@ -67,6 +67,8 @@ public class Compilador {
 		
 		System.out.println(parser.getArbolSintactico().imprimir("", ""));
 		
+		for(String s: parser.getErroresChequeoSemantico())
+			System.out.println(s);
 	}
 
 }
