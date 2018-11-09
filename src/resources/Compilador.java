@@ -86,6 +86,8 @@ public class Compilador {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		g.gererarCodigo(parser.getArbolSintactico());
 	}
 
 }

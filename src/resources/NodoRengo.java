@@ -13,4 +13,10 @@ public class NodoRengo extends Arbol{
 		salida += hijo.imprimir(offset + "-   " , "Hijo");
 		return salida;
 	}
+
+	@Override
+	public Arbol generarCodigo(GeneradorCodigo gc) {
+		this.hijo = hijo.generarCodigo(gc);
+		return gc.generarCodigoArbol(this.valor, this.hijo);
+	}
 }

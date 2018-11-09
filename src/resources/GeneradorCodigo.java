@@ -135,7 +135,46 @@ public class GeneradorCodigo {
 		return out;
 	}
 	
+	public Arbol generarCodigoArbol(String operacion, Arbol izquierdo, Arbol derecho){
+		
+		String registroOcupado = "";
+		switch(operacion){
+			case("+"): break;
+			case("-"): break;
+			case("*"): break;
+			case("/"): break;
+			case(":="): break;
+			case("="): break;
+			case("<"): break;
+			case("<="): break;
+			case(">"): break;
+			case(">="): break;
+			case("!="): break;
+			case("if"): break;
+			case("cuerpo"): break;
+			case("while"): break;
+			case("lista_sentencias"): break;
+		}
+		return new Hoja(registroOcupado);
+	}
 	
+	public Arbol generarCodigoArbol(String operacion, Arbol hijo){
+		String registroOcupado = "";
+		switch(operacion){
+			case("invocacion"): break;
+			case("impresion"): break;
+			case("cuerpo"): break;
+			case("then"): break;
+			case("else"): break;
+			case("condicion"): break;
+			case("casting"): break;
+		}
+		return new Hoja(registroOcupado);
+	}
+	
+	public void gererarCodigo(Arbol arbol){
+		arbol.generarCodigo(this);
+	}
 	
 	public static void main(String[] args) {
 		GeneradorCodigo g=new GeneradorCodigo();
@@ -145,7 +184,91 @@ public class GeneradorCodigo {
 			
 		}
 	}
-
+	
+	private String generarSuma(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarResta(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarMultiplicacion(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarDivision(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarAsignacion(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarIgual(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarMenor(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarMenorIgual(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarMayor(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarMayorIgual(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarDistinto(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarIf(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarCuerpo(){ /*Dos versiones de este?*/
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarWhile(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarListaSentencias(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarImpresion(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarInvocacion(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarThen(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarElse(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarCondicion(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
+	private String generarCasting(){
+		String registroOcupado = "";
+		return registroOcupado;
+	}
 }
 
 
