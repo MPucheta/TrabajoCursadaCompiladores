@@ -1,19 +1,21 @@
-integer _var,
+integer _var;_var4,
 uslinteger _var2; _var3,
 
-fun _var4,
 
-fun _f1 () { 
-	integer _x;_h,
-	_x := 5_i,
-	if(_x <=5_i)
-		_x := 10_i,
+_var:= 3_i*4_i,
+
+if(_var=1_i)
+	_var2:=2_ul,
+else
+	_var2:=555_ul,
+end_if
+
+_var4:=1_i,
+
+
+while(_var=555_i){
+	if(_var=666_i)
+		_var2:=2_ul,
 	end_if
-	void _g () {integer _y; _z,_z := _z + 1_i, print('suma'),}
-	_z:=3_i +_y,
-	integer _l,
-	return(_x()),
+	_var:=_var-1_i,
 }
-
-_y(),
-

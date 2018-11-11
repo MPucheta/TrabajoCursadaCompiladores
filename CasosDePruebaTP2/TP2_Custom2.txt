@@ -1,1 +1,15 @@
-_var:= integer(_var) + 1_i
+integer _var;_var2,
+_var:= 2_i,
+
+
+while(_var!=5_i){
+	_var:=_var+1_i,
+}
+
+if(_var=5_i)
+	print('si '), #probar cadenas de string separadas 'algo sale mal capo, var es distinto de 1_i'#
+else
+	print('no '),
+end_if
+
+print('test '),
