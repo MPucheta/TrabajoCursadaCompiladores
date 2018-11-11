@@ -1393,7 +1393,7 @@ case 76:
 																			atts.set("Token", "CTE_INTEGER"); atts.set("Valor", new Integer(-valorInteger));
 																			tablaSimbolos.put(nuevaClave, atts);
 																			}
-																		yyval =agregarNodoRengo("-",agregarHoja(((Token)val_peek(0).obj).claveTablaSimbolo)); /*agrego dos nodos de una, un - unario y una hoja con el valor en si*/
+						
 																		cambiarTipo(yyval, "integer");
 																		setNroLinea(yyval, (Token) val_peek(0).obj);
 																		}

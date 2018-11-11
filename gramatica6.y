@@ -92,7 +92,7 @@ id_invocacion				:	ID '('')' {
 										;
 
 
-sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion"); $$ = agregarNodoRengo("impresion",$2);} //se quiere agarrar el string de cadena entre parentesis
+sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion"); $$ = agregarNodoRengo("Impresion",$2);} //se quiere agarrar el string de cadena entre parentesis
 										|	PRINT  cadena_cararacteres_entre_parentesis  {agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + nroLinea($2));$$ = hojaError(); setNroLinea($$, $2);}
 										| PRINT error ','{agregarError("Error: sentencia de impresion erronea. Linea: " + ((Token) $1.obj).nroLinea);$$ = hojaError();setNroLinea($$, (Token) $3.obj);}
 										;
@@ -329,7 +329,7 @@ factor				:	 	ID								{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);
 																			atts.set("Token", "CTE_INTEGER"); atts.set("Valor", new Integer(-valorInteger));
 																			tablaSimbolos.put(nuevaClave, atts);
 																			}
-																		$$ =agregarNodoRengo("-",agregarHoja(((Token)$2.obj).claveTablaSimbolo)); //agrego dos nodos de una, un - unario y una hoja con el valor en si
+						
 																		cambiarTipo($$, "integer");
 																		setNroLinea($$, (Token) $2.obj);
 																		}
