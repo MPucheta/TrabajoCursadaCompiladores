@@ -1,0 +1,21 @@
+integer _var;_var4,
+uslinteger _var2; _var3,
+
+
+_var:= 3_i*4_i,
+
+if(_var=1_i)
+	_var2:=2_ul,
+else
+	_var2:=555_ul,
+end_if
+
+_var4:=1_i,
+
+
+while(_var=555_i){
+	if(_var=666_i)
+		_var2:=2_ul,
+	end_if
+	_var:=_var-1_i,
+}
