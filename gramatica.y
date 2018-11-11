@@ -658,11 +658,26 @@ private void declararFuncionesPendientes(String ambito,String tipo){
 		String func=funcionesADeclarar.get(0);
 
 	  if(func!=null){
-			if (tablaSimbolos.get(func).get("Declarada").equals("Si")) //ver si agrego de preguntar sobre los ambitos
-				System.out.println("Error: nombre previamente usado '" + func + "'."); //ERROR CHEQUEO SEMANTICO
+			if (tablaSimbolos.get(func).get("Declarada").equals("Si")){ //ver si agrego de preguntar sobre los ambitos
+				String aux="Error: nombre previamente usado '" + func + "'.";
+				agregarErrorChequeoSemantico(aux);
+				System.out.println(aux); //ERROR CHEQUEO SEMANTICO
+			}
 			else{
 				tablaSimbolos.get(func).set("Declarada", "Si");
-				tablaSimbolos.get(func).set("Tipo", tipo); //las funciones pendientes son siembre de tipo void, quizas debiera plantear una List<ParserVal> ?
+				tablaSimbolos.get(func).set("Tipo", tipo);
+				String retorno=" ";
+
+				if(tablaSimbolos.get(func).get("Tipo").equals("void")){
+					ultimaFunc=func;
+				}
+				if(tablaSimbolos.get(func).get("Tipo").equals("fun")){
+						//si llege hasta aca es que toy tratando una funcion. No es necesario chequear el atributo en la TS.
+						retorno=ultimaFunc;
+						ultimaFunc="";
+				}
+				tablaSimbolos.get(func).set("Retorno",retorno);
+				}
 
 				String[] partes=ambitoActual.split("@");
 
