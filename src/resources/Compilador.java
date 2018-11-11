@@ -64,12 +64,16 @@ public class Compilador {
 		
 		System.out.println("errores \n" + parser.getErroresDetallados());
 		
+		Hashtable<String, Arbol> arboles = parser.getArbolesSintacticos();
 		
-		System.out.println(parser.getArbolSintactico().imprimir("", ""));
+		for (String ambito: arboles.keySet()){
+			System.out.println("Arbol: " + ambito);
+			System.out.println(arboles.get(ambito).imprimir("", ""));
+		}
 		
 		for(String s: parser.getErroresChequeoSemantico())
 			System.out.println(s);
-		
+		/*
 		GeneradorCodigo g= new GeneradorCodigo(tablaSimbolos);
 		
 		List<String> datos=g.generarSeccionDatos();
@@ -94,7 +98,7 @@ public class Compilador {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		*/
 		
 	}
 
