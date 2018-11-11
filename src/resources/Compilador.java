@@ -70,15 +70,21 @@ public class Compilador {
 		for(String s: parser.getErroresChequeoSemantico())
 			System.out.println(s);
 		
-		GeneradorCodigo g= new GeneradorCodigo();
+		GeneradorCodigo g= new GeneradorCodigo(tablaSimbolos);
 		
-		List<String> datos=g.generarSeccionDatos(tablaSimbolos);
+		List<String> datos=g.generarSeccionDatos();
 		List<String> header =g.generarHeader();
 		List<String> includes = g.generarIncludes();
 		
 		List<String> asm=header;
+		
+		List<String> codigo=g.generarCodigo(parser.getArbolSintactico());
+		for(String s:codigo) {
+			System.out.print(s);
+		}
 		asm.addAll(includes);
 		asm.addAll(datos);
+		asm.addAll(codigo);
 		
 		try {
 			ArchivoTexto.escribirEnDisco("asm.txt", asm);
@@ -87,7 +93,7 @@ public class Compilador {
 			e.printStackTrace();
 		}
 		
-		g.gererarCodigo(parser.getArbolSintactico());
+		
 	}
 
 }

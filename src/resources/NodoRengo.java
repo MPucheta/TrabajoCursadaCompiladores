@@ -9,7 +9,7 @@ public class NodoRengo extends Arbol{
 	}
 	
 	public String imprimir(String offset, String prefijo) {
-		String salida = offset + prefijo + " Nodo " + this.getValor() + "\n";
+		String salida = offset + prefijo + " Nodo Rengo " + this.getValor() + "\n";
 		salida += hijo.imprimir(offset + "-   " , "Hijo");
 		return salida;
 	}

@@ -19,6 +19,9 @@ public class Nodo extends Arbol{
 
 	@Override
 	public Arbol generarCodigo(GeneradorCodigo gc) {
+		if(getValor().equalsIgnoreCase("While")) {
+			gc.addNewLabel();
+		}
 		this.hijoIzquierdo = hijoIzquierdo.generarCodigo(gc);
 		this.hijoDerecho = hijoDerecho.generarCodigo(gc);
 		
