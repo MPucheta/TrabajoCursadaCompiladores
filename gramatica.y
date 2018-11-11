@@ -92,7 +92,7 @@ id_invocacion				:	ID '('')' {
 										;
 
 
-sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion"); $$ = agregarNodoRengo("Impresion",$2);} //se quiere agarrar el string de cadena entre parentesis
+sentencia_impresion	:	PRINT  cadena_cararacteres_entre_parentesis ','	{agregarEstructuraDetectada("Impresion"); $$ = agregarNodoRengo("impresion",$2);} //se quiere agarrar el string de cadena entre parentesis
 										|	PRINT  cadena_cararacteres_entre_parentesis  {agregarError("Error: falta ',' luego de sentencia de impresion. Linea: " + nroLinea($2));$$ = hojaError(); setNroLinea($$, $2);}
 										| PRINT error ','{agregarError("Error: sentencia de impresion erronea. Linea: " + ((Token) $1.obj).nroLinea);$$ = hojaError();setNroLinea($$, (Token) $3.obj);}
 										;
@@ -236,7 +236,7 @@ condicion	:	expr '=' expr											{if (verificarTipos($1, $3, "condicion '='")
 																											$$ = agregarNodo("!=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
 																									setNroLinea($$, $3);	}
 
-					|	error {agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + ((Token) $1.obj).nroLinea);$$ = hojaError(); setNroLinea($$, (Token)$1.obj);} 
+					|	error {agregarError("Error: condicion no valida. Incorrecta mezcla de expresiones y comparador. Linea: " + ((Token) $1.obj).nroLinea);$$ = hojaError(); setNroLinea($$, (Token)$1.obj);}
 					;
 
 
