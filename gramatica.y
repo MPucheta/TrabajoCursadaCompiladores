@@ -18,7 +18,12 @@ import java.util.*;
 %%
 
 
-programa 			: 	conjunto_sentencias {	this.raizArbolSintactico = engancharSentencias();}
+programa 			: 	conjunto_sentencias {	this.raizArbolSintactico = engancharSentencias();
+																				for (String ambito: arbolesDeFunciones.keySet()){
+																					Arbol a = engancharSentencias(ambito); //se enganchan las sentencias de dentro de cada ambito
+																					todosLosArboles.put(ambito, a); //se agrega el arbol a la lista de salida
+																					}
+																				}
 							|		error conjunto_sentencias
 							;
 
@@ -29,7 +34,10 @@ conjunto_sentencias	:	sentencia //{$$ = agregarNodo("lista_sentencias", $1, new 
 
 
 sentencia 	: 	declarativa
-						| 	ejecutable {sentenciasEjecutables.add(0, (Arbol)$1.obj);}
+						| 	ejecutable {sentenciasEjecutables.add(0, (Arbol)$1.obj);
+														if (arbolesDeFunciones.get(ambitoActual) == null)
+															arbolesDeFunciones.put(ambitoActual, new ArrayList<Arbol>());
+														arbolesDeFunciones.get(ambitoActual).add(0, (Arbol)$1.obj); }
 						;
 
 
@@ -193,7 +201,7 @@ retorno_closure	: 	id_invocacion	{
 											}
 
 								}
-								| 	'{' conjunto_sentencias '}' {setNroLinea($$, (Token) $3.obj);}
+								| 	'{'  conjunto_sentencias '}' {setNroLinea($$, (Token) $3.obj);}
 								;
 
 lista_variables		:	ID 											{variablesADeclarar.add(obtenerLexema($1));}
@@ -374,6 +382,8 @@ List<String> variablesADeclarar;
 String ambitoActual;
 List<String> funcionesADeclarar;
 List<Arbol> sentenciasEjecutables;
+Hashtable<String, List<Arbol>> arbolesDeFunciones; // va a tener todas las sentencias sueltas de cada funcion
+Hashtable<String, Arbol> todosLosArboles; // va a tener los arboles sintacticos de cada funcion, con las sentencias ya enganchadas
 Token t;
 int ultimoTokenLeido;
 Arbol raizArbolSintactico;
@@ -448,6 +458,11 @@ public Parser(AnalizadorLexico AL, Hashtable<String, Atributos> tablaSimbolos, A
   funcionesADeclarar = new ArrayList<>();
 	sentenciasEjecutables = new ArrayList<>();
 
+	arbolesDeFunciones = new Hashtable<>();
+	arbolesDeFunciones.put(ambitoActual, new ArrayList<Arbol>());
+
+	todosLosArboles = new Hashtable<String, Arbol>();
+
 	nuevaPosibleFuncion=false;
 	posibleFuncion=false;
 	ultimoAmbitoPosible="main";
@@ -476,6 +491,7 @@ public List<String> getErroresChequeoSemantico(){
 	return this.erroresChequeoSemantico;
 
 }
+/*
 public Arbol getArbolSintactico(){
 	//en presencia de un error sintactico puedo setear un boolean o algo que haga que la raiz sea null y no generar codigo
 	if(errorSintaxis){
@@ -483,6 +499,13 @@ public Arbol getArbolSintactico(){
 	}
 	return this.raizArbolSintactico;
 
+}*/
+
+public Hashtable<String, Arbol> getArbolesSintacticos(){
+	if (errorSintaxis){
+		return new Hashtable<String, Arbol>();
+	}
+	return todosLosArboles;
 }
 private void agregarError(String e){
 	errorSintaxis = true;
@@ -604,6 +627,13 @@ private void declararVariables(ParserVal tipo, String uso){
 private Arbol engancharSentencias(){
 	Arbol salida = new Hoja(null);
 	for (Arbol a: sentenciasEjecutables)
+		salida = new Nodo("lista_sentencias", a, salida);
+	return salida;
+}
+
+private Arbol engancharSentencias(String ambito){
+	Arbol salida = new Hoja(null);
+	for (Arbol a: arbolesDeFunciones.get(ambito))
 		salida = new Nodo("lista_sentencias", a, salida);
 	return salida;
 }
