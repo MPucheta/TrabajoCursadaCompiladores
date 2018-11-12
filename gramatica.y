@@ -201,7 +201,7 @@ retorno_closure	: 	id_invocacion	{
 											}
 
 								}
-								| 	'{'  conjunto_sentencias '}' {setNroLinea($$, (Token) $3.obj);}
+								| 	'{'  conjunto_sentencias '}' {setNroLinea($$, (Token) $3.obj); 	eliminarUltimoAmbito();}
 								;
 
 lista_variables		:	ID 											{variablesADeclarar.add(obtenerLexema($1));}
@@ -389,6 +389,7 @@ int ultimoTokenLeido;
 Arbol raizArbolSintactico;
 boolean nuevaPosibleFuncion;
 boolean posibleFuncion;
+boolean posibleFuncionSinNombre;
 String ultimoAmbitoPosible;
 boolean errorSintaxis;
 List<String> erroresChequeoSemantico;
@@ -400,17 +401,38 @@ int yylex(){
 	//por lo que cuando el parsing detecta finalmente que un if termina en un end_if, el AL.nroLinea ya avanzo.
 	//Por lo tanto sin esto el nroLinea mostrado seria el del fin de la estructura y no del comienzo
 
-
 	if(posibleFuncion && ultimoTokenLeido==AL.ASCIIToken('(')){
 		agregarAmbito(ultimoAmbitoPosible);
-
+		posibleFuncionSinNombre = false;
 		posibleFuncion=false;
  	}
+ if (posibleFuncionSinNombre && ultimoTokenLeido==AL.ASCIIToken('{')){
+
+
+		String[] ambitos = ambitoActual.split("@");
+		String nombreFuncion = "FUNCRETORNO_" + ambitos[ambitos.length - 1]; //aca se puede cambiar el nombre de del retorno
+
+		Atributos atts = new Atributos();
+		atts.set("Declarada", "Si");
+		atts.set("Tipo", "void");
+		atts.set("Ambito", ambitoActual);
+		atts.set("Uso", "funcion");
+		atts.set("Lexema", nombreFuncion);
+		//atts.set("Token", "ID");
+		tablaSimbolos.put(nombreFuncion, atts);
+
+		ambitoActual = ambitoActual + "@" + nombreFuncion;
+		posibleFuncionSinNombre = false;
+	}
 
 	if(nuevaPosibleFuncion && ultimoTokenLeido==Token.ID){
 				posibleFuncion=true;
 				nuevaPosibleFuncion=false;
 				ultimoAmbitoPosible=t.claveTablaSimbolo; //t refiere al token nuevo, ultimoTokenLeido refiere al numero TIPO DE TOKEN
+	}
+	if(nuevaPosibleFuncion && ultimoTokenLeido==AL.ASCIIToken('(')){
+				posibleFuncionSinNombre=true;
+				nuevaPosibleFuncion=false;
 	}
 
 	switch(ultimoTokenLeido){
@@ -421,6 +443,8 @@ int yylex(){
 		case(Token.FUN):
 				nuevaPosibleFuncion=true;break;
 		case(Token.VOID):
+				nuevaPosibleFuncion=true;break;
+		case(Token.RETURN):
 				nuevaPosibleFuncion=true;break;
 		default:
 				break;
@@ -465,6 +489,7 @@ public Parser(AnalizadorLexico AL, Hashtable<String, Atributos> tablaSimbolos, A
 
 	nuevaPosibleFuncion=false;
 	posibleFuncion=false;
+	posibleFuncionSinNombre = false;
 	ultimoAmbitoPosible="main";
 
 	errorSintaxis=false;
@@ -648,11 +673,11 @@ private void cambiarAmbitoVariablesInternas(String ambito){
 
 }
 */
-private void declararFuncionesPendientes(String ambito,String tipo){
-	if(funcionesADeclarar.size()!=1){
+private void declararFuncionesPendientes(String ambito,String tipo){ /*REVISAR*/
+	if(funcionesADeclarar.size()!=1){/*
 		String aux="El numero de funciones debe ser exactamente igual a uno (1). En ambito " + ambito;
 		agregarErrorChequeoSemantico(aux);
-		System.out.println(aux); //ERROR SEMANTICO
+		System.out.println(aux); //ERROR SEMANTICO*/
 
 	}else{
 		String func=funcionesADeclarar.get(0);
