@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 
 public class Compilador {
 
@@ -26,7 +27,7 @@ public class Compilador {
 
 
 			
-			fuente = new ArchivoTexto("CasosDePruebaTP2\\TP2_Custom2.txt");
+			fuente = new ArchivoTexto("CasosDePruebaTP2\\TP2_Custom1.txt");
 
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
@@ -64,11 +65,19 @@ public class Compilador {
 		
 		System.out.println("errores \n" + parser.getErroresDetallados());
 		
+		Hashtable<String, Arbol> arboles = parser.getArbolesSintacticos();
 		
-		System.out.println(parser.getArbolSintactico().imprimir("", ""));
+		for (String ambito: arboles.keySet()){
+			System.out.println("Arbol: " + ambito);
+			System.out.println(arboles.get(ambito).imprimir("", ""));
+		}
 		
 		for(String s: parser.getErroresChequeoSemantico())
 			System.out.println(s);
+		
+		
+		
+		
 		
 		GeneradorCodigo g= new GeneradorCodigo(tablaSimbolos);
 		
@@ -78,7 +87,22 @@ public class Compilador {
 		
 		List<String> asm=header;
 		
-		List<String> codigo=g.generarCodigo(parser.getArbolSintactico());
+		
+		List<String> codigo=new ArrayList<>();
+		List<String> preCodigo=new ArrayList<>();
+		preCodigo.add("\n"+".code"+"\n");
+		Hashtable<String, Arbol> claveArboles=parser.getArbolesSintacticos();
+		for(String clave: claveArboles.keySet() ){
+			if(clave.equals("main")) {
+				codigo.addAll(g.generarCodigo(claveArboles.get(clave)));		
+			}else {
+				preCodigo.addAll(g.generarPreStartCode(claveArboles.get(clave), clave));
+			}
+			
+			System.out.println(clave);
+			
+			
+		}
 		for(String s:codigo) {
 			System.out.print(s);
 		}
@@ -86,14 +110,16 @@ public class Compilador {
 		List<String> fin=g.generarFin();
 		asm.addAll(includes);
 		asm.addAll(datos);
+		asm.addAll(preCodigo);
 		asm.addAll(codigo);
 		asm.addAll(fin);
 		try {
-			ArchivoTexto.escribirEnDisco("asm.asm", asm);
+			ArchivoTexto.escribirEnDisco("asm.txt", asm);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		
 		
 	}

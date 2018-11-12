@@ -18,7 +18,12 @@ import java.util.*;
 %%
 
 
-programa 			: 	conjunto_sentencias {	this.raizArbolSintactico = engancharSentencias();}
+programa 			: 	conjunto_sentencias {	this.raizArbolSintactico = engancharSentencias();
+																				for (String ambito: arbolesDeFunciones.keySet()){
+																					Arbol a = engancharSentencias(ambito); //se enganchan las sentencias de dentro de cada ambito
+																					todosLosArboles.put(ambito, a); //se agrega el arbol a la lista de salida
+																					}
+																				}
 							|		error conjunto_sentencias
 							;
 
@@ -29,7 +34,10 @@ conjunto_sentencias	:	sentencia //{$$ = agregarNodo("lista_sentencias", $1, new 
 
 
 sentencia 	: 	declarativa
-						| 	ejecutable {sentenciasEjecutables.add(0, (Arbol)$1.obj);}
+						| 	ejecutable {sentenciasEjecutables.add(0, (Arbol)$1.obj);
+														if (arbolesDeFunciones.get(ambitoActual) == null)
+															arbolesDeFunciones.put(ambitoActual, new ArrayList<Arbol>());
+														arbolesDeFunciones.get(ambitoActual).add(0, (Arbol)$1.obj); }
 						;
 
 
@@ -193,7 +201,7 @@ retorno_closure	: 	id_invocacion	{
 											}
 
 								}
-								| 	'{' conjunto_sentencias '}' {setNroLinea($$, (Token) $3.obj);}
+								| 	'{'  conjunto_sentencias '}' {setNroLinea($$, (Token) $3.obj); 	eliminarUltimoAmbito();}
 								;
 
 lista_variables		:	ID 											{variablesADeclarar.add(obtenerLexema($1));}
@@ -374,11 +382,14 @@ List<String> variablesADeclarar;
 String ambitoActual;
 List<String> funcionesADeclarar;
 List<Arbol> sentenciasEjecutables;
+Hashtable<String, List<Arbol>> arbolesDeFunciones; // va a tener todas las sentencias sueltas de cada funcion
+Hashtable<String, Arbol> todosLosArboles; // va a tener los arboles sintacticos de cada funcion, con las sentencias ya enganchadas
 Token t;
 int ultimoTokenLeido;
 Arbol raizArbolSintactico;
 boolean nuevaPosibleFuncion;
 boolean posibleFuncion;
+boolean posibleFuncionSinNombre;
 String ultimoAmbitoPosible;
 boolean errorSintaxis;
 List<String> erroresChequeoSemantico;
@@ -390,17 +401,38 @@ int yylex(){
 	//por lo que cuando el parsing detecta finalmente que un if termina en un end_if, el AL.nroLinea ya avanzo.
 	//Por lo tanto sin esto el nroLinea mostrado seria el del fin de la estructura y no del comienzo
 
-
 	if(posibleFuncion && ultimoTokenLeido==AL.ASCIIToken('(')){
 		agregarAmbito(ultimoAmbitoPosible);
-
+		posibleFuncionSinNombre = false;
 		posibleFuncion=false;
  	}
+ if (posibleFuncionSinNombre && ultimoTokenLeido==AL.ASCIIToken('{')){
+
+
+		String[] ambitos = ambitoActual.split("@");
+		String nombreFuncion = "FUNCRETORNO_" + ambitos[ambitos.length - 1]; //aca se puede cambiar el nombre de del retorno
+
+		Atributos atts = new Atributos();
+		atts.set("Declarada", "Si");
+		atts.set("Tipo", "void");
+		atts.set("Ambito", ambitoActual);
+		atts.set("Uso", "funcion");
+		atts.set("Lexema", nombreFuncion);
+		//atts.set("Token", "ID");
+		tablaSimbolos.put(nombreFuncion, atts);
+
+		ambitoActual = ambitoActual + "@" + nombreFuncion;
+		posibleFuncionSinNombre = false;
+	}
 
 	if(nuevaPosibleFuncion && ultimoTokenLeido==Token.ID){
 				posibleFuncion=true;
 				nuevaPosibleFuncion=false;
 				ultimoAmbitoPosible=t.claveTablaSimbolo; //t refiere al token nuevo, ultimoTokenLeido refiere al numero TIPO DE TOKEN
+	}
+	if(nuevaPosibleFuncion && ultimoTokenLeido==AL.ASCIIToken('(')){
+				posibleFuncionSinNombre=true;
+				nuevaPosibleFuncion=false;
 	}
 
 	switch(ultimoTokenLeido){
@@ -411,6 +443,8 @@ int yylex(){
 		case(Token.FUN):
 				nuevaPosibleFuncion=true;break;
 		case(Token.VOID):
+				nuevaPosibleFuncion=true;break;
+		case(Token.RETURN):
 				nuevaPosibleFuncion=true;break;
 		default:
 				break;
@@ -448,8 +482,14 @@ public Parser(AnalizadorLexico AL, Hashtable<String, Atributos> tablaSimbolos, A
   funcionesADeclarar = new ArrayList<>();
 	sentenciasEjecutables = new ArrayList<>();
 
+	arbolesDeFunciones = new Hashtable<>();
+	arbolesDeFunciones.put(ambitoActual, new ArrayList<Arbol>());
+
+	todosLosArboles = new Hashtable<String, Arbol>();
+
 	nuevaPosibleFuncion=false;
 	posibleFuncion=false;
+	posibleFuncionSinNombre = false;
 	ultimoAmbitoPosible="main";
 
 	errorSintaxis=false;
@@ -476,6 +516,7 @@ public List<String> getErroresChequeoSemantico(){
 	return this.erroresChequeoSemantico;
 
 }
+/*
 public Arbol getArbolSintactico(){
 	//en presencia de un error sintactico puedo setear un boolean o algo que haga que la raiz sea null y no generar codigo
 	if(errorSintaxis){
@@ -483,6 +524,13 @@ public Arbol getArbolSintactico(){
 	}
 	return this.raizArbolSintactico;
 
+}*/
+
+public Hashtable<String, Arbol> getArbolesSintacticos(){
+	if (errorSintaxis){
+		return new Hashtable<String, Arbol>();
+	}
+	return todosLosArboles;
 }
 private void agregarError(String e){
 	errorSintaxis = true;
@@ -608,6 +656,13 @@ private Arbol engancharSentencias(){
 	return salida;
 }
 
+private Arbol engancharSentencias(String ambito){
+	Arbol salida = new Hoja(null);
+	for (Arbol a: arbolesDeFunciones.get(ambito))
+		salida = new Nodo("lista_sentencias", a, salida);
+	return salida;
+}
+
 /*
 private void cambiarAmbitoVariablesInternas(String ambito){
 		for (String variable: variablesInternasFunciones){
@@ -618,21 +673,36 @@ private void cambiarAmbitoVariablesInternas(String ambito){
 
 }
 */
-private void declararFuncionesPendientes(String ambito,String tipo){
-	if(funcionesADeclarar.size()!=1){
+private void declararFuncionesPendientes(String ambito,String tipo){ /*REVISAR*/
+	if(funcionesADeclarar.size()!=1){/*
 		String aux="El numero de funciones debe ser exactamente igual a uno (1). En ambito " + ambito;
 		agregarErrorChequeoSemantico(aux);
-		System.out.println(aux); //ERROR SEMANTICO
+		System.out.println(aux); //ERROR SEMANTICO*/
 
 	}else{
 		String func=funcionesADeclarar.get(0);
 
 	  if(func!=null){
-			if (tablaSimbolos.get(func).get("Declarada").equals("Si")) //ver si agrego de preguntar sobre los ambitos
-				System.out.println("Error: nombre previamente usado '" + func + "'."); //ERROR CHEQUEO SEMANTICO
+			if (tablaSimbolos.get(func).get("Declarada").equals("Si")){ //ver si agrego de preguntar sobre los ambitos
+				String aux="Error: nombre previamente usado '" + func + "'.";
+				agregarErrorChequeoSemantico(aux);
+				System.out.println(aux); //ERROR CHEQUEO SEMANTICO
+			}
 			else{
 				tablaSimbolos.get(func).set("Declarada", "Si");
-				tablaSimbolos.get(func).set("Tipo", tipo); //las funciones pendientes son siembre de tipo void, quizas debiera plantear una List<ParserVal> ?
+				tablaSimbolos.get(func).set("Tipo", tipo);
+				String retorno=" ";
+
+				if(tablaSimbolos.get(func).get("Tipo").equals("void")){
+					ultimaFunc=func;
+				}
+				if(tablaSimbolos.get(func).get("Tipo").equals("fun")){
+						//si llege hasta aca es que toy tratando una funcion. No es necesario chequear el atributo en la TS.
+						retorno=ultimaFunc;
+						ultimaFunc="";
+				}
+				tablaSimbolos.get(func).set("Retorno",retorno);
+				}
 
 				String[] partes=ambitoActual.split("@");
 
