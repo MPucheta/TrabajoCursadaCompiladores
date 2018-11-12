@@ -112,7 +112,7 @@ public class GeneradorCodigo {
 		{
 			String registroOcupado="";
 			String generado=opASM+" ";
-
+			
 			if(esRegistro(valorIzq)){ //opero entre registro y reg/variable.
 				//izq es registro
 				generado+=valorIzq+",";
@@ -551,15 +551,18 @@ public class GeneradorCodigo {
 			String tipo=(String)atts.get("Tipo");
 			Object valor=null;
 			boolean esCadena=false;
-			if(tipo.equals("integer")) {
+			if(tipo.equals("integer")||tipo.equals("uslinteger")) {
+				continue; //no debo generar datos para constantes enteras, se usa el valor directamente. Continue pasa a la proxima iteracion del for.
 				//tipoDatos="DW";	//descomentar esto si hay que implementar optimizacion de registros, para integer usar AX en vez de EAX....
-				tipoDatos="DD"; //esto implica el uso de los reg de 32 bits
-				valor = (Integer) atts.get("Valor");
+				//tipoDatos="DD"; //esto implica el uso de los reg de 32 bits
+				//valor = (Integer) atts.get("Valor");
 			}
-			if(tipo.equals("uslinteger")) {
+			/*
+			   if(tipo.equals("uslinteger")) {
 				tipoDatos="DD";
 				valor = (Long) atts.get("Valor"); //esto es por si se rompe por pasar el valor a long en AL, antes habia un double....
 			}
+			*/
 			if(tipo.equals("cadena_caracteres")) {
 				esCadena=true;
 				tipoDatos="DB"; //por alguna razon los string se guardan como un DB, debe ser un puntero de 8 bits...
