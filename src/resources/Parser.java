@@ -507,6 +507,7 @@ boolean posibleFuncionSinNombre;
 String ultimoAmbitoPosible;
 boolean errorSintaxis;
 List<String> erroresChequeoSemantico;
+String ultimaFunc; //s utiliza para guardar la ultima funcion declarada en caso de poner un retorno
 int yylex(){
 	t = AL.getToken();
 	yylval = new ParserVal(t);
@@ -608,6 +609,8 @@ public Parser(AnalizadorLexico AL, Hashtable<String, Atributos> tablaSimbolos, A
 
 	errorSintaxis=false;
 	erroresChequeoSemantico=new ArrayList<>();
+
+	ultimaFunc="";
 	this.AL=AL;
 	this.tablaSimbolos = tablaSimbolos;
 	this.raizArbolSintactico=raizArbolSintactico;
@@ -797,11 +800,30 @@ private void declararFuncionesPendientes(String ambito,String tipo){ /*REVISAR*/
 		String func=funcionesADeclarar.get(0);
 
 	  if(func!=null){
-			if (tablaSimbolos.get(func).get("Declarada").equals("Si")) //ver si agrego de preguntar sobre los ambitos
-				System.out.println("Error: nombre previamente usado '" + func + "'."); //ERROR CHEQUEO SEMANTICO
+			if (tablaSimbolos.get(func).get("Declarada").equals("Si")){ //ver si agrego de preguntar sobre los ambitos
+				String aux="Error: nombre previamente usado '" + func + "'.";
+				agregarErrorChequeoSemantico(aux);
+				System.out.println(aux); //ERROR CHEQUEO SEMANTICO
+			}
 			else{
 				tablaSimbolos.get(func).set("Declarada", "Si");
-				tablaSimbolos.get(func).set("Tipo", tipo); //las funciones pendientes son siembre de tipo void, quizas debiera plantear una List<ParserVal> ?
+				tablaSimbolos.get(func).set("Tipo", tipo);
+				String retorno=" ";
+
+				if(!tablaSimbolos.get(func).get("Tipo").equals("fun")){
+					//hasta ahora como solo hay funciones void, solo entra cuando el tipo==void...
+					ultimaFunc=func;
+				}else
+				//if(tablaSimbolos.get(func).get("Tipo").equals("fun")) //se ancla con el else anterior. Antes habia void yy fun nomas pero se planteo mas general 
+					{
+						//si llege hasta aca es que toy tratando una funcion. No es necesario chequear el atributo en la TS.
+						//De principio solo puede retornar void o funciones anonimas
+						//No se probe un mecanismo "reliable" para otros tipos de funciones
+						retorno=ultimaFunc;
+						ultimaFunc="";
+				}
+				tablaSimbolos.get(func).set("Retorno",retorno);
+
 
 				String[] partes=ambitoActual.split("@");
 
@@ -878,7 +900,7 @@ private void verificarAmbito(ParserVal var, String ambito){
 		System.out.println(s);
 	}
 }
-//#line 810 "Parser.java"
+
 //###############################################################
 // method: yylexdebug : check lexer state
 //###############################################################
@@ -1483,7 +1505,7 @@ case 83:
 //#line 368 ".\gramatica.y"
 {agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
 break;
-//#line 1410 "Parser.java"
+
 //########## END OF USER-SUPPLIED ACTIONS ##########
     }//switch
     //#### Now let's reduce... ####
