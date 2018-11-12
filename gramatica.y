@@ -393,6 +393,7 @@ boolean posibleFuncionSinNombre;
 String ultimoAmbitoPosible;
 boolean errorSintaxis;
 List<String> erroresChequeoSemantico;
+String ultimaFunc;
 int yylex(){
 	t = AL.getToken();
 	yylval = new ParserVal(t);
@@ -418,9 +419,10 @@ int yylex(){
 		atts.set("Ambito", ambitoActual);
 		atts.set("Uso", "funcion");
 		atts.set("Lexema", nombreFuncion);
+		atts.set("Retorno", " ");
 		//atts.set("Token", "ID");
 		tablaSimbolos.put(nombreFuncion, atts);
-
+		ultimaFunc=nombreFuncion;
 		ambitoActual = ambitoActual + "@" + nombreFuncion;
 		posibleFuncionSinNombre = false;
 	}
@@ -494,6 +496,7 @@ public Parser(AnalizadorLexico AL, Hashtable<String, Atributos> tablaSimbolos, A
 
 	errorSintaxis=false;
 	erroresChequeoSemantico=new ArrayList<>();
+	ultimaFunc="";
 	this.AL=AL;
 	this.tablaSimbolos = tablaSimbolos;
 	this.raizArbolSintactico=raizArbolSintactico;
@@ -723,7 +726,7 @@ private void declararFuncionesPendientes(String ambito,String tipo){ /*REVISAR*/
 			funcionesADeclarar.clear();
 
 		}
-	}
+
 
 }
 
