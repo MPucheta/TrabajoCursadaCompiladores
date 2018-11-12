@@ -27,7 +27,7 @@ public class Compilador {
 
 
 			
-			fuente = new ArchivoTexto("CasosDePruebaTP2\\TP2_Custom1.txt");
+			fuente = new ArchivoTexto("CasosDePruebaTP2\\TP2_Custom2.txt");
 
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");

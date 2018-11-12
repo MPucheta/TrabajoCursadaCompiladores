@@ -507,7 +507,7 @@ boolean posibleFuncionSinNombre;
 String ultimoAmbitoPosible;
 boolean errorSintaxis;
 List<String> erroresChequeoSemantico;
-String ultimaFunc; //s utiliza para guardar la ultima funcion declarada en caso de poner un retorno
+String ultimaFunc;
 int yylex(){
 	t = AL.getToken();
 	yylval = new ParserVal(t);
@@ -533,9 +533,10 @@ int yylex(){
 		atts.set("Ambito", ambitoActual);
 		atts.set("Uso", "funcion");
 		atts.set("Lexema", nombreFuncion);
+		atts.set("Retorno", " ");
 		//atts.set("Token", "ID");
 		tablaSimbolos.put(nombreFuncion, atts);
-
+		ultimaFunc=nombreFuncion;
 		ambitoActual = ambitoActual + "@" + nombreFuncion;
 		posibleFuncionSinNombre = false;
 	}
@@ -609,7 +610,6 @@ public Parser(AnalizadorLexico AL, Hashtable<String, Atributos> tablaSimbolos, A
 
 	errorSintaxis=false;
 	erroresChequeoSemantico=new ArrayList<>();
-
 	ultimaFunc="";
 	this.AL=AL;
 	this.tablaSimbolos = tablaSimbolos;
@@ -810,20 +810,16 @@ private void declararFuncionesPendientes(String ambito,String tipo){ /*REVISAR*/
 				tablaSimbolos.get(func).set("Tipo", tipo);
 				String retorno=" ";
 
-				if(!tablaSimbolos.get(func).get("Tipo").equals("fun")){
-					//hasta ahora como solo hay funciones void, solo entra cuando el tipo==void...
+				if(tablaSimbolos.get(func).get("Tipo").equals("void")){
 					ultimaFunc=func;
-				}else
-				//if(tablaSimbolos.get(func).get("Tipo").equals("fun")) //se ancla con el else anterior. Antes habia void yy fun nomas pero se planteo mas general 
-					{
+				}
+				if(tablaSimbolos.get(func).get("Tipo").equals("fun")){
 						//si llege hasta aca es que toy tratando una funcion. No es necesario chequear el atributo en la TS.
-						//De principio solo puede retornar void o funciones anonimas
-						//No se probe un mecanismo "reliable" para otros tipos de funciones
 						retorno=ultimaFunc;
 						ultimaFunc="";
 				}
 				tablaSimbolos.get(func).set("Retorno",retorno);
-
+				}
 
 				String[] partes=ambitoActual.split("@");
 
@@ -844,7 +840,7 @@ private void declararFuncionesPendientes(String ambito,String tipo){ /*REVISAR*/
 			funcionesADeclarar.clear();
 
 		}
-	}
+
 
 }
 
@@ -900,7 +896,7 @@ private void verificarAmbito(ParserVal var, String ambito){
 		System.out.println(s);
 	}
 }
-
+//#line 828 "Parser.java"
 //###############################################################
 // method: yylexdebug : check lexer state
 //###############################################################
@@ -1505,7 +1501,7 @@ case 83:
 //#line 368 ".\gramatica.y"
 {agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
 break;
-
+//#line 1428 "Parser.java"
 //########## END OF USER-SUPPLIED ACTIONS ##########
     }//switch
     //#### Now let's reduce... ####
