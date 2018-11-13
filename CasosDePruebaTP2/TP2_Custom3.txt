@@ -19,9 +19,9 @@ end_if
 _var4:=16_ul,
 _var5:=2_ul,
 _var6:=2_ul,
-_var4:=_var4*2_ul/_var5*_var6, #16*2 /2*2 = 32#
+_var4:=_var4*2_ul/_var5*_var6*1_ul*2_ul / 2_ul /1_ul *2_ul *2_ul, 
 
-if(_var4=32_ul)
-	print('var 4 es 32 '),
+if(_var4=128_ul)
+	print('var 4 es 128 '),
 end_if
 print('test '),
