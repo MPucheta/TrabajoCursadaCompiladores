@@ -348,7 +348,7 @@ public class GeneradorCodigo {
 				break;
 			}
 			case("condicion"): break;
-			case("casting"): break;
+			case("casting"): registroOcupado = generarCasting(hijo.getValor()); break;
 		}
 		return new Hoja(registroOcupado);
 	}
@@ -577,7 +577,8 @@ public class GeneradorCodigo {
 				String regLibre=getRegistroLibre(false,getModo(valorDer));
 				if(regLibre!=null) {
 					setearOcupacionRegistro(regLibre, true);
-					generado="MOV "+regLibre+", _"+valorDer+new_line_windows;
+					//generado="MOV "+regLibre+", _"+valorDer+new_line_windows; COMENTO ESTO. REVISAR SI VA POR ALGUNA RAZON
+					generado="MOV "+regLibre+", "+sufijoVariablesYFunciones+valorDer+new_line_windows;
 					generado+="MOV "+sufijoVariablesYFunciones+valorIzq+","+regLibre+new_line_windows;
 					setearOcupacionRegistro(regLibre, false);
 				}
@@ -720,8 +721,53 @@ public class GeneradorCodigo {
 		String registroOcupado = "";
 		return registroOcupado;
 	}
-	private String generarCasting(){
+	private String generarCasting(String valor){
 		String registroOcupado = "";
+		String generado = "";
+		System.out.println("Valor: " + valor );
+		if (valor.equals("AX") || valor.equals("BX") || valor.equals("CX") || valor.equals("DX")){
+			String registroObtenido = getRegistroLibre(false, "32");
+			System.out.println("Registro obtenido: " + registroObtenido + "\n" );
+			generado = "MOV " + registroObtenido + ", 0" + new_line_windows;
+			generado += "MOV " + registroObtenido.substring(1) + ", " + valor + new_line_windows;
+			generado += "MOV E" + valor + ", " + registroObtenido + new_line_windows;
+			System.out.println(generado);
+			registroOcupado = "E" + valor;
+		}
+		else if (tablaSimbolos.get(valor).get("Token").equals("ID")){
+			
+			String nuevaClave = "uslinteger_" + valor; //se crea una nueva variable de 32 bits, tipo uslinteger, para agregar a la TS
+			Atributos atts = new Atributos();
+			atts.set("Tipo", "uslinteger");
+			atts.set("Declarada", tablaSimbolos.get(valor).get("Declarada"));
+			atts.set("Ambito", tablaSimbolos.get(valor).get("Ambito"));
+			atts.set("Lexema", nuevaClave);
+			atts.set("Token", tablaSimbolos.get(valor).get("Token"));
+			
+			tablaSimbolos.put(nuevaClave, atts);
+			
+			
+			String registroObtenido = getRegistroLibre(false, "16");
+			System.out.println("Registro obtenido: " + registroObtenido + "\n" );
+			
+			generado = "MOV " + registroObtenido + ", " + sufijoVariablesYFunciones + valor + new_line_windows;
+			generado += "MOV " + sufijoVariablesYFunciones + nuevaClave + ", E" + registroObtenido + new_line_windows;
+			generado += "MOV " + registroObtenido + ", 0" + new_line_windows;
+			generado += "MOV " + sufijoVariablesYFunciones + nuevaClave + " + 2, E" + registroObtenido + new_line_windows;
+			System.out.println(generado);
+			registroOcupado = nuevaClave;
+			
+		}
+		else if (tablaSimbolos.get(valor).get("Token").equals("CTE_INTEGER")){
+			String registroObtenido = getRegistroLibre(false, "32");
+			
+			generado += "MOV " + registroObtenido + " ," + tablaSimbolos.get(valor).get("Valor") + new_line_windows;
+			
+			setearOcupacionRegistro(registroObtenido, true);
+			registroOcupado = registroObtenido;
+		}
+		System.out.println("Registro ocupado: " + registroOcupado);
+		codigo.add(generado);
 		return registroOcupado;
 	}
 
