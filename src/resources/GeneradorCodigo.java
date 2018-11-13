@@ -504,72 +504,40 @@ public class GeneradorCodigo {
 	}
 	private String generarDivision(String valorIzq,String valorDer){
 		String registroOcupado = "";
-		String opASM="DIV ";
-		String generado=opASM+" ";
+		String opASM="DIV";
+		String generado="";
+		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
 		
-		if(esRegistro(valorIzq)){ //opero entre registro y reg/variable/inm.
-				//izq es registro
-				generado+=valorIzq+",";
-				if(esVariable(valorDer))
-					generado+=sufijoVariablesYFunciones+valorDer+new_line_windows; //para quehaga matching con las variables en .data
-				else {
-					if(!esRegistro(valorDer)) {//no puede haber inmediatos en MUL de lado derecho. Debo moverlo a un reg
-						String regAux=getRegistroLibre(true, getModo(valorDer));
-						if(regAux!=null) {
-							setearOcupacionRegistro(regAux, true);
-							generado="MOV " +regAux+","+quitarSufijo(valorDer)+new_line_windows; //debo pisar lo anterior, ya que debo mover registros
-							generado+=opASM+" "+valorIzq+","+regAux+new_line_windows; //hago operacion entre registros
-							setearOcupacionRegistro(regAux, false);
-						}
-						
-					
-					}else {//no hay problema si es un registro. Incluso puedo dejar el quitar Sufijo
-						generado+=valorDer+new_line_windows;
-					}
+		 if(regLibre!=null) {
+			 setearOcupacionRegistro(regLibre, true);
+			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
+			String factor=valorDer;
+			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
+			if(esVariable(valorIzq)) {
+				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
+			}else {
+				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
+			}
+			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
+				factor=sufijoVariablesYFunciones+valorDer;
+			}else {
+				if(!esRegistro(valorDer)) { //Si llegue aca entonces es un inmediato. Voy a mover ese inmediato a regLibre antes de hacer la MUL
+						 factor=regLibre;
+						 generado+="MOV " +regLibre + "," + quitarSufijo(valorDer)+new_line_windows;
+								
 				}
-				
-				registroOcupado=valorIzq;
-		}else {
-			{
-					//operacion es entre dos variables o variable/inmediato, debo mover a registros...
-					//si es asi las variables (el valorIzq por ejemplo tienen la forma de var1 que puedo buscar en la TS)
-					//Si lo puedo buscar en la TS, puedo saber el tipo y decidir que registro (16 o 32 bits) necesito
-					
-					String modo=getModo(valorIzq);
-					String regLibre="";
-					regLibre=getRegistroLibre(true,modo);
-					
-					if(regLibre!=null) {
-						setearOcupacionRegistro(regLibre, true);
-						registroOcupado=regLibre;
-						generado="MOV "+regLibre+","+sufijoVariablesYFunciones+(valorIzq)+new_line_windows; //se pisa el anterior generado ya que genero otra linea previa
-						//ya movi el lado izquierdo a un registro, hay que chequear el lado derecho
-						if(esVariable(valorDer))
-							generado+=opASM+" "+regLibre+","+sufijoVariablesYFunciones+valorDer+new_line_windows;
-						else {
-							//valorDer es un inmediato, no se permite en esta operacion
-							String regAux=getRegistroLibre(true, getModo(valorDer));
-							if(regAux!=null) {
-								setearOcupacionRegistro(regAux, true);
-								generado+="MOV " +regAux+","+quitarSufijo(valorDer)+new_line_windows; //debo pisar lo anterior, ya que debo mover registros
-								generado+=opASM+" "+regLibre+","+regAux+new_line_windows; //hago operacion entre registros
-								setearOcupacionRegistro(regAux, false);
-							}
-							
-			
-						}
-					}
-
-				
-
-
 			}
-		}
+			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
+					
+			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			registroOcupado=regLibre;
+			
 			codigo.add(generado);
-			
-			if(esRegistro(valorDer)) { //en ambos casos el lado derecho se libera si es reg
-			    setearOcupacionRegistro(valorDer, false); //libero registro
-			}
+		
+		 }
+		
+		
+		
 		return registroOcupado;
 	}
 	private String generarAsignacion(String valorIzq,String valorDer){
