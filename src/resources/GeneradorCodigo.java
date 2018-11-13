@@ -22,14 +22,14 @@ public class GeneradorCodigo {
 	String textSeparator="@";
 	// el label del fallo de condicion se comparte entre un fallo normal y un else.
 	//Si no hay else no tengo que poner el JMP incondicional.
-
+	static String[] registers ={"EBX","ECX","EDX","EAX"};
 
 	public GeneradorCodigo(Hashtable<String,Atributos> tablaSimbolos) {
 
 		this.tablaSimbolos=tablaSimbolos;
-		String[] regs = {"EAX","EBX","ECX","EDX"};//er de extender para usar solo lo necesario. Es decir, si toy usando variables de 16 bits, no usar todo el reg de 32
+		//er de extender para usar solo lo necesario. Es decir, si toy usando variables de 16 bits, no usar todo el reg de 32
 
-		for( String r: regs) {
+		for( String r: registers) {
 
 			this.setearOcupacionRegistro(r, false);
 		}
@@ -48,6 +48,9 @@ public class GeneradorCodigo {
 	}
 
 	public static void setearOcupacionRegistro(String r,Boolean ocupado) {
+		
+		if(r.length()==2)//AX,BX,CX,DX
+			r="E"+r;
 		tablaDeOcupacion.put(r,ocupado);
 
 	}
@@ -79,33 +82,64 @@ public class GeneradorCodigo {
 	}
 	private boolean esVariable(String posibleVariable) {
 		//Esto es para discernir si algo es una variable o no. Util para optimizar el uso de registros
-		String declarada=(String) tablaSimbolos.get(posibleVariable).get("Declarada");
+		String declarada=null;
+		Atributos var=tablaSimbolos.get(posibleVariable);
+		if(var!=null)
+			declarada=(String) var.get("Declarada");
 		return declarada!=null; //si es variable o funcion tiene Declarada. Por lo que declarada no es null
 	}
 
 
-	public static String getRegistroLibre(boolean prioritario) {
+	private String getModo(String clave) {
+		//sea variable o una cte tiene un tipo en la tabla de simbolos
+		String tipo=(String)tablaSimbolos.get(clave).get("Tipo");
+		String modo= "";
+		if(tipo.equals("integer"))
+			modo="16";
+		else 
+			if( tipo.equals("uslinteger")){
+			modo="32";
+		}
+		return modo;
+	}
+	public static String getRegistroLibre(boolean prioritario,String modo) {
 		//el boolean prioritario sirve para reservar los EAX y EDX para multiplicaciones y divisiones
 
-
-
-		for(String s: tablaDeOcupacion.keySet()) {
+		
+		String out=null;
+		
+		for(String s: registers) {
 
 			if(tablaDeOcupacion.get(s)==false) { //si esta libre la clave retorna false el metodo get
 				if(prioritario) {
-					if(s.equals("EAX")||s.equals("EDX"))
-						return s;
+					if(s.equals("EDX")||s.equals("EAX")) {
+						if(modo.equals("16"))
+							out=s.substring(1); //se le saca el E de extended
+						else
+							out=s;
+					}
 				}else {
-					if(s.equals("EBX")||s.equals("ECX"))
-						return s;
+					if(s.equals("EBX")||s.equals("ECX")) {
+						if(modo.equals("16"))
+							out=s.substring(1); //se le saca el E de extended
+						else
+							out=s;
+					}
 				}
 
 			}
 		}
-
+		if(out==null) { //ya no se puede escatimar registros
+			for(String s: registers) {
+				if(tablaDeOcupacion.get(s)==false)
+					out=s;
+			}
+			
+		}
 		//por alguna razon, mas que nada debugging, no hay reg libre...
-		System.out.println("ACA SALIO ALGO TREMENDAMENTE MAL, NO HAY REG LIBRES");
-		return null;
+		if(out==null)
+			System.out.println("ACA SALIO ALGO TREMENDAMENTE MAL, NO HAY REG LIBRES");
+		return out;
 	}
 
 	private String plantillaOperacionesExpresiones(String valorIzq,String valorDer,String opASM,boolean esConmutativa)
@@ -113,15 +147,26 @@ public class GeneradorCodigo {
 			String registroOcupado="";
 			String generado=opASM+" ";
 			
-			if(esRegistro(valorIzq)){ //opero entre registro y reg/variable.
+			if(esRegistro(valorIzq)){ //opero entre registro y reg/variable/inm.
 				//izq es registro
 				generado+=valorIzq+",";
 				if(esVariable(valorDer))
 					generado+=sufijoVariablesYFunciones+valorDer+new_line_windows; //para quehaga matching con las variables en .data
-				else
-					generado+=quitarSufijo(valorDer)+new_line_windows;
-				if(esRegistro(valorDer)) {
-				    setearOcupacionRegistro(valorDer, false); //libero registro
+				else {
+					if(esRegistro(valorDer)) {
+					    setearOcupacionRegistro(valorDer, false); //libero registro
+					}else {
+						if(opASM.equals("MUL")||opASM.equals("DIV")) {//el lado derecho no puede ser un inmediato en MUL y DIV
+							String regAux=getRegistroLibre(true, getModo(valorDer));
+							if(regAux!=null) {
+								setearOcupacionRegistro(regAux, true);
+								generado="MOV " +regAux+","+quitarSufijo(valorDer)+new_line_windows; //debo pisar lo anterior, ya que debo mover registros
+								generado+=opASM+" "+valorIzq+","+regAux+new_line_windows;
+								setearOcupacionRegistro(regAux, false);
+							}
+						}else //es un inmediato valido ya que ADD y SUB lo permiten
+							generado+=quitarSufijo(valorDer)+new_line_windows;
+					}
 				}
 				registroOcupado=valorIzq;
 			}else {
@@ -134,19 +179,40 @@ public class GeneradorCodigo {
 						generado+=quitarSufijo(valorIzq)+new_line_windows;
 				}else {
 					//operacion es entre dos variables o variable/inmediato, debo mover a registros...
+					//si es asi las variables (el valorIzq por ejemplo tienen la forma de var1 que puedo buscar en la TS)
+					//Si lo puedo buscar en la TS, puedo saber el tipo y decidir que registro (16 o 32 bits) necesito
+					
+					String modo=getModo(valorIzq);
 					String regLibre="";
+					
 					if(opASM.equals("MUL")||opASM.equals("DIV"))
-						regLibre=getRegistroLibre(true);
+						regLibre=getRegistroLibre(true,modo);
 					else
-						regLibre=getRegistroLibre(false);
+						regLibre=getRegistroLibre(false,modo);
+					
 					if(regLibre!=null) {
 						setearOcupacionRegistro(regLibre, true);
 						registroOcupado=regLibre;
 						generado="MOV "+regLibre+","+sufijoVariablesYFunciones+(valorIzq)+new_line_windows; //se pisa el anterior generado ya que genero otra linea previa
 						if(esVariable(valorDer))
 							generado+=opASM+" "+regLibre+","+sufijoVariablesYFunciones+valorDer+new_line_windows;
-						else
-							generado+=opASM+" "+regLibre+","+quitarSufijo(valorDer)+new_line_windows;
+						else {
+							if(opASM.equals("MUL")||opASM.equals("DIV")) {//el lado derecho no puede ser un inmediato en MUL y DIV
+								String regAux=getRegistroLibre(true, getModo(valorDer));
+								if(regAux!=null) {
+									setearOcupacionRegistro(regAux, true);
+									generado="MOV " +regAux+","+quitarSufijo(valorDer)+new_line_windows; //debo pisar lo anterior, ya que debo mover registros
+									generado+=opASM+" "+regLibre+","+regAux+new_line_windows; //hago
+									setearOcupacionRegistro(regAux, false);
+								}
+							}else //es un inmediato valido para ADD y SUB
+								{
+								generado+=opASM+" "+regLibre+","+quitarSufijo(valorDer)+new_line_windows;
+						
+							}
+							
+						}
+							
 
 
 					}
@@ -165,7 +231,8 @@ public class GeneradorCodigo {
 		String esVariable=(String) tablaSimbolos.get(valorIzq).get("Declarada"); //si es una cte entonces no tiene el campo declarada y no se puede comparar
 		if(!esRegistro(valorIzq)&&esVariable==null) { //el reg de destino de comparacion no puede ser un valor inmediato
 			//Si pongo || en la condicion anterior incluso cuando es variable la mueve a reg. O puedo sacar todo lo de esVariable si asi se desea
-			regLibre=getRegistroLibre(false);
+			
+			regLibre=getRegistroLibre(false,getModo(valorIzq));
 			if(regLibre!=null) {
 
 				out+="MOV "+ regLibre + ","+quitarSufijo(valorIzq)+new_line_windows; //le saco el sufijo porque es un inmediato
@@ -281,7 +348,7 @@ public class GeneradorCodigo {
 				break;
 			}
 			case("condicion"): break;
-			case("casting"): break;
+			case("casting"): registroOcupado = generarCasting(hijo.getValor()); break;
 		}
 		return new Hoja(registroOcupado);
 	}
@@ -292,20 +359,203 @@ public class GeneradorCodigo {
 
 
 	private String generarSuma(String valorIzq,String valorDer){
-		String registroOcupado = plantillaOperacionesExpresiones(valorIzq, valorDer, "ADD", true);
+		String registroOcupado = "";
+		String opASM="ADD";
+		String generado=opASM+" ";
+		if(esRegistro(valorIzq)){ //opero entre registro y reg/variable/inm.
+				//izq es registro
+				generado+=valorIzq+",";
+				if(esVariable(valorDer))
+					generado+=sufijoVariablesYFunciones+valorDer+new_line_windows; //para quehaga matching con las variables en .data
+				else
+					generado+=quitarSufijo(valorDer)+new_line_windows;
+				
+				
+				registroOcupado=valorIzq;
+			}else {
+				//izq es una variable o inm, si la operacion es conmutativa puedo reusar el reg, si no debo usar otro reg.
+				if(esRegistro(valorDer)) {
+					generado+=valorDer+",";
+					if(esVariable(valorIzq))
+						generado+=sufijoVariablesYFunciones+valorIzq+new_line_windows; //para quehaga matching con las variables en .data
+					else
+						generado+=quitarSufijo(valorIzq)+new_line_windows;
+				}else {
+					//operacion es entre dos variables o variable/inmediato, debo mover a registros...
+					//si es asi las variables (el valorIzq por ejemplo tienen la forma de var1 que puedo buscar en la TS)
+					//Si lo puedo buscar en la TS, puedo saber el tipo y decidir que registro (16 o 32 bits) necesito
+					
+					String modo=getModo(valorIzq);
+					String regLibre="";
+					
+					regLibre=getRegistroLibre(false,modo);
+					
+					if(regLibre!=null) {
+						setearOcupacionRegistro(regLibre, true);
+						registroOcupado=regLibre;
+						if(esVariable(valorIzq))
+							generado="MOV "+regLibre+","+sufijoVariablesYFunciones+(valorIzq)+new_line_windows; //se pisa el anterior generado ya que genero otra linea previa
+						else
+							generado="MOV "+regLibre+","+quitarSufijo(valorIzq)+new_line_windows;
+						
+						if(esVariable(valorDer))
+							generado+=opASM+" "+regLibre+","+sufijoVariablesYFunciones+valorDer+new_line_windows;
+						else
+							generado+=opASM+" "+regLibre+","+quitarSufijo(valorDer)+new_line_windows; //funciona en reg e inmediatos
+					
+							
 
+
+					}
+
+				}
+
+
+			}
+			codigo.add(generado);
+			if(esRegistro(valorDer)) { //en ambos casos el lado derecho se libera si es reg
+			    setearOcupacionRegistro(valorDer, false); //libero registro
+			}
+	
 		return registroOcupado;
 	}
 	private String generarResta(String valorIzq,String valorDer){
-		String registroOcupado = plantillaOperacionesExpresiones(valorIzq, valorDer, "SUB", false);
+		String registroOcupado = "";
+		String opASM="SUB";
+		String generado=opASM+" ";
+		if(esRegistro(valorIzq)){ //opero entre registro y reg/variable/inm.
+				//izq es registro
+				generado+=valorIzq+",";
+				if(esVariable(valorDer))
+					generado+=sufijoVariablesYFunciones+valorDer+new_line_windows; //para quehaga matching con las variables en .data
+				else
+					generado+=quitarSufijo(valorDer)+new_line_windows;
+				
+				
+				registroOcupado=valorIzq;
+		}else {
+				    //como SUB no es conmutativa debo generar un registro para el lado izquierdo. Si el lado derecho es un registro queda SUB R1,R2
+				 
+					//operacion es entre dos variables o variable/inmediato, debo mover a registros...
+					//si es asi las variables (el valorIzq por ejemplo tienen la forma de var1 que puedo buscar en la TS)
+					//Si lo puedo buscar en la TS, puedo saber el tipo y decidir que registro (16 o 32 bits) necesito
+					
+					String modo=getModo(valorIzq);
+					String regLibre="";
+					
+					regLibre=getRegistroLibre(false,modo);
+					
+					if(regLibre!=null) {
+						setearOcupacionRegistro(regLibre, true);
+						registroOcupado=regLibre;
+						if(esVariable(valorIzq))
+							generado="MOV "+regLibre+","+sufijoVariablesYFunciones+(valorIzq)+new_line_windows; //se pisa el anterior generado ya que genero otra linea previa
+						else
+							generado="MOV "+regLibre+","+quitarSufijo(valorIzq)+new_line_windows;
+						if(esVariable(valorDer))
+							generado+=opASM+" "+regLibre+","+sufijoVariablesYFunciones+valorDer+new_line_windows;
+						else
+							generado+=opASM+" "+regLibre+","+quitarSufijo(valorDer)+new_line_windows; //funciona en reg e inmediatos
+			
+					}
+
+				
+
+
+			}
+			codigo.add(generado);
+			
+			if(esRegistro(valorDer)) { //en ambos casos el lado derecho se libera si es reg
+			    setearOcupacionRegistro(valorDer, false); //libero registro
+			}
 		return registroOcupado;
 	}
+	
+	
 	private String generarMultiplicacion(String valorIzq,String valorDer){
-		String registroOcupado = plantillaOperacionesExpresiones(valorIzq, valorDer, "MUL", true);
+		String registroOcupado = "";
+		String opASM="MUL";
+		String generado="";
+		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
+		
+		 if(regLibre!=null) {
+			
+			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
+			String factor=valorDer;
+			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
+			if(esVariable(valorIzq)) {
+				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
+			}else {
+				if(esRegistro(valorIzq)) {
+					regLibre=valorIzq;
+				}
+				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
+			}
+			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
+				factor=sufijoVariablesYFunciones+valorDer;
+			}else {
+				if(!esRegistro(valorDer)) { //Si llegue aca entonces es un inmediato. Voy a mover ese inmediato a regLibre antes de hacer la MUL
+						 factor=regLibre;
+						 generado+="MOV " +regLibre + "," + quitarSufijo(valorDer)+new_line_windows;
+								
+				}
+			}
+			
+			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
+					
+			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			setearOcupacionRegistro("EAX", false);
+			registroOcupado=regLibre;
+			
+			codigo.add(generado);
+		
+		 }
+		
+		
+		
 		return registroOcupado;
 	}
 	private String generarDivision(String valorIzq,String valorDer){
-		String registroOcupado = plantillaOperacionesExpresiones(valorIzq, valorDer, "DIV", false);
+		String registroOcupado = "";
+		String opASM="DIV";
+		String generado="";
+		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
+		
+		 if(regLibre!=null) {
+			
+			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
+			String factor=valorDer;
+			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
+			if(esVariable(valorIzq)) {
+				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
+			}else {
+				if(esRegistro(valorIzq)) {
+					regLibre=valorIzq;
+				}
+				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
+			}
+			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
+				factor=sufijoVariablesYFunciones+valorDer;
+			}else {
+				if(!esRegistro(valorDer)) { //Si llegue aca entonces es un inmediato. Voy a mover ese inmediato a regLibre antes de hacer la MUL
+						 factor=regLibre;
+						 generado+="MOV " +regLibre + "," + quitarSufijo(valorDer)+new_line_windows;
+								
+				}
+			}
+			
+			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
+					
+			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			setearOcupacionRegistro("EAX", false);
+			registroOcupado=regLibre;
+			
+			codigo.add(generado);
+		
+		 }
+		
+		
+		
 		return registroOcupado;
 	}
 	private String generarAsignacion(String valorIzq,String valorDer){
@@ -324,10 +574,11 @@ public class GeneradorCodigo {
 
 			}else {
 				//Toy operando entre dos variables. ASM no soport MOV var,var2 ; Debo moverla entre registros
-				String regLibre=getRegistroLibre(false);
+				String regLibre=getRegistroLibre(false,getModo(valorDer));
 				if(regLibre!=null) {
 					setearOcupacionRegistro(regLibre, true);
-					generado="MOV "+regLibre+", _"+valorDer+new_line_windows;
+					//generado="MOV "+regLibre+", _"+valorDer+new_line_windows; COMENTO ESTO. REVISAR SI VA POR ALGUNA RAZON
+					generado="MOV "+regLibre+", "+sufijoVariablesYFunciones+valorDer+new_line_windows;
 					generado+="MOV "+sufijoVariablesYFunciones+valorIzq+","+regLibre+new_line_windows;
 					setearOcupacionRegistro(regLibre, false);
 				}
@@ -470,8 +721,47 @@ public class GeneradorCodigo {
 		String registroOcupado = "";
 		return registroOcupado;
 	}
-	private String generarCasting(){
+	private String generarCasting(String valor){
 		String registroOcupado = "";
+		String generado = "";
+		if (valor.equals("AX") || valor.equals("BX") || valor.equals("CX") || valor.equals("DX")){
+			String registroObtenido = getRegistroLibre(false, "32");
+			generado = "MOV " + registroObtenido + ", 0" + new_line_windows;
+			generado += "MOV " + registroObtenido.substring(1) + ", " + valor + new_line_windows;
+			generado += "MOV E" + valor + ", " + registroObtenido + new_line_windows;
+			registroOcupado = "E" + valor;
+		}
+		else if (tablaSimbolos.get(valor).get("Token").equals("ID")){
+			
+			String nuevaClave = "uslinteger_" + valor; //se crea una nueva variable de 32 bits, tipo uslinteger, para agregar a la TS
+			Atributos atts = new Atributos();
+			atts.set("Tipo", "uslinteger");
+			atts.set("Declarada", tablaSimbolos.get(valor).get("Declarada"));
+			atts.set("Ambito", tablaSimbolos.get(valor).get("Ambito"));
+			atts.set("Lexema", nuevaClave);
+			atts.set("Token", tablaSimbolos.get(valor).get("Token"));
+			
+			tablaSimbolos.put(nuevaClave, atts);
+			
+			
+			String registroObtenido = getRegistroLibre(false, "16");
+			
+			generado = "MOV " + registroObtenido + ", " + sufijoVariablesYFunciones + valor + new_line_windows;
+			generado += "MOV " + sufijoVariablesYFunciones + nuevaClave + ", E" + registroObtenido + new_line_windows;
+			generado += "MOV " + registroObtenido + ", 0" + new_line_windows;
+			generado += "MOV " + sufijoVariablesYFunciones + nuevaClave + " + 2, E" + registroObtenido + new_line_windows;
+			registroOcupado = nuevaClave;
+			
+		}
+		else if (tablaSimbolos.get(valor).get("Token").equals("CTE_INTEGER")){
+			String registroObtenido = getRegistroLibre(false, "32");
+			
+			generado += "MOV " + registroObtenido + " ," + tablaSimbolos.get(valor).get("Valor") + new_line_windows;
+			
+			setearOcupacionRegistro(registroObtenido, true);
+			registroOcupado = registroObtenido;
+		}
+		codigo.add(generado);
 		return registroOcupado;
 	}
 
@@ -551,18 +841,30 @@ public class GeneradorCodigo {
 			String tipo=(String)atts.get("Tipo");
 			Object valor=null;
 			boolean esCadena=false;
-			if(tipo.equals("integer")||tipo.equals("uslinteger")) {
-				continue; //no debo generar datos para constantes enteras, se usa el valor directamente. Continue pasa a la proxima iteracion del for.
-				//tipoDatos="DW";	//descomentar esto si hay que implementar optimizacion de registros, para integer usar AX en vez de EAX....
-				//tipoDatos="DD"; //esto implica el uso de los reg de 32 bits
-				//valor = (Integer) atts.get("Valor");
+			if(tipo.equals("integer")) {
+				valor = (Integer) atts.get("Valor");
+				if(valor!=null)//no debo generar datos para constantes enteras, se usa el valor directamente. Continue pasa a la proxima iteracion del for.
+					continue;
+				else
+				{
+				//si no tiene campo valor es una variable
+				tipoDatos="DW";	
+				
+				}
 			}
-			/*
+			
 			   if(tipo.equals("uslinteger")) {
-				tipoDatos="DD";
-				valor = (Long) atts.get("Valor"); //esto es por si se rompe por pasar el valor a long en AL, antes habia un double....
+				   valor = (Long) atts.get("Valor");
+					if(valor!=null)//no debo generar datos para constantes enteras, se usa el valor directamente. Continue pasa a la proxima iteracion del for.
+						continue;
+					else
+					{
+					//si no tiene campo valor es una variable
+					tipoDatos="DD";	
+					
+					}
 			}
-			*/
+			
 			if(tipo.equals("cadena_caracteres")) {
 				esCadena=true;
 				tipoDatos="DB"; //por alguna razon los string se guardan como un DB, debe ser un puntero de 8 bits...
