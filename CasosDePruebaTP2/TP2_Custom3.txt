@@ -1,0 +1,27 @@
+integer _var;_var2,
+_var:= 2_i,
+uslinteger _var4;_var5;_var6,
+
+while(_var!=5_i){
+	if(_var=3_i){
+		print('un 3'),
+	}
+	end_if
+	_var:=_var+1_i,
+}
+
+if(_var=5_i)
+	print('si '), 
+else
+	print('no '),
+end_if
+
+_var4:=16_ul,
+_var5:=2_ul,
+_var6:=2_ul,
+_var4:=_var4*2_ul/_var5*_var6, #16*2 /2*2 = 32#
+
+if(_var4=32_ul)
+	print('var 4 es 32 '),
+end_if
+print('test '),
