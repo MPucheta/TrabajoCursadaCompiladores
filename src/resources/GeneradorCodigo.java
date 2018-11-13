@@ -22,14 +22,14 @@ public class GeneradorCodigo {
 	String textSeparator="@";
 	// el label del fallo de condicion se comparte entre un fallo normal y un else.
 	//Si no hay else no tengo que poner el JMP incondicional.
-
+	static String[] registers ={"EBX","ECX","EDX","EAX"};
 
 	public GeneradorCodigo(Hashtable<String,Atributos> tablaSimbolos) {
 
 		this.tablaSimbolos=tablaSimbolos;
-		String[] regs = {"EAX","EBX","ECX","EDX"};//er de extender para usar solo lo necesario. Es decir, si toy usando variables de 16 bits, no usar todo el reg de 32
+		//er de extender para usar solo lo necesario. Es decir, si toy usando variables de 16 bits, no usar todo el reg de 32
 
-		for( String r: regs) {
+		for( String r: registers) {
 
 			this.setearOcupacionRegistro(r, false);
 		}
@@ -48,6 +48,7 @@ public class GeneradorCodigo {
 	}
 
 	public static void setearOcupacionRegistro(String r,Boolean ocupado) {
+		System.out.println("usado " +r);
 		if(r.length()==2)//AX,BX,CX,DX
 			r="E"+r;
 		tablaDeOcupacion.put(r,ocupado);
@@ -107,7 +108,7 @@ public class GeneradorCodigo {
 		
 		String out=null;
 		
-		for(String s: tablaDeOcupacion.keySet()) {
+		for(String s: registers) {
 
 			if(tablaDeOcupacion.get(s)==false) { //si esta libre la clave retorna false el metodo get
 				if(prioritario) {
@@ -129,7 +130,7 @@ public class GeneradorCodigo {
 			}
 		}
 		if(out==null) { //ya no se puede escatimar registros
-			for(String s: tablaDeOcupacion.keySet()) {
+			for(String s: registers) {
 				if(tablaDeOcupacion.get(s)==false)
 					out=s;
 			}
@@ -471,13 +472,16 @@ public class GeneradorCodigo {
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
 		
 		 if(regLibre!=null) {
-			 setearOcupacionRegistro(regLibre, true);
+			
 			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
 			String factor=valorDer;
 			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
 			if(esVariable(valorIzq)) {
 				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
 			}else {
+				if(esRegistro(valorIzq)) {
+					regLibre=valorIzq;
+				}
 				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
 			}
 			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
@@ -489,9 +493,11 @@ public class GeneradorCodigo {
 								
 				}
 			}
+			
 			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
 					
 			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			setearOcupacionRegistro("EAX", false);
 			registroOcupado=regLibre;
 			
 			codigo.add(generado);
@@ -509,13 +515,16 @@ public class GeneradorCodigo {
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
 		
 		 if(regLibre!=null) {
-			 setearOcupacionRegistro(regLibre, true);
+			
 			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
 			String factor=valorDer;
 			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
 			if(esVariable(valorIzq)) {
 				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
 			}else {
+				if(esRegistro(valorIzq)) {
+					regLibre=valorIzq;
+				}
 				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
 			}
 			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
@@ -527,9 +536,11 @@ public class GeneradorCodigo {
 								
 				}
 			}
+			
 			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
 					
 			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			setearOcupacionRegistro("EAX", false);
 			registroOcupado=regLibre;
 			
 			codigo.add(generado);
