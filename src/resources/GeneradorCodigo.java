@@ -724,14 +724,11 @@ public class GeneradorCodigo {
 	private String generarCasting(String valor){
 		String registroOcupado = "";
 		String generado = "";
-		System.out.println("Valor: " + valor );
 		if (valor.equals("AX") || valor.equals("BX") || valor.equals("CX") || valor.equals("DX")){
 			String registroObtenido = getRegistroLibre(false, "32");
-			System.out.println("Registro obtenido: " + registroObtenido + "\n" );
 			generado = "MOV " + registroObtenido + ", 0" + new_line_windows;
 			generado += "MOV " + registroObtenido.substring(1) + ", " + valor + new_line_windows;
 			generado += "MOV E" + valor + ", " + registroObtenido + new_line_windows;
-			System.out.println(generado);
 			registroOcupado = "E" + valor;
 		}
 		else if (tablaSimbolos.get(valor).get("Token").equals("ID")){
@@ -748,13 +745,11 @@ public class GeneradorCodigo {
 			
 			
 			String registroObtenido = getRegistroLibre(false, "16");
-			System.out.println("Registro obtenido: " + registroObtenido + "\n" );
 			
 			generado = "MOV " + registroObtenido + ", " + sufijoVariablesYFunciones + valor + new_line_windows;
 			generado += "MOV " + sufijoVariablesYFunciones + nuevaClave + ", E" + registroObtenido + new_line_windows;
 			generado += "MOV " + registroObtenido + ", 0" + new_line_windows;
 			generado += "MOV " + sufijoVariablesYFunciones + nuevaClave + " + 2, E" + registroObtenido + new_line_windows;
-			System.out.println(generado);
 			registroOcupado = nuevaClave;
 			
 		}
@@ -766,7 +761,6 @@ public class GeneradorCodigo {
 			setearOcupacionRegistro(registroObtenido, true);
 			registroOcupado = registroObtenido;
 		}
-		System.out.println("Registro ocupado: " + registroOcupado);
 		codigo.add(generado);
 		return registroOcupado;
 	}
