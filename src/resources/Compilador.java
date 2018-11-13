@@ -114,7 +114,7 @@ public class Compilador {
 		asm.addAll(codigo);
 		asm.addAll(fin);
 		try {
-			ArchivoTexto.escribirEnDisco("asm.txt", asm);
+			ArchivoTexto.escribirEnDisco("asm.asm", asm);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
