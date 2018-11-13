@@ -48,7 +48,7 @@ public class GeneradorCodigo {
 	}
 
 	public static void setearOcupacionRegistro(String r,Boolean ocupado) {
-		System.out.println("usado " +r);
+		
 		if(r.length()==2)//AX,BX,CX,DX
 			r="E"+r;
 		tablaDeOcupacion.put(r,ocupado);
@@ -393,7 +393,11 @@ public class GeneradorCodigo {
 					if(regLibre!=null) {
 						setearOcupacionRegistro(regLibre, true);
 						registroOcupado=regLibre;
-						generado="MOV "+regLibre+","+sufijoVariablesYFunciones+(valorIzq)+new_line_windows; //se pisa el anterior generado ya que genero otra linea previa
+						if(esVariable(valorIzq))
+							generado="MOV "+regLibre+","+sufijoVariablesYFunciones+(valorIzq)+new_line_windows; //se pisa el anterior generado ya que genero otra linea previa
+						else
+							generado="MOV "+regLibre+","+quitarSufijo(valorIzq)+new_line_windows;
+						
 						if(esVariable(valorDer))
 							generado+=opASM+" "+regLibre+","+sufijoVariablesYFunciones+valorDer+new_line_windows;
 						else
@@ -444,7 +448,10 @@ public class GeneradorCodigo {
 					if(regLibre!=null) {
 						setearOcupacionRegistro(regLibre, true);
 						registroOcupado=regLibre;
-						generado="MOV "+regLibre+","+sufijoVariablesYFunciones+(valorIzq)+new_line_windows; //se pisa el anterior generado ya que genero otra linea previa
+						if(esVariable(valorIzq))
+							generado="MOV "+regLibre+","+sufijoVariablesYFunciones+(valorIzq)+new_line_windows; //se pisa el anterior generado ya que genero otra linea previa
+						else
+							generado="MOV "+regLibre+","+quitarSufijo(valorIzq)+new_line_windows;
 						if(esVariable(valorDer))
 							generado+=opASM+" "+regLibre+","+sufijoVariablesYFunciones+valorDer+new_line_windows;
 						else
