@@ -483,7 +483,7 @@ final static String yyrule[] = {
 "r_value_asignacion : id_invocacion",
 };
 
-//#line 373 ".\gramatica.y"
+//#line 383 ".\gramatica.y"
 
 
 Hashtable<String, Atributos> tablaSimbolos;
@@ -1387,18 +1387,28 @@ case 66:
 break;
 case 67:
 //#line 275 ".\gramatica.y"
-{agregarEstructuraDetectada("Conversion explicita"); yyval = agregarNodoRengo("casting",val_peek(1)); cambiarTipo(yyval, "uslinteger"); setNroLinea(yyval, (Token) val_peek(0).obj);}
+{agregarEstructuraDetectada("Conversion explicita");
+																if (val_peek(1).sval.equals("integer")){
+																	yyval = agregarNodoRengo("casting",val_peek(1));
+																	cambiarTipo(yyval, "uslinteger");
+																}
+																else {
+																	agregarErrorChequeoSemantico("Error: no se puede hacer la conversion de " + val_peek(1).ival + " a uslinteger. Linea: " + nroLinea(val_peek(1)));
+																	yyval = hojaError();
+																}
+																setNroLinea(yyval, (Token) val_peek(0).obj);
+																}
 break;
 case 68:
-//#line 277 ".\gramatica.y"
+//#line 287 ".\gramatica.y"
 {agregarError("Error: falta ')' en la conversion explicita. Linea: " + nroLinea(val_peek(1))); yyval = hojaError();setNroLinea(yyval, val_peek(1));}
 break;
 case 69:
-//#line 279 ".\gramatica.y"
+//#line 289 ".\gramatica.y"
 {agregarError("Error: tipo no valido para conversion. Linea: " + ((Token)val_peek(3).obj).nroLinea); yyval = hojaError();setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 70:
-//#line 284 ".\gramatica.y"
+//#line 294 ".\gramatica.y"
 {
 																	if (verificarTipos(val_peek(2), val_peek(0), "operacion '*'")){
 																			yyval = agregarNodo("*",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘*‘ ; T.ptr ; F.ptr )*/
@@ -1410,7 +1420,7 @@ case 70:
 														}
 break;
 case 71:
-//#line 293 ".\gramatica.y"
+//#line 303 ".\gramatica.y"
 {
 																if (verificarTipos(val_peek(2), val_peek(0), "operacion '/'")){
 																		yyval = agregarNodo("/",val_peek(2),val_peek(0)); /*es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )*/
@@ -1422,7 +1432,7 @@ case 71:
 														}
 break;
 case 73:
-//#line 306 ".\gramatica.y"
+//#line 316 ".\gramatica.y"
 { yyval=agregarHoja(((Token)val_peek(0).obj).claveTablaSimbolo);
 																			if (verificarDeclaracion(val_peek(0))){
 																					cambiarTipo(yyval, (String)tablaSimbolos.get(obtenerLexema(val_peek(0))).get("Tipo"));
@@ -1434,7 +1444,7 @@ case 73:
 																				}
 break;
 case 74:
-//#line 315 ".\gramatica.y"
+//#line 325 ".\gramatica.y"
 { yyval=agregarHoja(((Token)val_peek(0).obj).claveTablaSimbolo);
 																			cambiarTipo(yyval, "integer");
 																		 Atributos atts = tablaSimbolos.get(((Token)val_peek(0).obj).claveTablaSimbolo); /*$1 es de tipo ParserVal, agarro su valor de string para buscar en la TS*/
@@ -1451,13 +1461,13 @@ case 74:
 																			}
 break;
 case 75:
-//#line 329 ".\gramatica.y"
+//#line 339 ".\gramatica.y"
 { yyval=agregarHoja(((Token)val_peek(0).obj).claveTablaSimbolo);
 																		cambiarTipo(yyval, "uslinteger");
 																	setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 76:
-//#line 332 ".\gramatica.y"
+//#line 342 ".\gramatica.y"
 {	agregarEstructuraDetectada("Negacion de operando");
 																		int valorInteger = (Integer) tablaSimbolos.get(((Token)val_peek(0).obj).claveTablaSimbolo).get("Valor");
 																		String nuevaClave = "-" + valorInteger + "_i";
@@ -1472,11 +1482,11 @@ case 76:
 																		}
 break;
 case 77:
-//#line 344 ".\gramatica.y"
+//#line 354 ".\gramatica.y"
 {agregarError("Error: negacion no permitida a este operando. Linea: " + ((Token) val_peek(1).obj).nroLinea);yyval = hojaError();setNroLinea(yyval, (Token) val_peek(1).obj);}
 break;
 case 79:
-//#line 349 ".\gramatica.y"
+//#line 359 ".\gramatica.y"
 {
 
 																							if (verificarDeclaracion(val_peek(3))&&verificarAccesibilidadPorAmbito(val_peek(3))){  /*se fija si la variable del lado izquierdo esta declarada*/
@@ -1490,18 +1500,18 @@ case 79:
 																						}
 break;
 case 80:
-//#line 361 ".\gramatica.y"
+//#line 371 ".\gramatica.y"
 {agregarError("Error: falta ',' en asignacion. Linea: " + nroLinea(val_peek(0))); yyval = hojaError();setNroLinea(yyval, val_peek(0));}
 break;
 case 81:
-//#line 363 ".\gramatica.y"
+//#line 373 ".\gramatica.y"
 {agregarError("Error: r-value de la asignacion mal definido. Linea: " + ((Token) val_peek(1).obj).nroLinea); yyval = hojaError();setNroLinea(yyval, (Token) val_peek(0).obj);}
 break;
 case 83:
-//#line 368 ".\gramatica.y"
+//#line 378 ".\gramatica.y"
 {agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
 break;
-//#line 1428 "Parser.java"
+//#line 1438 "Parser.java"
 //########## END OF USER-SUPPLIED ACTIONS ##########
     }//switch
     //#### Now let's reduce... ####
