@@ -272,7 +272,17 @@ expr 		: 	expr '+' term	{
 				;
 
 
-casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita"); $$ = agregarNodoRengo("casting",$3); cambiarTipo($$, "uslinteger"); setNroLinea($$, (Token) $4.obj);} /*verificar si la expresion no es uslinteger?*/
+casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicita");
+																if ($3.sval.equals("integer")){
+																	$$ = agregarNodoRengo("casting",$3);
+																	cambiarTipo($$, "uslinteger");
+																}
+																else {
+																	agregarErrorChequeoSemantico("Error: no se puede hacer la conversion de " + $3.ival + " a uslinteger. Linea: " + nroLinea($3));
+																	$$ = hojaError();
+																}
+																setNroLinea($$, (Token) $4.obj);
+																}
 
 				|	USLINTEGER '('expr error {agregarError("Error: falta ')' en la conversion explicita. Linea: " + nroLinea($3)); $$ = hojaError();setNroLinea($$, $3);}
 
