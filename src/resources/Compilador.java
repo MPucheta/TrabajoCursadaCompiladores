@@ -103,6 +103,9 @@ public class Compilador {
 			
 			
 		}
+		for(String s:preCodigo) {
+			System.out.print(s);
+		}
 		for(String s:codigo) {
 			System.out.print(s);
 		}

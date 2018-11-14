@@ -331,7 +331,7 @@ public class GeneradorCodigo {
 		String valorHijo=hijo.getValor();
 		String registroOcupado = "";
 		switch(operacion.toLowerCase()){
-			case("invocacion"): break;
+			case("invocacion"): registroOcupado = generarInvocacion(hijo.getValor()); break;
 			case("impresion"): {
 				String aux= valorHijo.split("'")[1];//por ejemplo 'test' pasa a ser test
 				String generado="INVOKE printf, ADDR " + sufijoVariablesYFunciones+aux.replace(" ", textSeparator) + new_line_windows; // el printf en minuscula porque es una funcion externa
@@ -477,6 +477,9 @@ public class GeneradorCodigo {
 		String opASM="MUL";
 		String generado="";
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
+		String regOP="EAX";
+		if(getModo(valorDer).equals("16"))
+			regOP="AX";
 		
 		 if(regLibre!=null) {
 			
@@ -484,12 +487,12 @@ public class GeneradorCodigo {
 			String factor=valorDer;
 			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
 			if(esVariable(valorIzq)) {
-				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
+				generado="MOV " + regOP + "," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
 			}else {
 				if(esRegistro(valorIzq)) {
 					regLibre=valorIzq;
 				}
-				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
+				generado="MOV " + regOP + "," + quitarSufijo(valorIzq)+new_line_windows; 
 			}
 			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
 				factor=sufijoVariablesYFunciones+valorDer;
@@ -503,7 +506,7 @@ public class GeneradorCodigo {
 			
 			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
 					
-			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			generado+= "MOV " + regLibre + "," + regOP+new_line_windows; //backup del dato
 			setearOcupacionRegistro("EAX", false);
 			registroOcupado=regLibre;
 			
@@ -520,6 +523,9 @@ public class GeneradorCodigo {
 		String opASM="DIV";
 		String generado="";
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
+		String regOP="EAX";
+		if(getModo(valorDer).equals("16"))
+			regOP="AX";
 		
 		 if(regLibre!=null) {
 			
@@ -527,12 +533,12 @@ public class GeneradorCodigo {
 			String factor=valorDer;
 			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
 			if(esVariable(valorIzq)) {
-				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
+				generado="MOV " + regOP + "," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
 			}else {
 				if(esRegistro(valorIzq)) {
 					regLibre=valorIzq;
 				}
-				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
+				generado="MOV " + regOP + "," + quitarSufijo(valorIzq)+new_line_windows; 
 			}
 			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
 				factor=sufijoVariablesYFunciones+valorDer;
@@ -546,7 +552,7 @@ public class GeneradorCodigo {
 			
 			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
 					
-			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			generado+= "MOV " + regLibre + "," + regOP+new_line_windows; //backup del dato
 			setearOcupacionRegistro("EAX", false);
 			registroOcupado=regLibre;
 			
@@ -690,8 +696,13 @@ public class GeneradorCodigo {
 		String registroOcupado = "";
 		return registroOcupado;
 	}
-	private String generarInvocacion(){
+	private String generarInvocacion(String valor){
 		String registroOcupado = "";
+		String generado = "CALL " + sufijoVariablesYFunciones + valor + new_line_windows;
+		codigo.add(generado);
+		registroOcupado = (String) tablaSimbolos.get(valor).get("Retorno");
+		if ((registroOcupado != null)&&(registroOcupado.equals("")))
+			registroOcupado = "@" + valor + "@ret";
 		return registroOcupado;
 	}
 	private String generarThen(){
@@ -778,8 +789,7 @@ public class GeneradorCodigo {
 		String retorno=""; //debo poner un retorno valido para cada tipo de funcion..... por ahora, VOID tiene retorno vacio y fun tiene retorno la label a una funcion 
 		retorno= (String)tablaSimbolos.get(aux[aux.length-1]).get("Retorno"); // en vez de aux pudiera poner directamente nombre, pero en caso de comentar la linea se pueden tener problemas al no encontrarla en tabla de simbolos
 
-		if(!retorno.equals(" ")) {
-			
+		if((retorno!=null)&&(!retorno.equals(" "))) {
 			codigo.add("MOV " + sufijoVariablesYFunciones+aux[aux.length-1]+sufijoVariablesYFunciones+"ret" +","+sufijoVariablesYFunciones+retorno+new_line_windows);
 		}
 		codigo.add("RET");
@@ -926,6 +936,14 @@ public class GeneradorCodigo {
 		//codigo.add(new_line_windows+".code"+new_line_windows);
 		//ESPACIO EN BLANCO PARA GENERAR EL PRECODE: FUNCIONES Y DEMAS DE CLOSURE
 		codigo.add(new_line_windows+"start:"+new_line_windows);
+		
+		/* PARA LIMPIAR LOS REGISTROS */
+		/*
+		codigo.add("XOR EAX, EAX" +new_line_windows );
+		codigo.add("XOR EBX, EBX"+new_line_windows);
+		codigo.add("XOR ECX, ECX"+new_line_windows);
+		codigo.add("XOR EDX, EDX"+new_line_windows);*/
+		
 		arbol.generarCodigo(this);
 
 		return codigo; //se esperar que arbol.generarCodigo modifique el codigo que es una lista global
@@ -944,12 +962,12 @@ public class GeneradorCodigo {
 		}
 		return out;
 	}
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		GeneradorCodigo g=new GeneradorCodigo(new Hashtable<>());
 		setearOcupacionRegistro("EAX", true);
 		for(String s: tablaDeOcupacion.keySet()) {
 			System.out.println("valor " + s + " ocupado " + tablaDeOcupacion.get(s));
 
 		}
-	}
+	}*/
 }

@@ -375,7 +375,7 @@ asignacion	:	ID ASIGN r_value_asignacion ',' {
 
 
 r_value_asignacion:	expr
-									| id_invocacion	{agregarEstructuraDetectada("Invocacion de funcion en asignacion");}
+									| id_invocacion	{agregarEstructuraDetectada("Invocacion de funcion en asignacion"); $$ = agregarNodoRengo("invocacion", $1); setNroLinea($$, $1); cambiarTipo($$, "fun");}
 									;
 
 
@@ -411,15 +411,13 @@ int yylex(){
 	//la siguiente condicion se debe hacer porque estas estructuras (ej, if, while) ocupan varias lineas de texto
 	//por lo que cuando el parsing detecta finalmente que un if termina en un end_if, el AL.nroLinea ya avanzo.
 	//Por lo tanto sin esto el nroLinea mostrado seria el del fin de la estructura y no del comienzo
-
 	if(posibleFuncion && ultimoTokenLeido==AL.ASCIIToken('(')){
 		agregarAmbito(ultimoAmbitoPosible);
 		posibleFuncionSinNombre = false;
 		posibleFuncion=false;
- 	}
+ 	}else
+		posibleFuncion = false;
  if (posibleFuncionSinNombre && ultimoTokenLeido==AL.ASCIIToken('{')){
-
-
 		String[] ambitos = ambitoActual.split("@");
 		String nombreFuncion = "FUNCRETORNO_" + ambitos[ambitos.length - 1]; //aca se puede cambiar el nombre de del retorno
 
@@ -436,16 +434,19 @@ int yylex(){
 		ambitoActual = ambitoActual + "@" + nombreFuncion;
 		posibleFuncionSinNombre = false;
 	}
+	else
+		posibleFuncionSinNombre = false;
 
 	if(nuevaPosibleFuncion && ultimoTokenLeido==Token.ID){
 				posibleFuncion=true;
 				nuevaPosibleFuncion=false;
 				ultimoAmbitoPosible=t.claveTablaSimbolo; //t refiere al token nuevo, ultimoTokenLeido refiere al numero TIPO DE TOKEN
-	}
-	if(nuevaPosibleFuncion && ultimoTokenLeido==AL.ASCIIToken('(')){
-				posibleFuncionSinNombre=true;
-				nuevaPosibleFuncion=false;
-	}
+	}else
+		if(nuevaPosibleFuncion && ultimoTokenLeido==AL.ASCIIToken('(')){
+					posibleFuncionSinNombre=true;
+					nuevaPosibleFuncion=false;
+		}else
+			nuevaPosibleFuncion=false;
 
 	switch(ultimoTokenLeido){
 		case(Token.IF):
