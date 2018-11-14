@@ -936,12 +936,14 @@ public class GeneradorCodigo {
 		//codigo.add(new_line_windows+".code"+new_line_windows);
 		//ESPACIO EN BLANCO PARA GENERAR EL PRECODE: FUNCIONES Y DEMAS DE CLOSURE
 		codigo.add(new_line_windows+"start:"+new_line_windows);
+		
+		/* PARA LIMPIAR LOS REGISTROS */
 		/*
 		codigo.add("XOR EAX, EAX" +new_line_windows );
 		codigo.add("XOR EBX, EBX"+new_line_windows);
 		codigo.add("XOR ECX, ECX"+new_line_windows);
-		codigo.add("XOR EDX, EDX"+new_line_windows);
-		*/
+		codigo.add("XOR EDX, EDX"+new_line_windows);*/
+		
 		arbol.generarCodigo(this);
 
 		return codigo; //se esperar que arbol.generarCodigo modifique el codigo que es una lista global
