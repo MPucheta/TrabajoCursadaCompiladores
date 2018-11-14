@@ -92,8 +92,17 @@ public class GeneradorCodigo {
 
 	private String getModo(String clave) {
 		//sea variable o una cte tiene un tipo en la tabla de simbolos
-		String tipo=(String)tablaSimbolos.get(clave).get("Tipo");
+		//Si es un registro se sabe que si empieza con E es un registro extended de 32 bits
 		String modo= "";
+		if(esRegistro(clave)) {
+			if(clave.substring(0, 1).equals("E")) {
+				modo="16";
+			}else {
+				modo="32";
+			}
+		}
+		String tipo=(String)tablaSimbolos.get(clave).get("Tipo");
+		
 		if(tipo.equals("integer"))
 			modo="16";
 		else 
@@ -477,19 +486,25 @@ public class GeneradorCodigo {
 		String opASM="MUL";
 		String generado="";
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
-		
+		String regOP="EAX";
+		if(getModo(valorDer).equals("16"))
+		{
+			regOP="AX";
+			opASM="I"+opASM; //si es un dato de 16 bits toy tratando, en este contexto, con variables integer que son signadas
+		}
+	
 		 if(regLibre!=null) {
 			
 			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
 			String factor=valorDer;
 			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
 			if(esVariable(valorIzq)) {
-				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
+				generado="MOV " + regOP + "," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
 			}else {
 				if(esRegistro(valorIzq)) {
 					regLibre=valorIzq;
 				}
-				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
+				generado="MOV " + regOP + "," + quitarSufijo(valorIzq)+new_line_windows; 
 			}
 			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
 				factor=sufijoVariablesYFunciones+valorDer;
@@ -503,7 +518,7 @@ public class GeneradorCodigo {
 			
 			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
 					
-			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			generado+= "MOV " + regLibre + "," + regOP+new_line_windows; //backup del dato
 			setearOcupacionRegistro("EAX", false);
 			registroOcupado=regLibre;
 			
@@ -520,19 +535,24 @@ public class GeneradorCodigo {
 		String opASM="DIV";
 		String generado="";
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
-		
+		String regOP="EAX";
+		if(getModo(valorDer).equals("16"))
+		{
+			regOP="AX";
+			opASM="I"+opASM; //IDIV. Si es de 16 bits es un integer y es un dato signado. Por lo que debo operarlo bajo esas reglas
+		}
 		 if(regLibre!=null) {
 			
 			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
 			String factor=valorDer;
 			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
 			if(esVariable(valorIzq)) {
-				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
+				generado="MOV " + regOP + "," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
 			}else {
 				if(esRegistro(valorIzq)) {
 					regLibre=valorIzq;
 				}
-				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
+				generado="MOV " + regOP + "," + quitarSufijo(valorIzq)+new_line_windows; 
 			}
 			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
 				factor=sufijoVariablesYFunciones+valorDer;
@@ -546,7 +566,7 @@ public class GeneradorCodigo {
 			
 			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
 					
-			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			generado+= "MOV " + regLibre + "," + regOP+new_line_windows; //backup del dato
 			setearOcupacionRegistro("EAX", false);
 			registroOcupado=regLibre;
 			
@@ -926,6 +946,9 @@ public class GeneradorCodigo {
 		//codigo.add(new_line_windows+".code"+new_line_windows);
 		//ESPACIO EN BLANCO PARA GENERAR EL PRECODE: FUNCIONES Y DEMAS DE CLOSURE
 		codigo.add(new_line_windows+"start:"+new_line_windows);
+		for(String s: registers) {
+			codigo.add("XOR " +s+","+s+new_line_windows); //limpio los registros para memory safety
+		}
 		arbol.generarCodigo(this);
 
 		return codigo; //se esperar que arbol.generarCodigo modifique el codigo que es una lista global
