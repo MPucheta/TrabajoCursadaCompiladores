@@ -340,7 +340,7 @@ public class GeneradorCodigo {
 		String valorHijo=hijo.getValor();
 		String registroOcupado = "";
 		switch(operacion.toLowerCase()){
-			case("invocacion"): break;
+			case("invocacion"): registroOcupado = generarInvocacion(hijo.getValor()); break;
 			case("impresion"): {
 				String aux= valorHijo.split("'")[1];//por ejemplo 'test' pasa a ser test
 				String generado="INVOKE printf, ADDR " + sufijoVariablesYFunciones+aux.replace(" ", textSeparator) + new_line_windows; // el printf en minuscula porque es una funcion externa
@@ -488,11 +488,12 @@ public class GeneradorCodigo {
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
 		String regOP="EAX";
 		if(getModo(valorDer).equals("16"))
+
 		{
 			regOP="AX";
 			opASM="I"+opASM; //si es un dato de 16 bits toy tratando, en este contexto, con variables integer que son signadas
 		}
-	
+
 		 if(regLibre!=null) {
 			
 			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
@@ -537,10 +538,12 @@ public class GeneradorCodigo {
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
 		String regOP="EAX";
 		if(getModo(valorDer).equals("16"))
+
 		{
 			regOP="AX";
 			opASM="I"+opASM; //IDIV. Si es de 16 bits es un integer y es un dato signado. Por lo que debo operarlo bajo esas reglas
 		}
+
 		 if(regLibre!=null) {
 			
 			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
@@ -710,8 +713,13 @@ public class GeneradorCodigo {
 		String registroOcupado = "";
 		return registroOcupado;
 	}
-	private String generarInvocacion(){
+	private String generarInvocacion(String valor){
 		String registroOcupado = "";
+		String generado = "CALL " + sufijoVariablesYFunciones + valor + new_line_windows;
+		codigo.add(generado);
+		registroOcupado = (String) tablaSimbolos.get(valor).get("Retorno");
+		if ((registroOcupado != null)&&(registroOcupado.equals("")))
+			registroOcupado = "@" + valor + "@ret";
 		return registroOcupado;
 	}
 	private String generarThen(){
@@ -798,8 +806,7 @@ public class GeneradorCodigo {
 		String retorno=""; //debo poner un retorno valido para cada tipo de funcion..... por ahora, VOID tiene retorno vacio y fun tiene retorno la label a una funcion 
 		retorno= (String)tablaSimbolos.get(aux[aux.length-1]).get("Retorno"); // en vez de aux pudiera poner directamente nombre, pero en caso de comentar la linea se pueden tener problemas al no encontrarla en tabla de simbolos
 
-		if(!retorno.equals(" ")) {
-			
+		if((retorno!=null)&&(!retorno.equals(" "))) {
 			codigo.add("MOV " + sufijoVariablesYFunciones+aux[aux.length-1]+sufijoVariablesYFunciones+"ret" +","+sufijoVariablesYFunciones+retorno+new_line_windows);
 		}
 		codigo.add("RET");
@@ -917,7 +924,7 @@ public class GeneradorCodigo {
 						
 						//estamos en presencia de una funcion. Lo correcto es generar una variable auxiliar para guardar el retorno
 						//se puede chequear adicionalmente... si es de tipo void no genero una variable...
-						//En la filmina de ejemplo est· planteado el retorno en una variable independientemente del caso
+						//En la filmina de ejemplo est√° planteado el retorno en una variable independientemente del caso
 						aux=sufijoVariablesYFunciones+clave+sufijoVariablesYFunciones+"ret"+" "+tipoDatos +" ";
 						
 					}else {
@@ -946,9 +953,19 @@ public class GeneradorCodigo {
 		//codigo.add(new_line_windows+".code"+new_line_windows);
 		//ESPACIO EN BLANCO PARA GENERAR EL PRECODE: FUNCIONES Y DEMAS DE CLOSURE
 		codigo.add(new_line_windows+"start:"+new_line_windows);
+
 		for(String s: registers) {
 			codigo.add("XOR " +s+","+s+new_line_windows); //limpio los registros para memory safety
 		}
+
+		
+		/* PARA LIMPIAR LOS REGISTROS */
+		/*
+		codigo.add("XOR EAX, EAX" +new_line_windows );
+		codigo.add("XOR EBX, EBX"+new_line_windows);
+		codigo.add("XOR ECX, ECX"+new_line_windows);
+		codigo.add("XOR EDX, EDX"+new_line_windows);*/
+
 		arbol.generarCodigo(this);
 
 		return codigo; //se esperar que arbol.generarCodigo modifique el codigo que es una lista global
@@ -967,12 +984,12 @@ public class GeneradorCodigo {
 		}
 		return out;
 	}
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		GeneradorCodigo g=new GeneradorCodigo(new Hashtable<>());
 		setearOcupacionRegistro("EAX", true);
 		for(String s: tablaDeOcupacion.keySet()) {
 			System.out.println("valor " + s + " ocupado " + tablaDeOcupacion.get(s));
 
 		}
-	}
+	}*/
 }
