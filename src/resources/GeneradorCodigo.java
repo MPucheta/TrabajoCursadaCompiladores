@@ -1,4 +1,5 @@
 
+
 package resources;
 
 import java.util.ArrayList;
@@ -362,7 +363,7 @@ public class GeneradorCodigo {
       case("-"):{
 				String generado="";
 				
-				//debido a como se planteo la gramatica, el - siempre est� aplicado a constante integer
+				//debido a como se planteo la gramatica, el - siempre estï¿½ aplicado a constante integer
 				String regLibre=getRegistroLibre(false, getModo(hijo.getValor()));//podria hardcodear el "16" de una
 				if(regLibre!=null) {
 					
@@ -944,7 +945,7 @@ public class GeneradorCodigo {
 						
 						//estamos en presencia de una funcion. Lo correcto es generar una variable auxiliar para guardar el retorno
 						//se puede chequear adicionalmente... si es de tipo void no genero una variable...
-						//En la filmina de ejemplo está planteado el retorno en una variable independientemente del caso
+						//En la filmina de ejemplo estÃ¡ planteado el retorno en una variable independientemente del caso
 						aux=sufijoVariablesYFunciones+clave+sufijoVariablesYFunciones+"ret"+" "+tipoDatos +" ";
 						
 					}else {
