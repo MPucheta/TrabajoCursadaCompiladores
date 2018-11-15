@@ -1,3 +1,5 @@
+
+
 package resources;
 
 import java.util.ArrayList;
@@ -18,8 +20,8 @@ public class GeneradorCodigo {
 
 	int posibleElse=-1; //int adicional por si hay que agregar una label extra por el then/else en vez de then solamente
 
-	String sufijoVariablesYFunciones="@"; //se puede usar el "_" para la forma tradicional....
-	String textSeparator="@";
+	String sufijoVariablesYFunciones="_"; //se puede usar el "_" para la forma tradicional....
+	String textSeparator="_";
 	// el label del fallo de condicion se comparte entre un fallo normal y un else.
 	//Si no hay else no tengo que poner el JMP incondicional.
 	static String[] registers ={"EBX","ECX","EDX","EAX"};
@@ -73,8 +75,8 @@ public class GeneradorCodigo {
 	private boolean esRegistro(String posibleReg) {
 		//hay una situacion en la que la variable tenga de identificador el nombre de un registro....
 		//Es medio rebuscado pero repensar
-		for(String s:tablaDeOcupacion.keySet()) {
-			if(s.equals(posibleReg)) {
+		for(String s:registers) {
+			if(s.equals(posibleReg)||s.substring(1).equals(posibleReg)) {
 				return true;
 			}
 		}
@@ -92,8 +94,17 @@ public class GeneradorCodigo {
 
 	private String getModo(String clave) {
 		//sea variable o una cte tiene un tipo en la tabla de simbolos
-		String tipo=(String)tablaSimbolos.get(clave).get("Tipo");
+		//Si es un registro se sabe que si empieza con E es un registro extended de 32 bits
 		String modo= "";
+		if(esRegistro(clave)) {
+			if(clave.substring(0, 1).equals("E")) {
+				modo="16";
+			}else {
+				modo="32";
+			}
+		}
+		String tipo=(String)tablaSimbolos.get(clave).get("Tipo");
+		
 		if(tipo.equals("integer"))
 			modo="16";
 		else 
@@ -331,7 +342,7 @@ public class GeneradorCodigo {
 		String valorHijo=hijo.getValor();
 		String registroOcupado = "";
 		switch(operacion.toLowerCase()){
-			case("invocacion"): break;
+			case("invocacion"): registroOcupado = generarInvocacion(hijo.getValor()); break;
 			case("impresion"): {
 				String aux= valorHijo.split("'")[1];//por ejemplo 'test' pasa a ser test
 				String generado="INVOKE printf, ADDR " + sufijoVariablesYFunciones+aux.replace(" ", textSeparator) + new_line_windows; // el printf en minuscula porque es una funcion externa
@@ -349,6 +360,24 @@ public class GeneradorCodigo {
 			}
 			case("condicion"): break;
 			case("casting"): registroOcupado = generarCasting(hijo.getValor()); break;
+      case("-"):{
+				String generado="";
+				
+				//debido a como se planteo la gramatica, el - siempre estï¿½ aplicado a constante integer
+				String regLibre=getRegistroLibre(false, getModo(hijo.getValor()));//podria hardcodear el "16" de una
+				if(regLibre!=null) {
+					
+					generado="XOR " + regLibre +","+regLibre+new_line_windows; //seteo el reg a cero
+					generado+="SUB " + regLibre + ","+quitarSufijo(hijo.getValor())+new_line_windows;
+					
+					registroOcupado=regLibre;
+					codigo.add(generado);
+				}
+				
+				
+				
+				break;
+			}
 		}
 		return new Hoja(registroOcupado);
 	}
@@ -477,19 +506,26 @@ public class GeneradorCodigo {
 		String opASM="MUL";
 		String generado="";
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
-		
+		String regOP="EAX";
+		if(getModo(valorDer).equals("16"))
+
+		{
+			regOP="AX";
+			opASM="I"+opASM; //si es un dato de 16 bits toy tratando, en este contexto, con variables integer que son signadas
+		}
+
 		 if(regLibre!=null) {
 			
 			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
 			String factor=valorDer;
 			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
 			if(esVariable(valorIzq)) {
-				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
+				generado="MOV " + regOP + "," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
 			}else {
 				if(esRegistro(valorIzq)) {
 					regLibre=valorIzq;
 				}
-				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
+				generado="MOV " + regOP + "," + quitarSufijo(valorIzq)+new_line_windows; 
 			}
 			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
 				factor=sufijoVariablesYFunciones+valorDer;
@@ -501,9 +537,10 @@ public class GeneradorCodigo {
 				}
 			}
 			
+			generado="XOR EDX,EDX"+new_line_windows+generado;
 			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
 					
-			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			generado+= "MOV " + regLibre + "," + regOP+new_line_windows; //backup del dato
 			setearOcupacionRegistro("EAX", false);
 			registroOcupado=regLibre;
 			
@@ -520,19 +557,26 @@ public class GeneradorCodigo {
 		String opASM="DIV";
 		String generado="";
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
-		
+		String regOP="EAX";
+		if(getModo(valorDer).equals("16"))
+
+		{
+			regOP="AX";
+			opASM="I"+opASM; //IDIV. Si es de 16 bits es un integer y es un dato signado. Por lo que debo operarlo bajo esas reglas
+		}
+
 		 if(regLibre!=null) {
 			
 			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
 			String factor=valorDer;
 			//se toma como que el lado izquierdo es el multiplicando. Por lo que muevo el valorIzq a EAX/AX para poder operar.
 			if(esVariable(valorIzq)) {
-				generado="MOV EAX," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
+				generado="MOV " + regOP + "," + sufijoVariablesYFunciones +valorIzq+new_line_windows; 
 			}else {
 				if(esRegistro(valorIzq)) {
 					regLibre=valorIzq;
 				}
-				generado="MOV EAX," + quitarSufijo(valorIzq)+new_line_windows; 
+				generado="MOV " + regOP + "," + quitarSufijo(valorIzq)+new_line_windows; 
 			}
 			if(esVariable(valorDer)) {//si es variable puedo hacer la MUL
 				factor=sufijoVariablesYFunciones+valorDer;
@@ -543,10 +587,10 @@ public class GeneradorCodigo {
 								
 				}
 			}
-			
+			generado="XOR EDX,EDX"+new_line_windows+generado;
 			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
 					
-			generado+= "MOV " + regLibre + "," + "EAX"+new_line_windows; //backup del dato
+			generado+= "MOV " + regLibre + "," + regOP+new_line_windows; //backup del dato
 			setearOcupacionRegistro("EAX", false);
 			registroOcupado=regLibre;
 			
@@ -690,8 +734,13 @@ public class GeneradorCodigo {
 		String registroOcupado = "";
 		return registroOcupado;
 	}
-	private String generarInvocacion(){
+	private String generarInvocacion(String valor){
 		String registroOcupado = "";
+		String generado = "CALL " + sufijoVariablesYFunciones + valor + new_line_windows;
+		codigo.add(generado);
+		registroOcupado = (String) tablaSimbolos.get(valor).get("Retorno");
+		if ((registroOcupado != null)&&(registroOcupado.equals("")))
+			registroOcupado = "@" + valor + "@ret";
 		return registroOcupado;
 	}
 	private String generarThen(){
@@ -778,8 +827,7 @@ public class GeneradorCodigo {
 		String retorno=""; //debo poner un retorno valido para cada tipo de funcion..... por ahora, VOID tiene retorno vacio y fun tiene retorno la label a una funcion 
 		retorno= (String)tablaSimbolos.get(aux[aux.length-1]).get("Retorno"); // en vez de aux pudiera poner directamente nombre, pero en caso de comentar la linea se pueden tener problemas al no encontrarla en tabla de simbolos
 
-		if(!retorno.equals(" ")) {
-			
+		if((retorno!=null)&&(!retorno.equals(" "))) {
 			codigo.add("MOV " + sufijoVariablesYFunciones+aux[aux.length-1]+sufijoVariablesYFunciones+"ret" +","+sufijoVariablesYFunciones+retorno+new_line_windows);
 		}
 		codigo.add("RET");
@@ -897,7 +945,7 @@ public class GeneradorCodigo {
 						
 						//estamos en presencia de una funcion. Lo correcto es generar una variable auxiliar para guardar el retorno
 						//se puede chequear adicionalmente... si es de tipo void no genero una variable...
-						//En la filmina de ejemplo est� planteado el retorno en una variable independientemente del caso
+						//En la filmina de ejemplo estÃ¡ planteado el retorno en una variable independientemente del caso
 						aux=sufijoVariablesYFunciones+clave+sufijoVariablesYFunciones+"ret"+" "+tipoDatos +" ";
 						
 					}else {
@@ -926,6 +974,19 @@ public class GeneradorCodigo {
 		//codigo.add(new_line_windows+".code"+new_line_windows);
 		//ESPACIO EN BLANCO PARA GENERAR EL PRECODE: FUNCIONES Y DEMAS DE CLOSURE
 		codigo.add(new_line_windows+"start:"+new_line_windows);
+
+		for(String s: registers) {
+			codigo.add("XOR " +s+","+s+new_line_windows); //limpio los registros para memory safety
+		}
+
+		
+		/* PARA LIMPIAR LOS REGISTROS */
+		/*
+		codigo.add("XOR EAX, EAX" +new_line_windows );
+		codigo.add("XOR EBX, EBX"+new_line_windows);
+		codigo.add("XOR ECX, ECX"+new_line_windows);
+		codigo.add("XOR EDX, EDX"+new_line_windows);*/
+
 		arbol.generarCodigo(this);
 
 		return codigo; //se esperar que arbol.generarCodigo modifique el codigo que es una lista global
@@ -944,12 +1005,12 @@ public class GeneradorCodigo {
 		}
 		return out;
 	}
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		GeneradorCodigo g=new GeneradorCodigo(new Hashtable<>());
 		setearOcupacionRegistro("EAX", true);
 		for(String s: tablaDeOcupacion.keySet()) {
 			System.out.println("valor " + s + " ocupado " + tablaDeOcupacion.get(s));
 
 		}
-	}
+	}*/
 }
