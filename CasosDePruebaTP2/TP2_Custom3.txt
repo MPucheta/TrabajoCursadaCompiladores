@@ -28,3 +28,10 @@ end_if
 integer _a,
 _a := 5_i + 2_i,
 print('test '),
+
+integer _var;_var2,
+_var:= -2_i,
+
+if(_var=-2_i)
+	print('menos 2'),
+end_if
