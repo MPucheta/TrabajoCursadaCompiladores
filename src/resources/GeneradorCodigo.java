@@ -349,6 +349,24 @@ public class GeneradorCodigo {
 			}
 			case("condicion"): break;
 			case("casting"): registroOcupado = generarCasting(hijo.getValor()); break;
+			case("-"):{
+				String generado="";
+				
+				//debido a como se planteo la gramatica, el - siempre está aplicado a constante integer
+				String regLibre=getRegistroLibre(false, getModo(hijo.getValor()));//podria hardcodear el "16" de una
+				if(regLibre!=null) {
+					
+					generado="XOR " + regLibre +","+regLibre+new_line_windows; //seteo el reg a cero
+					generado+="SUB " + regLibre + ","+quitarSufijo(hijo.getValor())+new_line_windows;
+					
+					registroOcupado=regLibre;
+					codigo.add(generado);
+				}
+				
+				
+				
+				break;
+			}
 		}
 		return new Hoja(registroOcupado);
 	}
