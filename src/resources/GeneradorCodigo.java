@@ -1,3 +1,4 @@
+
 package resources;
 
 import java.util.ArrayList;
@@ -92,8 +93,17 @@ public class GeneradorCodigo {
 
 	private String getModo(String clave) {
 		//sea variable o una cte tiene un tipo en la tabla de simbolos
-		String tipo=(String)tablaSimbolos.get(clave).get("Tipo");
+		//Si es un registro se sabe que si empieza con E es un registro extended de 32 bits
 		String modo= "";
+		if(esRegistro(clave)) {
+			if(clave.substring(0, 1).equals("E")) {
+				modo="16";
+			}else {
+				modo="32";
+			}
+		}
+		String tipo=(String)tablaSimbolos.get(clave).get("Tipo");
+		
 		if(tipo.equals("integer"))
 			modo="16";
 		else 
@@ -349,10 +359,10 @@ public class GeneradorCodigo {
 			}
 			case("condicion"): break;
 			case("casting"): registroOcupado = generarCasting(hijo.getValor()); break;
-			case("-"):{
+      case("-"):{
 				String generado="";
 				
-				//debido a como se planteo la gramatica, el - siempre está aplicado a constante integer
+				//debido a como se planteo la gramatica, el - siempre estï¿½ aplicado a constante integer
 				String regLibre=getRegistroLibre(false, getModo(hijo.getValor()));//podria hardcodear el "16" de una
 				if(regLibre!=null) {
 					
@@ -497,8 +507,12 @@ public class GeneradorCodigo {
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
 		String regOP="EAX";
 		if(getModo(valorDer).equals("16"))
+
+		{
 			regOP="AX";
-		
+			opASM="I"+opASM; //si es un dato de 16 bits toy tratando, en este contexto, con variables integer que son signadas
+		}
+
 		 if(regLibre!=null) {
 			
 			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
@@ -543,8 +557,12 @@ public class GeneradorCodigo {
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
 		String regOP="EAX";
 		if(getModo(valorDer).equals("16"))
+
+		{
 			regOP="AX";
-		
+			opASM="I"+opASM; //IDIV. Si es de 16 bits es un integer y es un dato signado. Por lo que debo operarlo bajo esas reglas
+		}
+
 		 if(regLibre!=null) {
 			
 			 //voy a usar el regLibre tanto para usar un posible inmediato como para guardar el resultado
@@ -925,7 +943,7 @@ public class GeneradorCodigo {
 						
 						//estamos en presencia de una funcion. Lo correcto es generar una variable auxiliar para guardar el retorno
 						//se puede chequear adicionalmente... si es de tipo void no genero una variable...
-						//En la filmina de ejemplo está planteado el retorno en una variable independientemente del caso
+						//En la filmina de ejemplo estÃ¡ planteado el retorno en una variable independientemente del caso
 						aux=sufijoVariablesYFunciones+clave+sufijoVariablesYFunciones+"ret"+" "+tipoDatos +" ";
 						
 					}else {
@@ -954,6 +972,11 @@ public class GeneradorCodigo {
 		//codigo.add(new_line_windows+".code"+new_line_windows);
 		//ESPACIO EN BLANCO PARA GENERAR EL PRECODE: FUNCIONES Y DEMAS DE CLOSURE
 		codigo.add(new_line_windows+"start:"+new_line_windows);
+
+		for(String s: registers) {
+			codigo.add("XOR " +s+","+s+new_line_windows); //limpio los registros para memory safety
+		}
+
 		
 		/* PARA LIMPIAR LOS REGISTROS */
 		/*
@@ -961,7 +984,7 @@ public class GeneradorCodigo {
 		codigo.add("XOR EBX, EBX"+new_line_windows);
 		codigo.add("XOR ECX, ECX"+new_line_windows);
 		codigo.add("XOR EDX, EDX"+new_line_windows);*/
-		
+
 		arbol.generarCodigo(this);
 
 		return codigo; //se esperar que arbol.generarCodigo modifique el codigo que es una lista global
