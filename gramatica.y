@@ -345,8 +345,10 @@ factor				:	 	ID								{ $$=agregarHoja(((Token)$1.obj).claveTablaSimbolo);
 																		if (!tablaSimbolos.containsKey(nuevaClave)){
 																			Atributos atts = new Atributos();
 																			atts.set("Token", "CTE_INTEGER"); atts.set("Valor", new Integer(-valorInteger));
+																			atts.set("Tipo","integer");
 																			tablaSimbolos.put(nuevaClave, atts);
 																			}
+
 																		$$ =agregarNodoRengo("-",agregarHoja(((Token)$2.obj).claveTablaSimbolo)); //agrego dos nodos de una, un - unario y una hoja con el valor en si
 																		cambiarTipo($$, "integer");
 																		setNroLinea($$, (Token) $2.obj);
