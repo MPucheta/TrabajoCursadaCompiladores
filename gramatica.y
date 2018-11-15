@@ -761,6 +761,8 @@ private void eliminarUltimoAmbito(){
 
 private void agregarAmbito(String ambito){
 	ambitoActual=ambitoActual+"@"+ambito;
+	if (arbolesDeFunciones.get(ambitoActual) == null)
+		arbolesDeFunciones.put(ambitoActual, new ArrayList<Arbol>());
 
 }
 

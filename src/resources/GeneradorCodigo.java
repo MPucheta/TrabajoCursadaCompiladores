@@ -19,8 +19,8 @@ public class GeneradorCodigo {
 
 	int posibleElse=-1; //int adicional por si hay que agregar una label extra por el then/else en vez de then solamente
 
-	String sufijoVariablesYFunciones="@"; //se puede usar el "_" para la forma tradicional....
-	String textSeparator="@";
+	String sufijoVariablesYFunciones="_"; //se puede usar el "_" para la forma tradicional....
+	String textSeparator="_";
 	// el label del fallo de condicion se comparte entre un fallo normal y un else.
 	//Si no hay else no tengo que poner el JMP incondicional.
 	static String[] registers ={"EBX","ECX","EDX","EAX"};
@@ -74,8 +74,8 @@ public class GeneradorCodigo {
 	private boolean esRegistro(String posibleReg) {
 		//hay una situacion en la que la variable tenga de identificador el nombre de un registro....
 		//Es medio rebuscado pero repensar
-		for(String s:tablaDeOcupacion.keySet()) {
-			if(s.equals(posibleReg)) {
+		for(String s:registers) {
+			if(s.equals(posibleReg)||s.substring(1).equals(posibleReg)) {
 				return true;
 			}
 		}
@@ -536,6 +536,7 @@ public class GeneradorCodigo {
 				}
 			}
 			
+			generado="XOR EDX,EDX"+new_line_windows+generado;
 			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
 					
 			generado+= "MOV " + regLibre + "," + regOP+new_line_windows; //backup del dato
@@ -585,7 +586,7 @@ public class GeneradorCodigo {
 								
 				}
 			}
-			
+			generado="XOR EDX,EDX"+new_line_windows+generado;
 			generado+=opASM +" "+factor+new_line_windows; //ej, MUL _var, o MUL R1
 					
 			generado+= "MOV " + regLibre + "," + regOP+new_line_windows; //backup del dato

@@ -863,6 +863,8 @@ private void eliminarUltimoAmbito(){
 
 private void agregarAmbito(String ambito){
 	ambitoActual=ambitoActual+"@"+ambito;
+	if (arbolesDeFunciones.get(ambitoActual) == null)
+		arbolesDeFunciones.put(ambitoActual, new ArrayList<Arbol>());
 
 }
 
@@ -897,7 +899,7 @@ private void verificarAmbito(ParserVal var, String ambito){
 		System.out.println(s);
 	}
 }
-//#line 829 "Parser.java"
+//#line 831 "Parser.java"
 //###############################################################
 // method: yylexdebug : check lexer state
 //###############################################################
@@ -1514,7 +1516,7 @@ case 83:
 //#line 380 ".\gramatica.y"
 {agregarEstructuraDetectada("Invocacion de funcion en asignacion"); yyval = agregarNodoRengo("invocacion", val_peek(0)); setNroLinea(yyval, val_peek(0)); cambiarTipo(yyval, "fun");}
 break;
-//#line 1441 "Parser.java"
+//#line 1443 "Parser.java"
 //########## END OF USER-SUPPLIED ACTIONS ##########
     }//switch
     //#### Now let's reduce... ####
