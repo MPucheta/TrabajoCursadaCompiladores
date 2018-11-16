@@ -1,5 +1,4 @@
 
-
 package resources;
 
 import java.util.ArrayList;
@@ -25,7 +24,8 @@ public class GeneradorCodigo {
 	// el label del fallo de condicion se comparte entre un fallo normal y un else.
 	//Si no hay else no tengo que poner el JMP incondicional.
 	static String[] registers ={"EBX","ECX","EDX","EAX"};
-
+	static String[] cleanUpCadena= {","}; //todo lo que este aca se cambia por textSeparator
+	
 	public GeneradorCodigo(Hashtable<String,Atributos> tablaSimbolos) {
 
 		this.tablaSimbolos=tablaSimbolos;
@@ -150,6 +150,9 @@ public class GeneradorCodigo {
 		//por alguna razon, mas que nada debugging, no hay reg libre...
 		if(out==null)
 			System.out.println("ACA SALIO ALGO TREMENDAMENTE MAL, NO HAY REG LIBRES");
+		else if (modo.equals("16") && out.length()==3)
+			out = out.substring(1);
+			
 		return out;
 	}
 
@@ -238,8 +241,20 @@ public class GeneradorCodigo {
 
 	private String plantillaOperacionesComparacion(String valorIzq, String valorDer) {
 		String out="";
-		String regLibre=sufijoVariablesYFunciones+valorIzq; //si es una variable ya la modifico, si luego encuentro que se necesita un registro entonces se pisa
-		String esVariable=(String) tablaSimbolos.get(valorIzq).get("Declarada"); //si es una cte entonces no tiene el campo declarada y no se puede comparar
+		String regLibre=""; //si es una variable ya la modifico, si luego encuentro que se necesita un registro entonces se pisa
+		String esVariable= null;
+		if(esRegistro(valorIzq)) {
+			regLibre=valorIzq;
+		}else {
+			
+			regLibre=sufijoVariablesYFunciones+valorIzq;
+			esVariable=(String) tablaSimbolos.get(valorIzq).get("Declarada"); //si es una cte entonces no tiene el campo declarada y no se puede comparar
+			
+		}
+		
+	
+			
+		
 		if(!esRegistro(valorIzq)&&esVariable==null) { //el reg de destino de comparacion no puede ser un valor inmediato
 			//Si pongo || en la condicion anterior incluso cuando es variable la mueve a reg. O puedo sacar todo lo de esVariable si asi se desea
 			
@@ -345,7 +360,12 @@ public class GeneradorCodigo {
 			case("invocacion"): registroOcupado = generarInvocacion(hijo.getValor()); break;
 			case("impresion"): {
 				String aux= valorHijo.split("'")[1];//por ejemplo 'test' pasa a ser test
+				for(String s: cleanUpCadena) { //limpio todo lo que este en cleanUpCadena. Por ejemplo , de la cadena
+					
+					aux=aux.replaceAll(s, textSeparator);
+				}
 				String generado="INVOKE printf, ADDR " + sufijoVariablesYFunciones+aux.replace(" ", textSeparator) + new_line_windows; // el printf en minuscula porque es una funcion externa
+				
 				codigo.add(generado);
 				break;
 			}
@@ -363,10 +383,10 @@ public class GeneradorCodigo {
       case("-"):{
 				String generado="";
 				
-				//debido a como se planteo la gramatica, el - siempre estï¿½ aplicado a constante integer
+				//debido a como se planteo la gramatica, el - siempre est� aplicado a constante integer
 				String regLibre=getRegistroLibre(false, getModo(hijo.getValor()));//podria hardcodear el "16" de una
 				if(regLibre!=null) {
-					
+					setearOcupacionRegistro(regLibre, true);
 					generado="XOR " + regLibre +","+regLibre+new_line_windows; //seteo el reg a cero
 					generado+="SUB " + regLibre + ","+quitarSufijo(hijo.getValor())+new_line_windows;
 					
@@ -542,6 +562,7 @@ public class GeneradorCodigo {
 					
 			generado+= "MOV " + regLibre + "," + regOP+new_line_windows; //backup del dato
 			setearOcupacionRegistro("EAX", false);
+			setearOcupacionRegistro(regLibre, true);
 			registroOcupado=regLibre;
 			
 			codigo.add(generado);
@@ -592,6 +613,7 @@ public class GeneradorCodigo {
 					
 			generado+= "MOV " + regLibre + "," + regOP+new_line_windows; //backup del dato
 			setearOcupacionRegistro("EAX", false);
+			setearOcupacionRegistro(regLibre, true);
 			registroOcupado=regLibre;
 			
 			codigo.add(generado);
@@ -929,7 +951,12 @@ public class GeneradorCodigo {
 			//En realidad nunca voy a usar algo como _1.... Si puedo generar el codigo directamente como inmediato
 			if(esCadena) {
 				aux=sufijoVariablesYFunciones+clave.replace(" ",textSeparator)+" "+tipoDatos +" ";//las cadenas se tratan distinto, hay que ponerles @ en cada separacion para que no rompa el ASM
+				
+				for(String s: cleanUpCadena) {//limpio todo lo que este en cleanUpCadena. Por ejemplo , de la cadena
+					aux=aux.replaceAll(s, textSeparator);
+				}
 				aux=aux + "\""+clave+"\"" + ",0" +new_line_windows; // "clave",0
+				
 				outCtes.add(aux);
 			}else {
 
@@ -945,7 +972,7 @@ public class GeneradorCodigo {
 						
 						//estamos en presencia de una funcion. Lo correcto es generar una variable auxiliar para guardar el retorno
 						//se puede chequear adicionalmente... si es de tipo void no genero una variable...
-						//En la filmina de ejemplo estÃ¡ planteado el retorno en una variable independientemente del caso
+						//En la filmina de ejemplo está planteado el retorno en una variable independientemente del caso
 						aux=sufijoVariablesYFunciones+clave+sufijoVariablesYFunciones+"ret"+" "+tipoDatos +" ";
 						
 					}else {
