@@ -31,7 +31,7 @@ public class TestCompilador {
 		String salida = "";
 		for (String s: tablaSimbolos.keySet()) {
 			String atts= tablaSimbolos.get(s).toString();
-			salida += s + " --> " + atts;
+			salida += s + " --> " + atts + "\n";
 		}
 		return salida;
 	}
