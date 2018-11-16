@@ -220,27 +220,27 @@ sentencias_ejecutables 	:	ejecutable	{$$ = agregarNodo("lista_sentencias", $1, n
 												;
 
 
-condicion	:	expr '=' expr											{if (verificarTipos($1, $3, "condicion '='"))
+condicion	:	expr '=' expr											{if (verificarTipos($1, $3, "condicion '='", nroLinea($3)))
 																									$$ = agregarNodo("=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
 																								setNroLinea($$, $3);}
 
-					|	expr '<' expr											{if (verificarTipos($1, $3, "condicion '<'"))
+					|	expr '<' expr											{if (verificarTipos($1, $3, "condicion '<'", nroLinea($3)))
 																											$$ = agregarNodo("<",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
 																										setNroLinea($$, $3);}
 
-					|	expr '>' expr											{if (verificarTipos($1, $3, "condicion '>'"))
+					|	expr '>' expr											{if (verificarTipos($1, $3, "condicion '>'", nroLinea($3)))
 																											$$ = agregarNodo(">",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
 																									setNroLinea($$, $3);	}
 
-					|	expr COMP_MENOR_IGUAL expr				{if (verificarTipos($1, $3, "condicion '<='"))
+					|	expr COMP_MENOR_IGUAL expr				{if (verificarTipos($1, $3, "condicion '<='", nroLinea($3)))
 																											$$ = agregarNodo("<=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
 																									setNroLinea($$, $3);	}
 
-					|	expr COMP_MAYOR_IGUAL expr				{if (verificarTipos($1, $3, "condicion '=>'"))
+					|	expr COMP_MAYOR_IGUAL expr				{if (verificarTipos($1, $3, "condicion '=>'", nroLinea($3)))
 																											$$ = agregarNodo(">=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
 																										setNroLinea($$, $3);}
 
-					|	expr COMP_DISTINTO expr						{if (verificarTipos($1, $3, "condicion '!='"))
+					|	expr COMP_DISTINTO expr						{if (verificarTipos($1, $3, "condicion '!='", nroLinea($3)))
 																											$$ = agregarNodo("!=",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
 																									setNroLinea($$, $3);	}
 
@@ -249,7 +249,7 @@ condicion	:	expr '=' expr											{if (verificarTipos($1, $3, "condicion '='")
 
 
 expr 		: 	expr '+' term	{
-															if (verificarTipos($1, $3, "operacion '+'")){
+															if (verificarTipos($1, $3, "operacion '+'", nroLinea($3))){
 																	$$ = agregarNodo("+",$1,$3);
 																	cambiarTipo($$, $1.sval);
 																}
@@ -259,7 +259,7 @@ expr 		: 	expr '+' term	{
 													}
 
 				| 	expr '-' term 		{
-																if (verificarTipos($1, $3, "operacion '/'")){
+																if (verificarTipos($1, $3, "operacion '/'", nroLinea($3))){
 																		$$ = agregarNodo("-",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘-‘ ; T.ptr ; F.ptr )
 																		cambiarTipo($$, $1.sval);
 																	}
@@ -292,7 +292,7 @@ casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicit
 
 
 term	 	: 	term '*' factor {
-																	if (verificarTipos($1, $3, "operacion '*'")){
+																	if (verificarTipos($1, $3, "operacion '*'", nroLinea($3))){
 																			$$ = agregarNodo("*",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘*‘ ; T.ptr ; F.ptr )
 																			cambiarTipo($$, $1.sval);
 																		}
@@ -301,7 +301,7 @@ term	 	: 	term '*' factor {
 																		setNroLinea($$, $3);
 														}
 				| 	term '/' factor {
-																if (verificarTipos($1, $3, "operacion '/'")){
+																if (verificarTipos($1, $3, "operacion '/'", nroLinea($3))){
 																		$$ = agregarNodo("/",$1,$3); //es lo denominado  T.ptr = crear_nodo( ‘/‘ ; T.ptr ; F.ptr )
 																		cambiarTipo($$, $1.sval);
 																	}
@@ -362,7 +362,7 @@ asignacion	:	ID ASIGN r_value_asignacion ',' {
 
 																							if (verificarDeclaracion($1)&&verificarAccesibilidadPorAmbito($1)){  //se fija si la variable del lado izquierdo esta declarada
 																									cambiarTipo($1, (String)tablaSimbolos.get(obtenerLexema($1)).get("Tipo")); //se le setea el tipo
-																									verificarTipos($1, $3, "asignacion"); 																		//se verifica que los tipos de los dos lados sean iguales
+																									verificarTipos($1, $3, "asignacion", nroLinea($3)); 																		//se verifica que los tipos de los dos lados sean iguales
 																									$$ = agregarNodo(":=",agregarHoja(((Token)$1.obj).claveTablaSimbolo),$3);
 																							}
 																							else
@@ -598,11 +598,11 @@ private void cambiarTipo(ParserVal pv,String tipo){
 
 }
 
-private boolean verificarTipos(ParserVal p1, ParserVal p2, String tipoSentencia){
+private boolean verificarTipos(ParserVal p1, ParserVal p2, String tipoSentencia, int linea){
  //verdadero si son iguales, falso si son distintos
 	if (p1.sval != p2.sval){
 		String aux="Error de tipos en " + tipoSentencia + ": no se puede realizar entre "
-												+ p1.sval+ " y " + p2.sval;// + ". En linea " + nroLinea(p1);
+												+ p1.sval+ " y " + p2.sval + ". Linea: " + linea;// + ". En linea " + nroLinea(p1);
 		agregarErrorChequeoSemantico(aux);
 		System.out.println(aux); /*cambiar*/
 	}else
