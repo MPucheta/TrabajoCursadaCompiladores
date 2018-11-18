@@ -33,7 +33,7 @@ public class Compilador {
 
 
 			
-			fuente = new ArchivoTexto(args[0]);
+			fuente = new ArchivoTexto(args[0]); //o TP4_Custom.txt
 
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");

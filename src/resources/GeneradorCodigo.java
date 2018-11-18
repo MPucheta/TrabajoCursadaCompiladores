@@ -245,6 +245,7 @@ public class GeneradorCodigo {
 		String esVariable= null;
 		if(esRegistro(valorIzq)) {
 			regLibre=valorIzq;
+			setearOcupacionRegistro(valorIzq, false);
 		}else {
 			
 			regLibre=sufijoVariablesYFunciones+valorIzq;
@@ -258,7 +259,7 @@ public class GeneradorCodigo {
 		if(!esRegistro(valorIzq)&&esVariable==null) { //el reg de destino de comparacion no puede ser un valor inmediato
 			//Si pongo || en la condicion anterior incluso cuando es variable la mueve a reg. O puedo sacar todo lo de esVariable si asi se desea
 			
-			regLibre=getRegistroLibre(false,getModo(valorIzq));
+			regLibre=getRegistroLibre(false,getModo(valorIzq));//podria ocuparlo y desocuparlo devuelta...
 			if(regLibre!=null) {
 
 				out+="MOV "+ regLibre + ","+quitarSufijo(valorIzq)+new_line_windows; //le saco el sufijo porque es un inmediato
@@ -268,9 +269,16 @@ public class GeneradorCodigo {
 
 		if(esVariable(valorDer))
 			out+="CMP "+regLibre+","+ sufijoVariablesYFunciones+valorDer + new_line_windows;
-		else
+		else {
 			//no es una variable, por lo que es un inmediato o un registro al cual quitarSufijo no le afecta
-			out+="CMP "+regLibre+","+quitarSufijo(valorDer) + new_line_windows; //regLibre es el nombre de la variable/reg anterior o el nuevo registro que se debe poner el valor Inmediato
+			if(esRegistro(valorDer)) {
+				out+="CMP "+regLibre+","+(valorDer) + new_line_windows;
+				setearOcupacionRegistro(valorDer, false);
+			}else { //valor inmediato
+				out+="CMP "+regLibre+","+quitarSufijo(valorDer) + new_line_windows; //regLibre es el nombre de la variable/reg anterior o el nuevo registro que se debe poner el valor Inmediato
+			}
+		}
+	
 		return out;
 
 	}
@@ -527,6 +535,7 @@ public class GeneradorCodigo {
 		String generado="";
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
 		String regOP="EAX";
+		
 		if(getModo(valorDer).equals("16"))
 
 		{
