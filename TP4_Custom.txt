@@ -78,3 +78,59 @@ while(_var4<4_ul){
 	_var4:=_var4+1_ul,
 }
 
+#lo siguiente es fibonacci#
+
+_a:=0_i,
+_b:=1_i,
+_c:=0_i,
+while(_a!=144_i){
+
+	if(_a=0_i)
+		print(' 0 '),
+	end_if
+	
+	_c:=_a+_b, #el proximo numero para usar despues#
+	_a:=_b, #el numero anterior#
+	_b:=_c,  
+	#a partir de aca es ver que los valores sean los de la secuencia, basicamente porque el lenguaje no imprime otra cosa que cadenas#
+	if(_a=1_i)
+		print(' 1 '),
+	end_if
+	
+	
+
+	
+	if(_a=2_i)
+		print(' 2 '),
+	end_if
+	if(_a=3_i)
+		print(' 3 '),
+	end_if
+	if(_a=5_i)
+		print(' 5 '),
+	end_if
+	if(_a=8_i)
+		print(' 8 '),
+	end_if
+	if(_a=13_i)
+		print(' 13 '),
+	end_if
+	if(_a=21_i)
+		print(' 21 '),
+	end_if
+	if(_a=34_i)
+		print(' 34 '),
+	end_if
+	if(_a=55_i)
+		print(' 55 '),
+	end_if
+	if(_a=89_i)
+		print(' 89 '),
+	end_if
+	if(_a=144_i)
+		print(' 144 '),
+	end_if
+	
+
+
+}
