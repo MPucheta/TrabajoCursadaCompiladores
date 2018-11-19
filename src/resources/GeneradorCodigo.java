@@ -373,7 +373,7 @@ public class GeneradorCodigo {
 					aux=aux.replaceAll(s, textSeparator);
 				}
 				String generado="INVOKE printf, ADDR " + sufijoVariablesYFunciones+aux.replace(" ", textSeparator) + new_line_windows; // el printf en minuscula porque es una funcion externa
-				
+				generado+="INVOKE printf,cfm$(\"\\n\")" +new_line_windows;
 				codigo.add(generado);
 				break;
 			}
