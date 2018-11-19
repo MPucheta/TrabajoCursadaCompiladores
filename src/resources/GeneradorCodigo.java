@@ -24,7 +24,7 @@ public class GeneradorCodigo {
 	// el label del fallo de condicion se comparte entre un fallo normal y un else.
 	//Si no hay else no tengo que poner el JMP incondicional.
 	static String[] registers ={"EBX","ECX","EDX","EAX"};
-	static String[] cleanUpCadena= {","}; //todo lo que este aca se cambia por textSeparator
+	static String[] cleanUpCadena= {",","-"}; //todo lo que este aca se cambia por textSeparator
 	
 	public GeneradorCodigo(Hashtable<String,Atributos> tablaSimbolos) {
 
