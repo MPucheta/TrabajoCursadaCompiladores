@@ -2,16 +2,28 @@ integer _a; _b; _c,
 _a := 2_i,
 fun _funcion,
 _b := - 1_i,
+_c := 10_i,
 
-fun _f1(){
-	void _g(){print('EJECUTADO G     '),}
+
+fun _f1(){ 
+	print('Ejecucion de _f1'),
+	void _g(){print('Ejecucion de _g'),}
 	return(_g()), 
 }
+
+
 fun _f2(){
+	print('Ejecucion de _f2'),
 	uslinteger _i,
-	_i := uslinteger(_c),
-	return({print('CAMBIANDO EL VALOR DE _C A 1     '), 
-		_c := 1_i,}), 
+	_i := uslinteger(_c), #en este momento, _c vale 10_i#
+	
+	
+	
+	return({
+			print('Ejecucion de funcion anonima '),
+			print('cambiando el valor de _c a 1'), 
+			_c := 1_i,
+			}), 
 }
 
 _a := _a + 2_i + _a * _b - _a / 2_i,
@@ -24,7 +36,6 @@ else
 end_if
 
 
-
 if (_a = 1_i)
 	{
 	_funcion := _f1(),
@@ -34,10 +45,16 @@ else
 	print('a no es 1'),
 end_if
 
+
+
 _a := -1_i,
+
 if (_a *_a * _a= -1_i)
-	print('        puede que ande, a es -1'),
+	print('a es -1'),
 end_if
+
+
+
 
 uslinteger _var4;_var5;_var6,
 _var4:=16_ul,
@@ -45,9 +62,11 @@ _var5:=2_ul,
 _var6:=2_ul+1_ul-1_ul,
 _var4:=_var4*2_ul/_var5*_var6*1_ul*2_ul / 2_ul /1_ul *2_ul +2_ul*32_ul, 
 _var4:=_var4*2_ul,
+
 if(_var4=256_ul)
 	print(' var 4 es 256 '),
 end_if
+
 
 _var4:=32_ul,
 _var4:=_var4*4_ul/4_ul*4_ul/4_ul*4_ul/4_ul   *4_ul, #en realidad son todos 1/1 menos el ultimo #
@@ -78,28 +97,33 @@ while(_var4<4_ul){
 	_var4:=_var4+1_ul,
 }
 
+
+
+_funcion := _f2(),
+_funcion(),
+
+
+
 #lo siguiente es fibonacci#
 
 _a:=0_i,
 _b:=1_i,
 _c:=0_i,
-while(_a!=144_i){
+while(_a < 1000_i){
 
-	if(_a=0_i)
+	if(_a=0_i){
+		print('sucesion de fibonacci'),
+		print(' '),
 		print(' 0 '),
+		
+		}
 	end_if
 	
-	_c:=_a+_b, #el proximo numero para usar despues#
-	_a:=_b, #el numero anterior#
-	_b:=_c,  
+	
 	#a partir de aca es ver que los valores sean los de la secuencia, basicamente porque el lenguaje no imprime otra cosa que cadenas#
 	if(_a=1_i)
 		print(' 1 '),
 	end_if
-	
-	
-
-	
 	if(_a=2_i)
 		print(' 2 '),
 	end_if
@@ -130,7 +154,26 @@ while(_a!=144_i){
 	if(_a=144_i)
 		print(' 144 '),
 	end_if
+	if(_a=233_i)
+		print(' 233 '),
+	end_if
+	if(_a=377_i)
+		print(' 377 '),
+	end_if
+	if(_a=610_i)
+		print(' 610 '),
+	end_if
+	if(_a=987_i)
+		print(' 987 '),
+	end_if
+	if(_a=1597_i)
+		print(' 1597 '), # no debe imprimir este numero #
+	end_if
 	
-
-
+	
+	
+	_c:=_a+_b, #el proximo numero para usar despues#
+	_a:=_b, #el numero anterior#
+	_b:=_c,  
+	
 }
