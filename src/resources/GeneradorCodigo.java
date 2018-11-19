@@ -24,7 +24,7 @@ public class GeneradorCodigo {
 	// el label del fallo de condicion se comparte entre un fallo normal y un else.
 	//Si no hay else no tengo que poner el JMP incondicional.
 	static String[] registers ={"EBX","ECX","EDX","EAX"};
-	static String[] cleanUpCadena= {","}; //todo lo que este aca se cambia por textSeparator
+	static String[] cleanUpCadena= {",","-"}; //todo lo que este aca se cambia por textSeparator
 	
 	public GeneradorCodigo(Hashtable<String,Atributos> tablaSimbolos) {
 
@@ -245,6 +245,7 @@ public class GeneradorCodigo {
 		String esVariable= null;
 		if(esRegistro(valorIzq)) {
 			regLibre=valorIzq;
+			setearOcupacionRegistro(valorIzq, false);
 		}else {
 			
 			regLibre=sufijoVariablesYFunciones+valorIzq;
@@ -258,7 +259,7 @@ public class GeneradorCodigo {
 		if(!esRegistro(valorIzq)&&esVariable==null) { //el reg de destino de comparacion no puede ser un valor inmediato
 			//Si pongo || en la condicion anterior incluso cuando es variable la mueve a reg. O puedo sacar todo lo de esVariable si asi se desea
 			
-			regLibre=getRegistroLibre(false,getModo(valorIzq));
+			regLibre=getRegistroLibre(false,getModo(valorIzq));//podria ocuparlo y desocuparlo devuelta...
 			if(regLibre!=null) {
 
 				out+="MOV "+ regLibre + ","+quitarSufijo(valorIzq)+new_line_windows; //le saco el sufijo porque es un inmediato
@@ -268,9 +269,16 @@ public class GeneradorCodigo {
 
 		if(esVariable(valorDer))
 			out+="CMP "+regLibre+","+ sufijoVariablesYFunciones+valorDer + new_line_windows;
-		else
+		else {
 			//no es una variable, por lo que es un inmediato o un registro al cual quitarSufijo no le afecta
-			out+="CMP "+regLibre+","+quitarSufijo(valorDer) + new_line_windows; //regLibre es el nombre de la variable/reg anterior o el nuevo registro que se debe poner el valor Inmediato
+			if(esRegistro(valorDer)) {
+				out+="CMP "+regLibre+","+(valorDer) + new_line_windows;
+				setearOcupacionRegistro(valorDer, false);
+			}else { //valor inmediato
+				out+="CMP "+regLibre+","+quitarSufijo(valorDer) + new_line_windows; //regLibre es el nombre de la variable/reg anterior o el nuevo registro que se debe poner el valor Inmediato
+			}
+		}
+	
 		return out;
 
 	}
@@ -365,7 +373,7 @@ public class GeneradorCodigo {
 					aux=aux.replaceAll(s, textSeparator);
 				}
 				String generado="INVOKE printf, ADDR " + sufijoVariablesYFunciones+aux.replace(" ", textSeparator) + new_line_windows; // el printf en minuscula porque es una funcion externa
-				
+				generado+="INVOKE printf,cfm$(\"\\n\")" +new_line_windows;
 				codigo.add(generado);
 				break;
 			}
@@ -527,6 +535,7 @@ public class GeneradorCodigo {
 		String generado="";
 		String regLibre=getRegistroLibre(false, getModo(valorDer)); //de principio no quiero usar los prioritarios
 		String regOP="EAX";
+		
 		if(getModo(valorDer).equals("16"))
 
 		{
@@ -1023,7 +1032,7 @@ public class GeneradorCodigo {
 		List<String> out = new ArrayList<>();
 		String[] endArch= {
 
-		"inkey \"Press any key to exit...\"", //para que no se cierre la consola de una
+		"inkey \"Presiona cualquier tecla para continuar...\"", //para que no se cierre la consola de una
 		"invoke ExitProcess, 0",
 		"end start"
 		};

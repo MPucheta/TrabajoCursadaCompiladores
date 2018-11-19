@@ -1,0 +1,136 @@
+integer _a; _b; _c,
+_a := 2_i,
+fun _funcion,
+_b := - 1_i,
+
+fun _f1(){
+	void _g(){print('EJECUTADO G     '),}
+	return(_g()), 
+}
+fun _f2(){
+	uslinteger _i,
+	_i := uslinteger(_c),
+	return({print('CAMBIANDO EL VALOR DE _C A 1     '), 
+		_c := 1_i,}), 
+}
+
+_a := _a + 2_i + _a * _b - _a / 2_i,
+#_a debiera ser 1#
+
+if (_a > 0_i)
+	print('a mayor a 0  '),
+else
+	print('a no es mayor a 0  '),
+end_if
+
+
+
+if (_a = 1_i)
+	{
+	_funcion := _f1(),
+	_funcion(),
+	}
+else
+	print('a no es 1'),
+end_if
+
+_a := -1_i,
+if (_a *_a * _a= -1_i)
+	print('        puede que ande, a es -1'),
+end_if
+
+uslinteger _var4;_var5;_var6,
+_var4:=16_ul,
+_var5:=2_ul,
+_var6:=2_ul+1_ul-1_ul,
+_var4:=_var4*2_ul/_var5*_var6*1_ul*2_ul / 2_ul /1_ul *2_ul +2_ul*32_ul, 
+_var4:=_var4*2_ul,
+if(_var4=256_ul)
+	print(' var 4 es 256 '),
+end_if
+
+_var4:=32_ul,
+_var4:=_var4*4_ul/4_ul*4_ul/4_ul*4_ul/4_ul   *4_ul, #en realidad son todos 1/1 menos el ultimo #
+
+if(_var4=128_ul)
+	print(' var 4 es 128 '),
+end_if
+
+_var4:=0_ul,
+_var5:=0_ul,
+
+while(_var4<4_ul){
+	print(' nueva ejecucion de while '),
+	
+	while(_var5<2_ul){
+		_var5:=_var5+1_ul,
+		if(_var5=2_ul)
+			print(' saliendo del while _var5 es 2 '),
+		end_if
+	}
+	
+	if(_var5=2_ul){
+		print(' reseteando _var5 '),
+		_var5:=0_ul,
+	}
+	end_if
+	
+	_var4:=_var4+1_ul,
+}
+
+#lo siguiente es fibonacci#
+
+_a:=0_i,
+_b:=1_i,
+_c:=0_i,
+while(_a!=144_i){
+
+	if(_a=0_i)
+		print(' 0 '),
+	end_if
+	
+	_c:=_a+_b, #el proximo numero para usar despues#
+	_a:=_b, #el numero anterior#
+	_b:=_c,  
+	#a partir de aca es ver que los valores sean los de la secuencia, basicamente porque el lenguaje no imprime otra cosa que cadenas#
+	if(_a=1_i)
+		print(' 1 '),
+	end_if
+	
+	
+
+	
+	if(_a=2_i)
+		print(' 2 '),
+	end_if
+	if(_a=3_i)
+		print(' 3 '),
+	end_if
+	if(_a=5_i)
+		print(' 5 '),
+	end_if
+	if(_a=8_i)
+		print(' 8 '),
+	end_if
+	if(_a=13_i)
+		print(' 13 '),
+	end_if
+	if(_a=21_i)
+		print(' 21 '),
+	end_if
+	if(_a=34_i)
+		print(' 34 '),
+	end_if
+	if(_a=55_i)
+		print(' 55 '),
+	end_if
+	if(_a=89_i)
+		print(' 89 '),
+	end_if
+	if(_a=144_i)
+		print(' 144 '),
+	end_if
+	
+
+
+}
