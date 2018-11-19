@@ -1032,7 +1032,7 @@ public class GeneradorCodigo {
 		List<String> out = new ArrayList<>();
 		String[] endArch= {
 
-		"inkey \"Press any key to exit...\"", //para que no se cierre la consola de una
+		"inkey \"Presiona cualquier tecla para continuar...\"", //para que no se cierre la consola de una
 		"invoke ExitProcess, 0",
 		"end start"
 		};
