@@ -18,9 +18,9 @@ _a := _a + 2_i + _a * _b - _a / 2_i,
 #_a debiera ser 1#
 
 if (_a > 0_i)
-	print('a mayor a 0'),
+	print('a mayor a 0  '),
 else
-	print('a no es mayor a 0'),
+	print('a no es mayor a 0  '),
 end_if
 
 
@@ -48,3 +48,32 @@ _var4:=_var4*2_ul,
 if(_var4=256_ul)
 	print(' var 4 es 256 '),
 end_if
+
+_var4:=16_ul,
+_var5:=2_ul,
+_var6:=2_ul+1_ul-1_ul,
+_var4:=_var4*2_ul/_var5*_var6*1_ul*2_ul / 2_ul /1_ul *2_ul +2_ul*32_ul, 
+
+if(_var4=128_ul)
+	print(' var 4 es 128 '),
+end_if
+
+_var4:=0_ul,
+_var5:=0_ul,
+
+while(_var4<4_ul){
+	print(' nueva ejecucion de while '),
+	
+	while(_var5<2_ul){
+		_var5:=_var5+1_ul,
+	}
+	
+	if(_var5=2_ul){
+		print('reseteando _var5 '),
+		_var5:=0_ul,
+	}
+	end_if
+	
+	_var4:=_var4+1_ul,
+}
+
