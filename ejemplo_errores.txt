@@ -1,0 +1,26 @@
+integer _a; _b,
+
+_c := _a + _b,       # _c no declarada #
+
+integer _a, 	# _a redeclarada #
+
+
+
+uslinteger _ul,
+
+_a := _b + _ul * 7_i, # incompatibilidad de multiplicacion entre uslinteger e integer #
+
+_ul := uslinteger(77_ul), # no se puede convertir de uslinteger a uslinteger #
+
+
+
+fun _f(){
+	integer _varf,
+	_varf := 5_i,
+	
+	void _g(){_varf := _varf + 55_i,}
+	
+	return(_g()),
+}
+
+_varf := _a, # _varf no esta al alcance del ambito main #
