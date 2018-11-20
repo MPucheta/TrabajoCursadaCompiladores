@@ -33,7 +33,7 @@ public class Compilador {
 
 
 			
-			fuente = new ArchivoTexto(args[0]); //o TP4_Custom.txt
+			fuente = new ArchivoTexto(args[0]); 
 
 		} catch (IOException e) {
 			System.out.println("Error al abrir el archivo.");
@@ -51,7 +51,7 @@ public class Compilador {
 		// cortado por la mitad
 		
 		AL = new AnalizadorLexico(programa, tablaSimbolos);
-
+		
 		List<String> reporte = new ArrayList<>();
 		Parser parser= new Parser(AL, tablaSimbolos,raizArbol);
 		parser.run();

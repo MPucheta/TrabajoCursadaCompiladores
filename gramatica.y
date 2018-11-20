@@ -67,7 +67,7 @@ invocacion	:	id_invocacion ',' {				Arbol arbol = (Arbol) $1.obj;
 																									if(!tablaSimbolos.get(clave).get("Tipo").equals("fun")){
 																											String aux="Error: '_" + clave + "' no es de tipo fun. Solo se permiten invocaciones de tipo fun. Linea: " + nroLinea($1);
 																											agregarErrorChequeoSemantico(aux);
-																											System.out.println(aux);
+																											//System.out.println(aux);
 																									}
 																									else{
 																											cambiarTipo($$, "invocacion");
@@ -75,7 +75,7 @@ invocacion	:	id_invocacion ',' {				Arbol arbol = (Arbol) $1.obj;
 																									if (!ambito.equals("*"))
 																										if (!ambitoActual.contains(ambito)){
 																											agregarErrorChequeoSemantico("Error: variable '" + atts.get("Lexema") + "' utilizada fuera de su ambito. Linea: " + nroLinea($1));
-																											System.out.println("Error: variable '" + atts.get("Lexema") + "' utilizada fuera de su ambito. Linea: " + nroLinea($1));
+																											//System.out.println("Error: variable '" + atts.get("Lexema") + "' utilizada fuera de su ambito. Linea: " + nroLinea($1));
 																										}
 
 																					}else{
@@ -197,7 +197,7 @@ retorno_closure	: 	id_invocacion	{
 
 												String aux="Error: El retorno de closure debe ser tipo void. En Linea " + nroLinea($1) ;
 												agregarErrorChequeoSemantico(aux);
-												System.out.println(aux);
+												//System.out.println(aux);
 											}
 
 								}
@@ -278,7 +278,7 @@ casting :	USLINTEGER '('expr')' {agregarEstructuraDetectada("Conversion explicit
 																	cambiarTipo($$, "uslinteger");
 																}
 																else {
-																	agregarErrorChequeoSemantico("Error: no se puede hacer la conversion de " + $3.ival + " a uslinteger. Linea: " + nroLinea($3));
+																	agregarErrorChequeoSemantico("Error: no se puede hacer la conversion de la expresion a uslinteger. Linea: " + nroLinea($3));
 																	$$ = hojaError();
 																}
 																setNroLinea($$, (Token) $4.obj);
@@ -481,7 +481,7 @@ void yyerror(String s)
 	}
 	String err= "En linea: " + AL.nroLinea + ". Ocurrio un error de parsing ( "  + s + " ) al leer el token " + Token.tipoToken(ultimoTokenLeido) +"\n"; //tambien se puede usar yychar en vez de lo del ultimoTokenLeido
 	this.erroresGenerales.add(err);
-	System.out.println(err);
+	//System.out.println(err);
 }
 
 public Parser(AnalizadorLexico AL, Hashtable<String, Atributos> tablaSimbolos, Arbol raizArbolSintactico)
@@ -604,7 +604,7 @@ private boolean verificarTipos(ParserVal p1, ParserVal p2, String tipoSentencia,
 		String aux="Error de tipos en " + tipoSentencia + ": no se puede realizar entre "
 												+ p1.sval+ " y " + p2.sval + ". Linea: " + linea;// + ". En linea " + nroLinea(p1);
 		agregarErrorChequeoSemantico(aux);
-		System.out.println(aux); /*cambiar*/
+		//System.out.println(aux);
 	}else
 		return true;
 	return false;
@@ -614,9 +614,9 @@ private boolean verificarDeclaracion(ParserVal p1){
  //retorna verdadero si esta declarada
  	String claveTS = obtenerLexema(p1);
 	if (tablaSimbolos.get(claveTS).get("Declarada").equals("No")){ // se busca en la TS el atributo "Declarada" y se fija si tiene valor "No"
-		String aux="Error: variable '_" + claveTS +  "' no declarada. ";// + nroLinea(p1);
+		String aux="Error: variable '_" + claveTS +  "' no declarada. Linea: " + ((Token)p1.obj).nroLinea;
 		agregarErrorChequeoSemantico(aux);
-		System.out.println(aux); /*cambiar*/
+		//System.out.println(aux); /*cambiar*/
 	}else{
 
 		return true;
@@ -640,7 +640,7 @@ private boolean verificarAccesibilidadPorAmbito(ParserVal p1){
 	}else{
 		String error="Error: variable/funcion '_" + obtenerLexema(p1) + "' no accesible en el ambito " + ambitoActual + ". Linea: " + ((Token)p1.obj).nroLinea;
 		agregarErrorChequeoSemantico(error);
-		System.out.println(error);
+		//System.out.println(error);
 	}
 	return false;
 }
@@ -649,7 +649,7 @@ private void declararVariables(ParserVal tipo, String uso){
 		if (tablaSimbolos.get(variable).get("Declarada").equals("Si")){
 			String aux="Error: redeclaracion de variable '_" + variable + "'. En linea " + nroLinea(tipo);
 			agregarErrorChequeoSemantico(aux);
-			System.out.println(aux); //ERROR CHEQUEO SEMANTICO
+			//System.out.println(aux); //ERROR CHEQUEO SEMANTICO
 		}else{
 			tablaSimbolos.get(variable).set("Declarada", "Si");
 			tablaSimbolos.get(variable).set("Tipo", tipo.sval);
@@ -702,7 +702,7 @@ private void declararFuncionesPendientes(String ambito,String tipo){ /*REVISAR*/
 			if (tablaSimbolos.get(func).get("Declarada").equals("Si")){ //ver si agrego de preguntar sobre los ambitos
 				String aux="Error: nombre previamente usado '" + func + "'.";
 				agregarErrorChequeoSemantico(aux);
-				System.out.println(aux); //ERROR CHEQUEO SEMANTICO
+				//System.out.println(aux); //ERROR CHEQUEO SEMANTICO
 			}
 			else{
 				tablaSimbolos.get(func).set("Declarada", "Si");
@@ -794,6 +794,6 @@ private void verificarAmbito(ParserVal var, String ambito){
 	if (!ambito.contains(((String)tablaSimbolos.get(((Token)var.obj).claveTablaSimbolo).get("Ambito"))) && !ambito.equals(((String)tablaSimbolos.get(((Token)var.obj).claveTablaSimbolo).get("Ambito")))){
 		String s = "Error: variable '_" + ((Token)var.obj).claveTablaSimbolo + "' no se puede utilizar en el ambito " + ambito + ", ya que pertenece al ambito " + tablaSimbolos.get(((Token)var.obj).claveTablaSimbolo).get("Ambito") +". Linea: " + ((Token)var.obj).nroLinea;
 		agregarErrorChequeoSemantico(s);
-		System.out.println(s);
+		//System.out.println(s);
 	}
 }
