@@ -77,7 +77,7 @@ public class Compilador {
 		for (String s: reporte)
 			System.out.print(s);
 		
-		
+		System.out.println("*************************************************\n\n");
 		/*
 		try {
 			ArchivoTexto.escribirEnDisco("tokensLeidos.txt",parser.getTokensLeidos());
